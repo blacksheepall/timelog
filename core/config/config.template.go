@@ -20,6 +20,7 @@ type Config struct {
 		ORMLogLevel int `yaml:"orm_log_level"`
 	} `yaml:"log"`
 	Passkey struct {
+		Enabled      bool     `yaml:"enabled" env-default:"false"`
 		RPID         string   `yaml:"rp_id"`
 		RPName       string   `yaml:"rp_name"`
 		RPOrigins    []string `yaml:"rp_origins"`

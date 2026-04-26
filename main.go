@@ -26,8 +26,10 @@ func main() {
 
 	service.InitService(logger, cfg)
 	model.InitDao(cfg, logger)
-	if err := service.InitWebAuthn(); err != nil {
-		panic("Failed to initialize WebAuthn: " + err.Error())
+	if cfg.Passkey.Enabled {
+		if err := service.InitWebAuthn(); err != nil {
+			panic("Failed to initialize WebAuthn: " + err.Error())
+		}
 	}
 
 	r := router.Register(gin.New(), cfg, logger, staticFiles)

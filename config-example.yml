@@ -9,19 +9,20 @@ log:
   level: debug
   path: ./app.log
   rotation:
-      max_size: 10
-      max_backups: 3
-      max_age: 7
+    max_size: 10
+    max_backups: 3
+    max_age: 7
   orm_log_level: 4 # 1=silent, 2=error, 3=warn, 4=info
 passkey:
-    rp_id: "localhost"
-    rp_name: "TimeLog"
-    rp_origins:
-        - "http://localhost:3000"
-        - "http://localhost:8083"
-    token_ttl: 86400
-    temp_password:
-        ttl: 900
+  enabled: false
+  rp_id: 'localhost'
+  rp_name: 'TimeLog'
+  rp_origins:
+    - 'http://localhost:3000'
+    - 'http://localhost:8083'
+  token_ttl: 86400
+  temp_password:
+    ttl: 900
 test:
   flush: false
 mcp:

@@ -38,7 +38,9 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 
 	api := r.Group("/api")
 	protected := api.Group("")
-	protected.Use(middleware.Auth())
+	if cfg.Passkey.Enabled {
+		protected.Use(middleware.Auth())
+	}
 
 	// 注册 TimeLog 路由
 	RegisterTimeLogRoutes(protected)
@@ -49,8 +51,10 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	// 注册 Constraint 路由
 	setupConstraintRoutes(protected)
 
-	// 注册 Passkey 路由
-	setupPasskeyRoutes(api, protected)
+	// 注册 Passkey 路由（仅当 passkey 功能启用时）
+	if cfg.Passkey.Enabled {
+		setupPasskeyRoutes(api, protected)
+	}
 
 	// 注册 Swagger 文档路由（仅非 prod 构建）
 	setupSwagger(r)
