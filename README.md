@@ -34,7 +34,7 @@ This will generate the necessary files in the `docs` directory that are required
 
 ## Passkey Setup
 
-Passkey authentication requires HTTPS. Follow the certificate setup below, then use the helper script to generate a one-time temp password to bind a device in the UI.
+Passkey authentication requires HTTPS. Follow the certificate setup below, then generate a one-time temp password to bind a device in the UI.
 
 ### Certificate Setup (Required for Passkey)
 
@@ -57,7 +57,9 @@ server:
 
 **Note:** For local development, you may need to accept the self-signed certificate warning in your browser. The application will be accessible at `https://localhost:8083` (or your configured port).
 
-### Generate temp password
+### Generate temp password for the current app instance
+
+If you need a temp password that the current app instance can immediately accept, use the DB-backed admin command:
 
 ```bash
 make passkey-temp create
@@ -69,7 +71,24 @@ Optional: specify TTL seconds (defaults to config `passkey.temp_password.ttl`).
 make passkey-temp create 900
 ```
 
-### List or revoke temp passwords
+### Generate temp password material in a portable way
+
+If you only need to generate temp password material without loading project config or touching the app database, use the standalone CLI:
+
+```bash
+go run ./cmd/temp-password
+go run ./cmd/temp-password 900
+go run ./cmd/temp-password -json
+```
+
+You can also build a portable binary:
+
+```bash
+make build-temp-password
+./bin/temp-password 900
+```
+
+### List or revoke DB-backed temp passwords
 
 ```bash
 make passkey-temp list
