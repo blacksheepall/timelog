@@ -26,7 +26,7 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp migrate passkey-temp build-temp-password build-temp-password-lite
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp migrate passkey-temp build-temp-password build-temp-password-lite swagger
 
 all: build
 
@@ -88,7 +88,12 @@ fmt:
 install-deps:
 	go install gorm.io/gen/tools/gentool@latest
 
+# Swagger docs target
+swagger:
+	swag init
+
 gen-model:
 	@go run model/gentool/gormgen.go
 	@rm -f model/gen/schema_migrations.gen.go model/gen/sqlite_sequence.gen.go 2>/dev/null || true
+	@sed -i '' 's/gorm\.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at"`/gorm.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at" swaggertype:"string"`/g' model/gen/*.go 2>/dev/null || true
 	@echo "Models generated. Check compilation with: go build ./model/..."
