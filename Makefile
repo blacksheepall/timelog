@@ -26,7 +26,7 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp migrate passkey-temp
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp migrate passkey-temp build-temp-password build-temp-password-lite
 
 all: build
 
@@ -67,7 +67,13 @@ mcp:
 
 # Temp password utility for passkey setup
 passkey-temp:
-	go run scripts/passkey_temp_password.go
+	go run ./cmd/passkey-temp-admin
+
+build-temp-password:
+	go build -trimpath -o bin/temp-password ./cmd/temp-password
+
+build-temp-password-lite:
+	go build -trimpath -ldflags="-s -w" -o bin/temp-password ./cmd/temp-password
 
 # Migrate target
 migrate:

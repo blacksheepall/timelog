@@ -28,9 +28,12 @@ func main() {
 	case "create":
 		ttl := cfg.Passkey.TempPassword.TTL
 		if len(os.Args) >= 3 {
-			if value, err := strconv.Atoi(os.Args[2]); err == nil {
-				ttl = value
+			value, err := strconv.Atoi(os.Args[2])
+			if err != nil {
+				fmt.Printf("invalid ttl: %v\n", err)
+				os.Exit(1)
 			}
+			ttl = value
 		}
 		record, password, err := service.CreateTempPassword(ttl)
 		if err != nil {
@@ -74,5 +77,5 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("Usage: go run scripts/passkey_temp_password.go <create|list|revoke> [ttl|id]")
+	fmt.Println("Usage: go run ./cmd/passkey-temp-admin <create|list|revoke> [ttl|id]")
 }
