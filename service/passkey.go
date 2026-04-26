@@ -2,7 +2,6 @@ package service
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/pkg/temppassword"
 )
 
 var webAuthnInstance *webauthn.WebAuthn
@@ -114,14 +114,7 @@ func StoreSessionToken(token string, ttlSeconds int64) error {
 }
 
 func GenerateTempPassword() (string, string, error) {
-	raw := make([]byte, 16)
-	if _, err := rand.Read(raw); err != nil {
-		return "", "", err
-	}
-
-	password := hex.EncodeToString(raw)
-	hashBytes := sha256.Sum256([]byte(password))
-	return password, hex.EncodeToString(hashBytes[:]), nil
+	return temppassword.GeneratePassword()
 }
 
 func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
@@ -158,8 +151,7 @@ func CleanupExpiredTempPasswords() error {
 }
 
 func ValidateTempPassword(password string) (*model.TempPassword, error) {
-	hashBytes := sha256.Sum256([]byte(password))
-	hash := hex.EncodeToString(hashBytes[:])
+	hash := temppassword.HashPassword(password)
 
 	dao := model.GetDao()
 	return model.GetTempPasswordByHash(dao.Db(), hash, time.Now())
