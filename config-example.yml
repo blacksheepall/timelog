@@ -5,6 +5,9 @@ server:
   port: 8080
   allow_origins:
     - '*'
+  https_enabled: true
+  cert_file: ./certs/cert.pem
+  key_file: ./certs/key.pem
 log:
   level: debug
   path: ./app.log

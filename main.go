@@ -41,6 +41,10 @@ func main() {
 
 	// Get server address
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.Port)
+	protocol := "http"
+	if cfg.Server.HTTPSEnabled {
+		protocol = "https"
+	}
 
 	wg.Add(1)
 	go router.LaunchServer(ctx, &wg, r, cfg)
@@ -51,7 +55,7 @@ func main() {
 	logger.Info("Server started, press Ctrl+C to stop.")
 
 	fmt.Println("Program is running ...")
-	fmt.Printf("Server is running at http://%s\n", addr)
+	fmt.Printf("Server is running at %s://%s\n", protocol, addr)
 	logger.Info("Program is running, waiting for termination signal...")
 	someonesaidbye := <-byebye // waiting for signal
 	logger.Info("Received signal: %s, shutting down...", someonesaidbye)

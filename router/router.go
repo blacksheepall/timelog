@@ -110,7 +110,13 @@ func LaunchServer(ctx context.Context, wg *sync.WaitGroup, r *gin.Engine, cfg *c
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		var err error
+		if cfg.Server.HTTPSEnabled {
+			err = srv.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile)
+		} else {
+			err = srv.ListenAndServe()
+		}
+		if err != nil && err != http.ErrServerClosed {
 			log.Fatal("Server startup failed", err)
 		}
 	}()
