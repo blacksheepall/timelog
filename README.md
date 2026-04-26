@@ -34,7 +34,28 @@ This will generate the necessary files in the `docs` directory that are required
 
 ## Passkey Setup
 
-Passkey authentication replaces the previous Basic Auth flow. Use the helper script to generate a one-time temp password, then bind a device in the UI.
+Passkey authentication requires HTTPS. Follow the certificate setup below, then use the helper script to generate a one-time temp password to bind a device in the UI.
+
+### Certificate Setup (Required for Passkey)
+
+Since Passkey authentication requires a secure context (HTTPS), generate a self-signed certificate:
+
+```bash
+./scripts/generate-certs.sh localhost 365
+```
+
+This creates `certs/cert.pem` and `certs/key.pem` in the project root.
+
+Update your `config.yml`:
+
+```yaml
+server:
+  https_enabled: true
+  cert_file: ./certs/cert.pem
+  key_file: ./certs/key.pem
+```
+
+**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. The application will be accessible at `https://localhost:8083` (or your configured port).
 
 ### Generate temp password
 
@@ -57,11 +78,11 @@ make passkey-temp revoke <id>
 
 ### Bind device
 
-Open `http://localhost:3000/passkey/register` and use the temp password to create a passkey.
+Open `https://localhost:3000/passkey/register` and use the temp password to create a passkey.
 
 ### Login
 
-Open `http://localhost:3000/login` and complete the passkey prompt.
+Open `https://localhost:3000/login` and complete the passkey prompt.
 
 ## Migrate
 

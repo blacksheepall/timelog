@@ -27,6 +27,8 @@ go.work.sum
 config.yml
 config-test.yml
 
+# HTTPS certificates
+certs/
 
 # database file
 *.db
