@@ -1,141 +1,46 @@
 # AGENTS.md
 
-This file is for agentic coding tools working in `/Users/n/Documents/Developer/timelog`.
+## Snapshot
+- Full-stack local time logging app: Go backend (`main.go`) + Vue 3/Vite frontend (`web/`) + SQLite.
+- `main.go` embeds `web/dist`; production and local binary runs serve the built SPA from the Go binary.
+- Passkey auth is optional, but when `passkey.enabled` is true, all main `/api` routes are behind `router/middleware/auth.go` bearer-token auth.
 
-## Project Summary
-- Full-stack local time logging app.
-- Backend: Go + Gin + GORM + SQLite.
-- Frontend: Vue 3 + TypeScript + Vite + Tailwind + Pinia + Vue Router.
-- Production serves the built frontend from the Go binary via `embed`.
-- Auth includes passkey flows; most API routes are protected.
+## Read First
+- `README.md` for Swagger, passkey, migration, and temp-password workflows.
+- `web/CLAUDE.md` before frontend changes.
 
-## Instruction Files Checked
-- Root guidance exists in `CLAUDE.md`.
-- Frontend guidance exists in `web/CLAUDE.md`.
-- No repo-local `.cursorrules`, `.cursor/rules/`, or `.github/copilot-instructions.md` file was found.
+## Commands That Matter
+- Full app build: `make buildx`.
+- Backend-only build: `make build`.
+  Use this only if `web/dist` already exists; `main.go` embeds that directory and plain `make build` does not build the frontend first.
+- Frontend dev: `cd web && pnpm install && pnpm run dev`.
+- Frontend verification: `cd web && pnpm run type-check`; use `cd web && pnpm run build` for stronger verification.
+- Backend tests: `go test ./...`.
+- Focused tests: `go test ./router/...`, `go test ./service/...`, `go test ./model/...`, `go test ./test/...`.
+- Formatting: `make fmt`.
 
-## Repository Layout
-- `main.go`: app entrypoint, config load, logger init, embedded frontend.
-- `router/`: Gin route registration and HTTP handlers.
-- `router/middleware/`: auth and CORS middleware.
-- `service/`: thin business layer over model operations.
-- `model/`: DAO setup, data access, migrations, generated-model integration.
-- `model/gen/`: generated GORM models; treat as generated code.
-- `core/config/`, `core/logger/`: config loading and zap-based logging.
-- `test/`: integration tests. `web/`: Vue SPA. `mcp/`: MCP server code.
+## Config And Runtime Gotchas
+- App startup hardcodes `config.yml` (`main.go`, `cmd/passkey-temp-admin/main.go`). Tests hardcode `config-test.yml` (`test/setup_test.go`). If those files are missing, startup panics.
+- Both `config.yml` and `config-test.yml` are gitignored. Copy from `config-example.yml` when needed.
+- Vite dev server runs on `http://localhost:3000` and proxies `/api` to `http://localhost:8083`.
+- Passkeys require HTTPS. Cert generation lives in `scripts/generate-certs.sh`; see `README.md` for the exact setup.
 
-## Build And Run Commands
-Run from repo root unless noted.
+## Verified Code Boundaries
+- HTTP wiring lives in `router/`; `router/router.go` registers route groups, optional auth, Swagger, and SPA fallback.
+- Business logic is thin `service/` wrappers over `model/`; preserve the existing `router -> service -> model` flow.
+- `model/gen/` is generated and gitignored. Do not hand-edit it.
+- Frontend API access is centralized in `web/src/api/index.ts`.
 
-### Backend
-- `make build` - build Go binary as `./main`.
-- `make build-lite` - smaller local binary.
-- `make build-linux` - Linux production binary with `prod` tag.
-- `make buildx` - build frontend, then backend.
-- `./main` - run backend after building.
+## Codegen / Build Quirks
+- Non-`prod` builds compile `router/swagger.go`, which imports `github.com/blacksheepaul/timelog/docs`. If Swagger files are missing, run `swag init` before `go mod tidy` or non-prod builds.
+- `make gen-model` requires `TIMELOG_GEN_DB_PATH` to be set; `model/gentool/gormgen.go` panics otherwise.
+- CI release build runs `make install-deps gen-model buildx-linux`; do not assume `make build-linux` alone matches release artifacts.
 
-### Frontend
-- `cd web && pnpm install` - install frontend deps.
-- `cd web && pnpm run dev` - start Vite dev server on `:3000`.
-- `cd web && pnpm run build` - type-check and production build.
-- `cd web && pnpm run preview` - preview built frontend.
-- `cd web && pnpm run type-check` - TypeScript checking only.
+## Testing Notes
+- `test/setup_test.go` reloads the DB from migrations when `test.flush` is true in `config-test.yml`.
+- For backend changes, prefer the narrowest package test first, then broaden.
 
-### Other
-- `make web` - install frontend deps and build frontend.
-- `make mcp` - build MCP server binary.
-- `make docker env=prod` - build Docker image.
-- `make run env=prod` - run Dockerized app.
-- `make clean` - remove binaries plus `web/dist` and `web/node_modules`.
-
-## Test Commands
-### Main entrypoints
-- `go test ./...` - run all Go tests.
-- `go test ./test/...` - run integration tests only.
-- `go test ./router/...` - run router and middleware tests.
-- `go test ./service/...` - run service tests.
-- `go test ./model/...` - run model tests.
-
-### Single-test patterns
-- `go test ./service -run TestPasskeySessionKeyNamespacing -v`
-- `go test ./router/middleware -run TestAuthMiddlewareRejectsPasskeySession -v`
-- `go test ./model -run TestBuildCategoryTreePointers -v`
-- `go test ./test -run TestCategoryTreeStructure -v`
-- `go test ./test -run '^TestCategoryTreeMultipleRoots$' -v` for exact-name matching.
-
-### Frontend verification
-- No dedicated frontend unit test script exists in `web/package.json`.
-- Use `cd web && pnpm run type-check` for fast validation.
-- Use `cd web && pnpm run build` for the strongest frontend verification.
-
-## Formatting And Linting
-- `make fmt` is the repo formatting command.
-- `make fmt` runs `go fmt ./...`, `cd mcp && go fmt ./...`, and Prettier on `web/src/`.
-- There is no dedicated Go lint target and no ESLint script currently configured.
-- If you touch frontend code, at minimum run `cd web && pnpm run type-check`; prefer `build` for route/layout/API-impacting changes.
-
-## Swagger / Generated Artifacts
-- Read `README.md` before changing Swagger-related backend code.
-- Dev/test workflows may require `swag init` before `go mod tidy` or some builds.
-- `model/gen/` is generated output; avoid manual edits unless the repo clearly expects it.
-- Use `make gen-model` for model regeneration.
-
-## Configuration Notes
-- Default runtime config is `config.yml`; example config is `config-example.yml`.
-- Integration tests use `config-test.yml` according to `test/setup_test.go` and `CLAUDE.md`.
-- Test DB flushing is controlled by `test.flush` in config.
-- Frontend dev server expects backend access on the configured local port.
-
-## Backend Conventions (Go)
-- Use `gofmt`; do not hand-format Go code.
-- Keep imports in standard Go style: stdlib, blank line, third-party/internal.
-- Follow existing architecture: router -> service -> model.
-- Keep HTTP binding/parsing in `router/`, business rules in `service/`, persistence/tree logic in `model/`.
-- Prefer existing helpers like `SuccessResponse`, `ErrorResponse`, and `parseInt32Param`.
-- Most IDs are `int32`; match existing signatures instead of widening to `int`.
-- Generated model fields often use pointers; preserve pointer semantics carefully.
-- Use `model.GetDao().Db()` in service functions.
-- When adding error context, use `fmt.Errorf("...: %w", err)` and return errors upward.
-- Keep handler error paths explicit with early returns after `c.JSON(...)`.
-
-## Go Naming And Structure
-- Exported names: PascalCase. Unexported names: camelCase. Package names: short, lowercase, no underscores.
-- Keep files focused by domain (`timelog.go`, `task.go`, `constraint.go`, `passkey.go`).
-- Prefer a small nearby helper over a catch-all util file.
-- Preserve existing comment/docstring style; many router comments are Chinese Swagger comments.
-
-## Error Handling Expectations
-- Validate request input close to the handler boundary.
-- Convert parse/bind failures into `400`, missing resources into `404`, and non-client service/model failures into `500`.
-- In the frontend, keep `try/catch` blocks around async API calls.
-- On frontend failures, follow existing patterns: set local error state, `console.error`, and notify the user.
-
-## Frontend Conventions (Vue + TypeScript)
-- Use `<script setup lang="ts">` for Vue SFCs.
-- Use 2-space indentation, single quotes, and no semicolons, matching current code.
-- Prefer `@/` aliases and `import type` for type-only imports.
-- Keep external imports before internal alias imports.
-- Component/view filenames use PascalCase; composables use `useXxx`; stores use Pinia `defineStore` with short domain names.
-- Use `ref`, `reactive`, `computed`, `watch`, and `onMounted` in the existing Composition API style.
-- Keep API access centralized in `web/src/api/index.ts` and preserve shared `ApiResponse<T>` wrapper types.
-- Keep router metadata titles updated when adding pages.
-
-## Frontend UI / Data Patterns
-- Prefer Tailwind utility classes in templates over ad hoc CSS.
-- Follow existing loading/error/empty-state rendering patterns in views.
-- Keep user feedback explicit with the injected `showNotification` pattern.
-- For list loads, current code often uses `response.data || []`; keep behavior consistent unless refactoring broadly.
-- Route date formatting through `web/src/utils/date`; keep auth token handling in `web/src/utils/auth` and axios interceptors.
-
-## Testing Guidance For Agents
-- Run the narrowest relevant test first, then broaden scope.
-- For backend logic changes, start with a single-package `go test` command using `-run`.
-- For HTTP handler changes, prefer router or integration tests depending on scope.
-- Before finishing a task, run at least one verification command that directly covers your edits.
-
-## Practical Workflow
-- Read `CLAUDE.md` and `web/CLAUDE.md` before larger changes.
-- Check whether your change affects generated artifacts, config, or embedded frontend output.
-- Prefer minimal, pattern-matching changes over broad refactors.
-- Do not edit unrelated dirty files.
-- If you change frontend code intended for production serving, remember the backend serves `web/dist` output after a build.
+## Frontend Notes
+- Prettier style is enforced by repo config: 2 spaces, single quotes, no semicolons.
+- Route titles are set from `meta.title` in `web/src/router/index.ts`; keep them updated when adding routes.
+- The frontend still exports deprecated `tagAPI` as an alias of `categoryAPI`; avoid introducing new tag-based code.
