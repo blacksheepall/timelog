@@ -114,12 +114,23 @@
 
     loading.value = true
     try {
+      console.log('Step 1: Calling registerBegin...')
       const beginResponse = await passkeyAPI.registerBegin(tempPassword.value, deviceName.value)
+      console.log('Step 2: registerBegin response:', beginResponse)
+      
       const { session_id, data } = beginResponse.data
+      console.log('Step 3: Extracted session_id and data')
+      
+      console.log('Step 4: Calling beginRegistration with data:', data)
       const credential = await beginRegistration(data)
+      console.log('Step 5: beginRegistration result:', credential)
+      
       await passkeyAPI.registerFinish(session_id, credential, deviceName.value)
+      console.log('Step 6: registerFinish success')
+      
       router.push('/login')
     } catch (err: any) {
+      console.error('Registration error:', err)
       error.value = err?.response?.data?.message || err?.message || '绑定失败'
     } finally {
       loading.value = false
