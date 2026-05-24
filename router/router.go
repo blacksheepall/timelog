@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -117,6 +118,7 @@ func LaunchServer(ctx context.Context, wg *sync.WaitGroup, r *gin.Engine, cfg *c
 			err = srv.ListenAndServe()
 		}
 		if err != nil && err != http.ErrServerClosed {
+			fmt.Fprintf(os.Stderr, "Server startup failed: %v\n", err)
 			log.Fatal("Server startup failed", err)
 		}
 	}()
