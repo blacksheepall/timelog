@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 
@@ -15,7 +16,7 @@ import (
 
 var webAuthnInstance *webauthn.WebAuthn
 
-func InitWebAuthn() error {
+func InitWebAuthnWithConfig(cfg *config.Config) error {
 	if cfg == nil {
 		return errors.New("config not initialized")
 	}

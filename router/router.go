@@ -3,11 +3,10 @@ package router
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
-	"os"
-	"sync"
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -27,13 +26,7 @@ var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
 		p.ErrorMessage,
 	)
 })
-var log logger.Logger
-var appConfig *config.Config
-
 func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles embed.FS) *gin.Engine {
-	log = l
-	appConfig = cfg
-
 	r.Use(GinLogger)
 	r.Use(middleware.Cors(cfg))
 
@@ -54,7 +47,7 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {
-		setupPasskeyRoutes(api, protected)
+		setupPasskeyRoutes(api, protected, cfg)
 	}
 
 	// 注册 Swagger 文档路由（仅非 prod 构建）
@@ -63,16 +56,16 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	// 静态文件服务 - 嵌入的Vue前端
 	distFS, err := fs.Sub(staticFiles, "web/dist")
 	if err != nil {
-		log.Fatal("Failed to create sub filesystem", err)
+		l.Fatal("Failed to create sub filesystem", err)
 	}
 	if _, err := fs.Stat(distFS, "index.html"); err != nil {
-		log.Fatal("Embedded frontend is missing index.html; run `make web` or `make buildx` first", err)
+		l.Fatal("Embedded frontend is missing index.html; run `make web` or `make buildx` first", err)
 	}
 
 	// 创建assets子目录的文件系统
 	assetsFS, err := fs.Sub(distFS, "assets")
 	if err != nil {
-		log.Fatal("Failed to create assets sub filesystem", err)
+		l.Fatal("Failed to create assets sub filesystem", err)
 	}
 
 	// 服务静态资源文件 (JS, CSS, images等)
@@ -102,17 +95,16 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	return r
 }
 
-func LaunchServer(ctx context.Context, wg *sync.WaitGroup, r *gin.Engine, cfg *config.Config) {
-	defer wg.Done()
-
+func RunServer(ctx context.Context, r *gin.Engine, cfg *config.Config, l logger.Logger) error {
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.Port)
-	log.Info("[Startup] Server is starting...")
-	log.Info(fmt.Sprintf("[Startup] Listen address: %s", addr))
+	l.Info("[Startup] Server is starting...")
+	l.Info(fmt.Sprintf("[Startup] Listen address: %s", addr))
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: r,
 	}
 
+	errCh := make(chan error, 1)
 	go func() {
 		var err error
 		if cfg.Server.HTTPSEnabled {
@@ -120,20 +112,28 @@ func LaunchServer(ctx context.Context, wg *sync.WaitGroup, r *gin.Engine, cfg *c
 		} else {
 			err = srv.ListenAndServe()
 		}
-		if err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "Server startup failed: %v\n", err)
-			log.Fatal("Server startup failed", err)
-		}
+		errCh <- err
 	}()
 
-	<-ctx.Done()
-	log.Info("Server received stop signal, shutting down...")
+	select {
+	case <-ctx.Done():
+		l.Info("Server received stop signal, shutting down...")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatal("Server shutdown failed", err)
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			return err
+		}
+		if err := <-errCh; err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		l.Info("Server exited gracefully.")
+		return nil
+	case err := <-errCh:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		return nil
 	}
-	log.Info("Server exited gracefully.")
 }

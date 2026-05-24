@@ -6,11 +6,9 @@ import (
 )
 
 var log logger.Logger
-var cfg *config.Config
 
-func InitService(loggerInstance logger.Logger, config *config.Config) {
+func InitService(loggerInstance logger.Logger, _ *config.Config) {
 	log = loggerInstance
-	cfg = config
 }
 
 type Response struct {

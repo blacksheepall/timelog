@@ -4,9 +4,9 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -27,7 +27,7 @@ func main() {
 	service.InitService(logger, cfg)
 	model.InitDao(cfg, logger)
 	if cfg.Passkey.Enabled {
-		if err := service.InitWebAuthn(); err != nil {
+		if err := service.InitWebAuthnWithConfig(cfg); err != nil {
 			panic("Failed to initialize WebAuthn: " + err.Error())
 		}
 	}
@@ -37,8 +37,6 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var wg sync.WaitGroup
-
 	// Get server address
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Addr, cfg.Server.Port)
 	protocol := "http"
@@ -46,8 +44,10 @@ func main() {
 		protocol = "https"
 	}
 
-	wg.Add(1)
-	go router.LaunchServer(ctx, &wg, r, cfg)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- router.RunServer(ctx, r, cfg, logger)
+	}()
 
 	byebye := make(chan os.Signal, 1) // Listen for system signal，such as SIGINT, SIGTERM
 	signal.Notify(byebye, syscall.SIGINT, syscall.SIGTERM)
@@ -57,10 +57,22 @@ func main() {
 	fmt.Println("Program is running ...")
 	fmt.Printf("Server is running at %s://%s\n", protocol, addr)
 	logger.Info("Program is running, waiting for termination signal...")
-	someonesaidbye := <-byebye // waiting for signal
-	logger.Info("Received signal: %s, shutting down...", someonesaidbye)
 
-	cancel() // tell other goroutines to stop
+	select {
+	case someonesaidbye := <-byebye:
+		logger.Info("Received signal: %s, shutting down...", someonesaidbye)
+		cancel()
+		if err := <-errCh; err != nil {
+			slog.Error("server exited with error", "err", err)
+			os.Exit(1)
+		}
+	case err := <-errCh:
+		if err != nil {
+			slog.Error("server startup failed", "err", err)
+			os.Exit(1)
+		}
+	}
+
 	logger.Info("Program exited gracefully.")
 	fmt.Println("Program exited gracefully.")
 }
