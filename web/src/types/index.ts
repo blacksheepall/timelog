@@ -17,6 +17,7 @@ export interface CategoryNode {
 }
 
 export interface TimeLog {
+  id?: number
   ID: number
   start_time: string
   end_time?: string | null
@@ -25,8 +26,11 @@ export interface TimeLog {
   task_id?: number | null
   task?: Task | null
   remarks: string
+  created_at?: string
   CreatedAt: string
+  updated_at?: string
   UpdatedAt: string
+  deleted_at?: string | null
   DeletedAt?: string | null
 }
 

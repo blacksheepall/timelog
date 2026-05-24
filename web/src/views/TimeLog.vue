@@ -182,7 +182,12 @@
 
     try {
       if (editingLog.value) {
-        await timelogAPI.update(editingLog.value.ID, data as UpdateTimeLogRequest)
+        const logId = editingLog.value.id || editingLog.value.ID
+        if (!logId) {
+          showNotification('error', 'Invalid time log ID')
+          return
+        }
+        await timelogAPI.update(logId, data as UpdateTimeLogRequest)
         showNotification('success', 'Time log updated successfully')
       } else {
         await timelogAPI.create(data as CreateTimeLogRequest)
@@ -216,7 +221,7 @@
     }
 
     // 按ID排序获取最新的 timelog（ID是自增的，能准确反映创建顺序）
-    const sortedLogs = [...timeLogs.value].sort((a, b) => b.ID - a.ID)
+    const sortedLogs = [...timeLogs.value].sort((a, b) => (b.id || b.ID) - (a.id || a.ID))
 
     const lastLog = sortedLogs[0]
     return lastLog?.end_time || null

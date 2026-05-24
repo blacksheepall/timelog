@@ -81,7 +81,7 @@
               <button @click="$emit('edit', log)" class="text-blue-600 hover:text-blue-900 mr-4">
                 Edit
               </button>
-              <button @click="$emit('delete', log.ID)" class="text-red-600 hover:text-red-900">
+              <button @click="$emit('delete', log.id || log.ID)" class="text-red-600 hover:text-red-900">
                 Delete
               </button>
             </td>
