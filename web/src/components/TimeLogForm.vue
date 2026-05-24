@@ -109,10 +109,10 @@
       </div>
 
       <div>
-        <label for="remarks" class="block text-sm font-medium text-gray-700 mb-2"> Remarks </label>
+        <label for="remark" class="block text-sm font-medium text-gray-700 mb-2"> Remark </label>
         <textarea
-          id="remarks"
-          v-model="form.remarks"
+          id="remark"
+          v-model="form.remark"
           rows="3"
           placeholder="Add any notes or description..."
           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -169,13 +169,13 @@
     end_time: string
     category_id: number | ''
     task_id: number | ''
-    remarks: string
+    remark: string
   }>({
     start_time: '',
     end_time: '',
     category_id: '',
     task_id: '',
-    remarks: '',
+    remark: '',
   })
 
   const resetForm = () => {
@@ -188,7 +188,7 @@
     form.end_time = ''
     form.category_id = ''
     form.task_id = ''
-    form.remarks = ''
+    form.remark = ''
   }
 
   const setCurrentTime = (field: 'start' | 'end') => {
@@ -210,7 +210,7 @@
       form.end_time = props.editingLog.end_time ? formatUTCToLocal(props.editingLog.end_time) : ''
       form.category_id = props.editingLog.category_id
       form.task_id = props.editingLog.task_id || ''
-      form.remarks = props.editingLog.remarks
+      form.remark = props.editingLog.remark || ''
     } else {
       resetForm()
     }
@@ -230,7 +230,7 @@
       end_time: form.end_time ? formatLocalToUTC(form.end_time) : undefined,
       category_id: Number(form.category_id),
       task_id: form.task_id ? Number(form.task_id) : null,
-      remarks: form.remarks,
+      remark: form.remark,
     }
 
     emit('submit', data)

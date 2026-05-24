@@ -54,7 +54,7 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="log in timeLogs" :key="log.ID" class="hover:bg-gray-50">
+          <tr v-for="log in timeLogs" :key="log.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
               {{ formatDateTime(log.start_time) }}
             </td>
@@ -75,13 +75,13 @@
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-              {{ log.remarks }}
+              {{ log.remark }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button @click="$emit('edit', log)" class="text-blue-600 hover:text-blue-900 mr-4">
                 Edit
               </button>
-              <button @click="$emit('delete', log.id || log.ID)" class="text-red-600 hover:text-red-900">
+              <button @click="$emit('delete', log.id)" class="text-red-600 hover:text-red-900">
                 Delete
               </button>
             </td>

@@ -106,7 +106,7 @@
         No recent time logs found.
       </div>
       <div v-else class="divide-y divide-gray-200">
-        <div v-for="log in recentLogs" :key="log.ID" class="p-6 hover:bg-gray-50">
+        <div v-for="log in recentLogs" :key="log.id" class="p-6 hover:bg-gray-50">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <span
@@ -117,7 +117,7 @@
                 {{ log.category.name }}
               </span>
               <div>
-                <p class="text-sm font-medium text-gray-900">{{ log.remarks || 'No remarks' }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ log.remark || 'No remarks' }}</p>
                 <p class="text-xs text-gray-500">
                   {{ formatDateTime(log.start_time) }} -
                   {{ log.end_time ? formatDateTime(log.end_time) : 'Ongoing' }}
