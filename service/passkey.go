@@ -49,14 +49,14 @@ func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSec
 	if session == nil {
 		return errors.New("session is nil")
 	}
-	dao := model.GetDao()
+	dao := getDao()
 	// Namespace the key to prevent confusion with auth tokens
 	dao.WriteCache("passkey_session:"+sessionID, session, ttlSeconds)
 	return nil
 }
 
 func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
-	dao := model.GetDao()
+	dao := getDao()
 	// Use namespaced key to retrieve passkey session
 	raw, ok := dao.GetCache("passkey_session:" + sessionID)
 	if !ok {
@@ -72,7 +72,7 @@ func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
 }
 
 func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
-	dao := model.GetDao()
+	dao := getDao()
 	record := model.WebAuthnCredentialFromCredential(credential)
 	if record == nil {
 		return nil, errors.New("credential is nil")
@@ -85,17 +85,17 @@ func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string)
 }
 
 func ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.ListWebAuthnCredentials(dao.Db())
 }
 
 func DeletePasskeyCredential(id uint) error {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.DeleteWebAuthnCredential(dao.Db(), id)
 }
 
 func LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.GetWebAuthnCredentialByCredentialID(dao.Db(), rawID)
 }
 
@@ -108,7 +108,7 @@ func GenerateSessionToken() (string, error) {
 }
 
 func StoreSessionToken(token string, ttlSeconds int64) error {
-	dao := model.GetDao()
+	dao := getDao()
 	// Namespace the key to distinguish from passkey sessions
 	dao.WriteCache("auth_token:"+token, true, ttlSeconds)
 	return nil
@@ -124,7 +124,7 @@ func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
 		return nil, "", err
 	}
 
-	dao := model.GetDao()
+	dao := getDao()
 	record := &model.TempPassword{
 		PasswordHash: hash,
 		ExpiresAt:    time.Now().Add(time.Duration(ttlSeconds) * time.Second),
@@ -137,23 +137,23 @@ func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
 }
 
 func ListTempPasswords() ([]model.TempPassword, error) {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.ListTempPasswords(dao.Db())
 }
 
 func DeleteTempPassword(id uint) error {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.DeleteTempPassword(dao.Db(), id)
 }
 
 func CleanupExpiredTempPasswords() error {
-	dao := model.GetDao()
+	dao := getDao()
 	return model.DeleteExpiredTempPasswords(dao.Db(), time.Now())
 }
 
 func ValidateTempPassword(password string) (*model.TempPassword, error) {
 	hash := temppassword.HashPassword(password)
 
-	dao := model.GetDao()
+	dao := getDao()
 	return model.GetTempPasswordByHash(dao.Db(), hash, time.Now())
 }

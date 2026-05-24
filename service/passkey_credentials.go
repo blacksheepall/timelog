@@ -11,6 +11,6 @@ func UpdatePasskeyCredentialAuth(credential *webauthn.Credential) error {
 		return nil
 	}
 
-	dao := model.GetDao()
+	dao := getDao()
 	return model.UpdateWebAuthnCredentialAuth(dao.Db(), credential.ID, credential)
 }
