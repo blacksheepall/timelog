@@ -50,3 +50,4 @@ dev.db.bk*
 model/gen/
 .vscode
 .worktrees/
+bin/*

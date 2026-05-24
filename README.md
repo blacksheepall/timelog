@@ -71,23 +71,6 @@ Optional: specify TTL seconds (defaults to config `passkey.temp_password.ttl`).
 make passkey-temp create 900
 ```
 
-### Generate temp password material in a portable way
-
-If you only need to generate temp password material without loading project config or touching the app database, use the standalone CLI:
-
-```bash
-go run ./cmd/temp-password
-go run ./cmd/temp-password 900
-go run ./cmd/temp-password -json
-```
-
-You can also build a portable binary:
-
-```bash
-make build-temp-password
-./bin/temp-password 900
-```
-
 ### List or revoke DB-backed temp passwords
 
 ```bash

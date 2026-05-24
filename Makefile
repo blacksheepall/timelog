@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 # Makefile for timelog project
 
 # Default values
@@ -24,22 +29,15 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-lite build-linux build-linux-lite buildx buildx-linux docker run clean web mcp migrate fmt install-deps swagger gen-model build-temp-password build-temp-password-lite
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model 
 
 all: build
 
 build:
 	go build -trimpath -o $(BIN_NAME)
 
-build-lite:
-	go build -trimpath -ldflags="-s -w" -o $(BIN_NAME)
-
 build-linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -tags prod -o $(BIN_NAME_LINUX)
-
-# recude ≈22% size with -ldflags
-build-linux-lite:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -tags prod -ldflags="-s -w" -o $(BIN_NAME_LINUX)
 
 buildx: web build
 
@@ -52,7 +50,7 @@ run: docker
 	docker run --rm -e ENV=$(env) -p $(PORT):$(DOCKER_PORT) $(DOCKER_TAG)
 
 clean:
-	rm -f $(BIN_NAME) $(BIN_NAME_LINUX) bin/temp-password mcp/timelog-mcp-server
+	rm -f $(BIN_NAME) $(BIN_NAME_LINUX) mcp/timelog-mcp-server
 	rm -rf web/dist web/node_modules
 
 # Web frontend targets
@@ -63,11 +61,18 @@ web:
 mcp:
 	cd mcp && go build -o timelog-mcp-server .
 
-build-temp-password:
-	go build -trimpath -o bin/temp-password ./cmd/temp-password
+# Passkey temp password management
+# Usage:
+#   make passkey-temp create          # Create with default TTL (from config.yml)
+#   make passkey-temp create 900      # Create with custom TTL (seconds)
+#   make passkey-temp list            # List active temp passwords
+#   make passkey-temp revoke <id>     # Revoke a temp password by ID
+passkey-temp:
+	@go run ./cmd/passkey-temp-admin $(filter-out $@,$(MAKECMDGOALS))
 
-build-temp-password-lite:
-	go build -trimpath -ldflags="-s -w" -o bin/temp-password ./cmd/temp-password
+# Prevent make from interpreting passkey-temp subcommands as targets
+%:
+	@:
 
 # Migrate target
 migrate:
@@ -80,7 +85,30 @@ fmt:
 	cd web && npx prettier --write src/ || true
 
 install-deps:
+	go install github.com/swaggo/swag/cmd/swag@latest
 	go install gorm.io/gen/tools/gentool@latest
+
+# Generate self-signed certificates for local HTTPS testing
+gen-certs:
+	@echo "Generating self-signed certificates for local HTTPS testing..."
+	@mkdir -p certs
+	@openssl req -x509 -newkey rsa:4096 \
+		-keyout certs/key.pem \
+		-out certs/cert.pem \
+		-days 365 \
+		-nodes \
+		-subj "/CN=localhost" \
+		-addext "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:192.168.8.22" \
+		2>/dev/null || \
+	openssl req -x509 -newkey rsa:4096 \
+		-keyout certs/key.pem \
+		-out certs/cert.pem \
+		-days 365 \
+		-nodes \
+		-subj "/CN=localhost"
+	@echo "Certificates generated in ./certs/"
+	@echo "  - certs/cert.pem"
+	@echo "  - certs/key.pem"
 
 # Swagger docs target
 swagger:
