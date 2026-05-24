@@ -31,6 +31,7 @@ func setupTestEnvironment() {
 	cfg.Log.ORMLogLevel = 1
 	model.InitDao(cfg, FakeLogger{})
 	service.InitService(FakeLogger{}, cfg)
+	setMiddlewareDAOProviderForTest(model.GetDao)
 }
 
 func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {

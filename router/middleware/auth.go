@@ -3,9 +3,6 @@ package middleware
 import (
 	"errors"
 	"strings"
-	"sync"
-
-	"github.com/blacksheepaul/timelog/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,18 +26,23 @@ func Auth() gin.HandlerFunc {
 	}
 }
 
-var dao *model.Dao
-var once sync.Once
+var tokenValidator = isValidUserTokenWithPrefix
 
 func isValidUserToken(token string) bool {
-	once.Do(func() {
-		dao = model.GetDao()
-	})
+	return tokenValidator(token)
+}
+
+func isValidUserTokenWithPrefix(token string) bool {
+	dao := getMiddlewareDAO()
 	// Only accept keys with auth_token: prefix to prevent passkey session misuse
 	if _, ok := dao.GetCache("auth_token:" + token); ok {
 		return true
 	}
 	return false
+}
+
+type cacheReader interface {
+	GetCache(key string) (any, bool)
 }
 
 var (

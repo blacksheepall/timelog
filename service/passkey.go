@@ -7,14 +7,12 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/model"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 
-	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/pkg/temppassword"
 )
-
-var webAuthnInstance *webauthn.WebAuthn
 
 func InitWebAuthnWithConfig(cfg *config.Config) error {
 	if cfg == nil {
@@ -37,12 +35,14 @@ func InitWebAuthnWithConfig(cfg *config.Config) error {
 		return err
 	}
 
-	webAuthnInstance = instance
+	webAuthnProvider = func() *webauthn.WebAuthn {
+		return instance
+	}
 	return nil
 }
 
 func GetWebAuthn() *webauthn.WebAuthn {
-	return webAuthnInstance
+	return getWebAuthn()
 }
 
 func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {

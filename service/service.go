@@ -4,10 +4,12 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 var log logger.Logger
 var daoProvider func() *model.Dao = model.GetDao
+var webAuthnProvider func() *webauthn.WebAuthn
 
 func InitService(loggerInstance logger.Logger, _ *config.Config) {
 	log = loggerInstance
@@ -23,6 +25,17 @@ func setDaoProviderForTest(provider func() *model.Dao) {
 		return
 	}
 	daoProvider = provider
+}
+
+func getWebAuthn() *webauthn.WebAuthn {
+	if webAuthnProvider == nil {
+		return nil
+	}
+	return webAuthnProvider()
+}
+
+func setWebAuthnProviderForTest(provider func() *webauthn.WebAuthn) {
+	webAuthnProvider = provider
 }
 
 type Response struct {
