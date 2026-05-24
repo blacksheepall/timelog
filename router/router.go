@@ -65,6 +65,9 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	if err != nil {
 		log.Fatal("Failed to create sub filesystem", err)
 	}
+	if _, err := fs.Stat(distFS, "index.html"); err != nil {
+		log.Fatal("Embedded frontend is missing index.html; run `make web` or `make buildx` first", err)
+	}
 
 	// 创建assets子目录的文件系统
 	assetsFS, err := fs.Sub(distFS, "assets")

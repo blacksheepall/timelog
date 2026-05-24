@@ -30,6 +30,13 @@ swag init
 
 This will generate the necessary files in the `docs` directory that are required by the router package.
 
+If `swag init` fails because `web/dist` is missing, build the frontend once first:
+
+```bash
+make web
+make swagger
+```
+
 **Note:** For production builds, Swagger is automatically excluded via the `prod` build tag, so you don't need to generate Swagger documentation for production deployments.
 
 ## Passkey Setup
@@ -41,7 +48,7 @@ Passkey authentication requires HTTPS. Follow the certificate setup below, then 
 Since Passkey authentication requires a secure context (HTTPS), generate a self-signed certificate:
 
 ```bash
-./scripts/generate-certs.sh localhost 365
+make gen-certs
 ```
 
 This creates `certs/cert.pem` and `certs/key.pem` in the project root.
@@ -70,6 +77,8 @@ Optional: specify TTL seconds (defaults to config `passkey.temp_password.ttl`).
 ```bash
 make passkey-temp create 900
 ```
+
+If your config file is not at the project root, set `TIMELOG_CONFIG_PATH` before running the command.
 
 ### List or revoke DB-backed temp passwords
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/model"
 )
@@ -10,12 +8,7 @@ import (
 // NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
 func NewTimelogMCPServer() *TimelogMCPServer {
 	// Initialize configuration
-	// Check for config path from environment variable first
-	configPath := os.Getenv("TIMELOG_CONFIG_PATH")
-	if configPath == "" {
-		configPath = "config.yml" // fallback to default relative path
-	}
-
+	configPath := config.ResolveConfigPath("config.yml")
 	cfg := config.GetConfig(configPath)
 
 	// Initialize MCP logger (file-only, configurable)

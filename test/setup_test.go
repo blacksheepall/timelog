@@ -1,8 +1,10 @@
 package integration_test
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -11,13 +13,11 @@ import (
 	"github.com/blacksheepaul/timelog/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
 func TestMain(m *testing.M) {
-	cfg := config.GetConfig("../config-test.yml")
+	cfg := loadTestConfig()
 	gin.SetMode(gin.DebugMode)
 	serviceForTest(cfg, FakeLogger{})
 	daoForTest(cfg, FakeLogger{})
@@ -29,24 +29,78 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func loadTestConfig() *config.Config {
+	configPath := config.ResolveConfigPath("../config-test.yml")
+	if _, err := os.Stat(configPath); err == nil {
+		return config.GetConfig(configPath)
+	}
+
+	cfg := config.GetConfig("../config-example.yml")
+	cfg.Database.Host = "./test.db"
+	cfg.Server.HTTPSEnabled = false
+	cfg.Passkey.Enabled = false
+	cfg.Log.Path = "./test.log"
+	cfg.Test.Flush = true
+	return cfg
+}
+
 func flushDb() {
-	dao := model.GetDao()
-	driver, err := sqlite3.WithInstance(dao.RawDB, &sqlite3.Config{})
+	migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
 	if err != nil {
 		panic(err)
 	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://../model/migrations",
-		"sqlite3", driver)
+
+	rawDB := model.GetDao().RawDB
+	if rawDB == nil {
+		panic("raw database is nil")
+	}
+
+	if err := dropAllTables(rawDB); err != nil {
+		panic(fmt.Errorf("failed to drop tables: %v", err))
+	}
+
+	for _, migrationFile := range migrationFiles {
+		content, err := os.ReadFile(migrationFile)
+		if err != nil {
+			panic(fmt.Errorf("failed to read migration %s: %v", migrationFile, err))
+		}
+		if _, err := rawDB.Exec(string(content)); err != nil {
+			panic(fmt.Errorf("failed to apply migration %s: %v", migrationFile, err))
+		}
+	}
+}
+
+func dropAllTables(db *sql.DB) error {
+	rows, err := db.Query(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	if err := m.Down(); err != nil && err != migrate.ErrNoChange {
-		panic(fmt.Errorf("Failed to drop tables: %v", err))
+	defer rows.Close()
+
+	var tableNames []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return err
+		}
+		tableNames = append(tableNames, name)
 	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		panic(fmt.Errorf("Failed to apply migrations: %v", err))
+	if err := rows.Err(); err != nil {
+		return err
 	}
+
+	if _, err := db.Exec("PRAGMA foreign_keys = OFF"); err != nil {
+		return err
+	}
+	defer db.Exec("PRAGMA foreign_keys = ON")
+
+	for _, name := range tableNames {
+		if _, err := db.Exec("DROP TABLE IF EXISTS " + name); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func daoForTest(cfg *config.Config, logi logger.Logger) {

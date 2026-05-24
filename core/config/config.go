@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -15,11 +16,19 @@ var (
 func GetConfig(config_path string) *Config {
 	once.Do(func() {
 		instance = &Config{}
-		if err := cleanenv.ReadConfig(config_path, instance); err != nil {
+		resolvedPath := ResolveConfigPath(config_path)
+		if err := cleanenv.ReadConfig(resolvedPath, instance); err != nil {
 			panic(err)
 		}
 	})
 	return instance
+}
+
+func ResolveConfigPath(defaultPath string) string {
+	if path := os.Getenv("TIMELOG_CONFIG_PATH"); path != "" {
+		return path
+	}
+	return defaultPath
 }
 
 // inject custom config for testing
