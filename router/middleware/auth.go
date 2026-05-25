@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"errors"
 	"strings"
 
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,20 +45,15 @@ type cacheReader interface {
 	GetCache(key string) (any, bool)
 }
 
-var (
-	ErrNoSession      = errors.New("no session found")
-	ErrInvalidSession = errors.New("invalid session")
-)
-
 func GetSessionFromHeader(c *gin.Context) (string, error) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		return "", ErrNoSession
+		return "", errs.ErrAuthNoSession
 	}
 
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		return "", ErrInvalidSession
+		return "", errs.ErrAuthInvalidSession
 	}
 
 	return parts[1], nil

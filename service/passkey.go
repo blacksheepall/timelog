@@ -3,11 +3,11 @@ package service
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 
@@ -16,11 +16,11 @@ import (
 
 func InitWebAuthnWithConfig(cfg *config.Config) error {
 	if cfg == nil {
-		return errors.New("config not initialized")
+		return errs.ErrPasskeyConfigNotInitialized
 	}
 
 	if cfg.Passkey.RPID == "" || cfg.Passkey.RPName == "" || len(cfg.Passkey.RPOrigins) == 0 {
-		return errors.New("passkey config missing rp_id/rp_name/rp_origins")
+		return errs.ErrPasskeyConfigIncomplete
 	}
 
 	instance, err := webauthn.New(&webauthn.Config{
@@ -47,7 +47,7 @@ func GetWebAuthn() *webauthn.WebAuthn {
 
 func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
 	if session == nil {
-		return errors.New("session is nil")
+		return errs.ErrPasskeySessionNil
 	}
 	dao := getDao()
 	// Namespace the key to prevent confusion with auth tokens
@@ -60,12 +60,12 @@ func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
 	// Use namespaced key to retrieve passkey session
 	raw, ok := dao.GetCache("passkey_session:" + sessionID)
 	if !ok {
-		return nil, errors.New("session not found")
+		return nil, errs.ErrPasskeySessionNotFound
 	}
 
 	session, ok := raw.(*webauthn.SessionData)
 	if !ok || session == nil {
-		return nil, errors.New("invalid session data")
+		return nil, errs.ErrPasskeySessionInvalid
 	}
 
 	return session, nil
@@ -75,7 +75,7 @@ func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string)
 	dao := getDao()
 	record := model.WebAuthnCredentialFromCredential(credential)
 	if record == nil {
-		return nil, errors.New("credential is nil")
+		return nil, errs.ErrPasskeyCredentialNil
 	}
 	record.DeviceName = deviceName
 	if err := model.CreateWebAuthnCredential(dao.Db(), record); err != nil {

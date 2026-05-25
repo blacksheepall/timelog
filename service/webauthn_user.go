@@ -1,8 +1,7 @@
 package service
 
 import (
-	"errors"
-
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -50,7 +49,7 @@ func LoadPasskeyUser() (*PasskeyUser, error) {
 
 func LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn.User, error) {
 	if string(userHandle) != "timelog-single-user" {
-		return nil, errors.New("user not found")
+		return nil, errs.ErrPasskeyUserNotFound
 	}
 
 	return LoadPasskeyUser()
