@@ -13,28 +13,24 @@ import (
 
 var mcpLogger *zap.SugaredLogger
 
-// InitMCPLogger creates a file-only logger for MCP debugging
-// This logger will never write to stdout to avoid breaking MCP protocol
+// InitMCPLogger creates a file-only logger for MCP debugging.
+// This logger will never write to stdout to avoid breaking MCP protocol.
 func InitMCPLogger(cfg *config.Config) *zap.SugaredLogger {
-	// Return no-op logger if MCP logging is disabled
 	if cfg == nil || !cfg.MCP.Enabled {
 		mcpLogger = zap.NewNop().Sugar()
 		return mcpLogger
 	}
 
-	// Allow environment variable override
 	if os.Getenv("MCP_DEBUG") == "false" {
 		mcpLogger = zap.NewNop().Sugar()
 		return mcpLogger
 	}
 
-	// Parse log level (default to debug for troubleshooting)
 	level, err := zap.ParseAtomicLevel(cfg.MCP.Level)
 	if err != nil {
 		level = zap.NewAtomicLevelAt(zap.DebugLevel)
 	}
 
-	// Ensure log directory exists
 	logPath := cfg.MCP.Path
 	if logPath == "" {
 		logPath = "logs/mcp.log"
@@ -43,13 +39,11 @@ func InitMCPLogger(cfg *config.Config) *zap.SugaredLogger {
 	logDir := filepath.Dir(logPath)
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(logDir, 0755); err != nil {
-			// If we can't create directory, return no-op logger
 			mcpLogger = zap.NewNop().Sugar()
 			return mcpLogger
 		}
 	}
 
-	// Configure encoder for detailed debugging
 	encoderConfig := zapcore.EncoderConfig{
 		LevelKey:       "level",
 		TimeKey:        "timestamp",
@@ -62,7 +56,6 @@ func InitMCPLogger(cfg *config.Config) *zap.SugaredLogger {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// File writer with rotation (reuse main app rotation settings)
 	fileWriter := zapcore.AddSync(&lumberjack.Logger{
 		Filename:   logPath,
 		MaxSize:    cfg.Log.Rotation.MaxSize,
@@ -70,14 +63,12 @@ func InitMCPLogger(cfg *config.Config) *zap.SugaredLogger {
 		MaxAge:     cfg.Log.Rotation.MaxAge,
 	})
 
-	// Create core - FILE OUTPUT ONLY (never stdout)
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConfig),
 		fileWriter,
 		level,
 	)
 
-	// Create logger with caller info for debugging
 	mcpLogger = zap.New(core,
 		zap.AddCaller(),
 		zap.AddStacktrace(zapcore.ErrorLevel),
@@ -86,48 +77,7 @@ func InitMCPLogger(cfg *config.Config) *zap.SugaredLogger {
 	return mcpLogger
 }
 
-// GetMCPLogger returns the MCP logger instance
-func GetMCPLogger() *zap.SugaredLogger {
-	if mcpLogger == nil {
-		return zap.NewNop().Sugar()
-	}
-	return mcpLogger
-}
-
-// Helper functions for structured MCP logging
-
-// LogMCPToolCall logs when an MCP tool is called
-func LogMCPToolCall(toolName string, params map[string]interface{}) {
-	if mcpLogger == nil {
-		return
-	}
-	mcpLogger.Infow("MCP tool called",
-		"tool", toolName,
-		"params", params,
-	)
-}
-
-// LogMCPToolResult logs the result of an MCP tool call
-func LogMCPToolResult(toolName string, success bool, resultCount int, err error) {
-	if mcpLogger == nil {
-		return
-	}
-
-	fields := []interface{}{
-		"tool", toolName,
-		"success", success,
-		"result_count", resultCount,
-	}
-
-	if err != nil {
-		fields = append(fields, "error", err.Error())
-		mcpLogger.Errorw("MCP tool completed with error", fields...)
-	} else {
-		mcpLogger.Infow("MCP tool completed successfully", fields...)
-	}
-}
-
-// LogMCPError logs MCP-specific errors for debugging
+// LogMCPError logs MCP-specific errors for debugging.
 func LogMCPError(operation string, err error, context map[string]interface{}) {
 	if mcpLogger == nil {
 		return
@@ -137,7 +87,6 @@ func LogMCPError(operation string, err error, context map[string]interface{}) {
 		"operation", operation,
 		"error", err.Error(),
 	}
-
 	for k, v := range context {
 		fields = append(fields, k, v)
 	}
@@ -145,7 +94,7 @@ func LogMCPError(operation string, err error, context map[string]interface{}) {
 	mcpLogger.Errorw("MCP error occurred", fields...)
 }
 
-// LogMCPDebug logs debug information for troubleshooting
+// LogMCPDebug logs debug information for troubleshooting.
 func LogMCPDebug(message string, fields map[string]interface{}) {
 	if mcpLogger == nil {
 		return

@@ -16,30 +16,47 @@ func init() {
 	var err error
 	singaporeLocation, err = time.LoadLocation("Asia/Singapore")
 	if err != nil {
-		// Fallback to UTC+8 if timezone data is not available
 		singaporeLocation = time.FixedZone("SGT", 8*60*60)
 	}
 }
 
-// formatMCPResponse wraps the response in the standard format to prevent LLM hallucinations
-func formatMCPResponse(summaryText string, data interface{}) (*mcp.CallToolResult, interface{}, error) {
-	// Add summary to data
-	dataMap, ok := data.(map[string]interface{})
-	if !ok {
-		return nil, nil, fmt.Errorf("data must be a map[string]interface{}")
-	}
-	dataMap["_summary"] = summaryText
+func formatSGDateTime(t time.Time) string {
+	return t.In(singaporeLocation).Format("2006-01-02 15:04:05")
+}
 
-	jsonBytes, err := json.MarshalIndent(dataMap, "", "  ")
+func formatSGDate(t time.Time) string {
+	return t.In(singaporeLocation).Format("2006-01-02")
+}
+
+func formatSGDateTimePtr(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.In(singaporeLocation).Format("2006-01-02 15:04:05")
+}
+
+func formatSGDatePtr(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.In(singaporeLocation).Format("2006-01-02")
+}
+
+func formatDuration(d time.Duration) string {
+	return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
+}
+
+func formatMCPResponse(summaryText string, data map[string]interface{}) (*mcp.CallToolResult, interface{}, error) {
+	data["_summary"] = summaryText
+
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal response: %w", err)
 	}
 
-	responseText := string(jsonBytes)
-
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{&mcp.TextContent{
-			Text: responseText,
+			Text: string(jsonBytes),
 		}},
 	}, nil, nil
 }
@@ -49,93 +66,68 @@ type DateInfoParams struct{}
 
 func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoParams) (*mcp.CallToolResult, interface{}, error) {
 	now := time.Now().In(singaporeLocation)
-	today := now.Format("2006-01-02")
-	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
 	weekday := now.Weekday()
-	// 以周一为一周的开始
 	daysSinceMonday := (int(weekday) + 6) % 7
 	monday := now.AddDate(0, 0, -daysSinceMonday)
 	sunday := monday.AddDate(0, 0, 6)
-	weekRange := []string{
-		monday.Format("2006-01-02"),
-		sunday.Format("2006-01-02"),
-	}
 
 	response := map[string]interface{}{
 		"timezone":   "Asia/Singapore (SGT, UTC+8)",
-		"now":        now.Format("2006-01-02 15:04:05"),
-		"today":      today,
-		"yesterday":  yesterday,
+		"now":        formatSGDateTime(now),
+		"today":      now.Format("2006-01-02"),
+		"yesterday":  now.AddDate(0, 0, -1).Format("2006-01-02"),
 		"weekday":    weekday.String(),
-		"week_range": weekRange,
+		"week_range": []string{monday.Format("2006-01-02"), sunday.Format("2006-01-02")},
 	}
-	summaryText := "当前日期和时间信息，包括今天、昨天和本周日期范围"
-	return formatMCPResponse(summaryText, response)
+	return formatMCPResponse("当前日期和时间信息，包括今天、昨天和本周日期范围", response)
 }
 
 func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args DateRangeParams) (*mcp.CallToolResult, interface{}, error) {
-	startDateStr := args.StartDate
-	endDateStr := args.EndDate
-
-	// 使用 model 层的函数，自动处理时区转换
-	timeLogs, err := model.ListTimeLogsByLocalDateRange(server.db, startDateStr, endDateStr)
+	timeLogs, err := model.ListTimeLogsByLocalDateRange(server.db, args.StartDate, args.EndDate)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get time logs by date range: %w", err)
 	}
-
-	// 获取新加坡时区用于格式化输出
-	sgLocation := model.GetSingaporeLocation()
 
 	var result []map[string]interface{}
 	totalDuration := time.Duration(0)
 
 	for _, tl := range timeLogs {
 		duration := time.Duration(0)
-		durationStr := ""
+		durationStr := "ongoing"
 
 		if tl.EndTime != nil {
 			duration = tl.EndTime.Sub(tl.StartTime)
 			totalDuration += duration
-			hours := int(duration.Hours())
-			minutes := int(duration.Minutes()) % 60
-			durationStr = fmt.Sprintf("%dh %dm", hours, minutes)
-		} else {
-			durationStr = "ongoing"
+			durationStr = formatDuration(duration)
 		}
 
 		entry := map[string]interface{}{
 			"id":         tl.ID,
-			"start_time": tl.StartTime.In(sgLocation).Format("2006-01-02 15:04:05"),
+			"start_time": formatSGDateTime(tl.StartTime),
 			"end_time":   nil,
 			"duration":   durationStr,
 			"remarks":    tl.Remark,
 		}
 
 		if tl.EndTime != nil {
-			entry["end_time"] = tl.EndTime.In(sgLocation).Format("2006-01-02 15:04:05")
+			entry["end_time"] = formatSGDateTime(*tl.EndTime)
 		}
 
 		result = append(result, entry)
 	}
 
-	totalHours := int(totalDuration.Hours())
-	totalMinutes := int(totalDuration.Minutes()) % 60
-
 	response := map[string]interface{}{
 		"time_logs":      result,
 		"count":          len(result),
-		"date_range":     fmt.Sprintf("%s to %s", startDateStr, endDateStr[:10]),
-		"total_duration": fmt.Sprintf("%dh %dm", totalHours, totalMinutes),
+		"date_range":     fmt.Sprintf("%s to %s", args.StartDate, args.EndDate),
+		"total_duration": formatDuration(totalDuration),
 	}
 
-	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %dh %dm", len(result), startDateStr, endDateStr[:10], totalHours, totalMinutes)
+	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %s", len(result), args.StartDate, args.EndDate, formatDuration(totalDuration))
 	return formatMCPResponse(summaryText, response)
 }
 
 func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskStatusParams) (*mcp.CallToolResult, interface{}, error) {
-	statusStr := args.Status
-
-	// Include all tasks (suspended and completed) to filter by status in application code
 	tasks, err := model.GetAllTasks(server.db, true, true)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get tasks: %w", err)
@@ -145,11 +137,10 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 	for _, task := range tasks {
 		isCompleted := task.IsCompleted != nil && *task.IsCompleted
 
-		// Filter by status
-		if statusStr == "completed" && !isCompleted {
+		if args.Status == "completed" && !isCompleted {
 			continue
 		}
-		if statusStr == "pending" && isCompleted {
+		if args.Status == "pending" && isCompleted {
 			continue
 		}
 
@@ -170,14 +161,14 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 			"description":       task.Description,
 			"category":          categoryName,
 			"category_color":    categoryColor,
-			"due_date":          task.DueDate.In(singaporeLocation).Format("2006-01-02"),
+			"due_date":          formatSGDate(task.DueDate),
 			"estimated_minutes": task.EstimatedMinutes,
 			"is_completed":      isCompleted,
-			"created_at":        task.CreatedAt.In(singaporeLocation).Format("2006-01-02 15:04:05"),
+			"created_at":        formatSGDateTimePtr(task.CreatedAt),
 		}
 
 		if task.CompletedAt != nil {
-			entry["completed_at"] = task.CompletedAt.In(singaporeLocation).Format("2006-01-02 15:04:05")
+			entry["completed_at"] = formatSGDateTime(*task.CompletedAt)
 		}
 
 		result = append(result, entry)
@@ -186,11 +177,10 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 	response := map[string]interface{}{
 		"tasks":  result,
 		"count":  len(result),
-		"status": statusStr,
+		"status": args.Status,
 	}
 
-	summaryText := fmt.Sprintf("Found %d %s tasks", len(result), statusStr)
-	return formatMCPResponse(summaryText, response)
+	return formatMCPResponse(fmt.Sprintf("Found %d %s tasks", len(result), args.Status), response)
 }
 
 func GetCurrentActivity(ctx context.Context, req *mcp.CallToolRequest, args CurrentActivityParams) (*mcp.CallToolResult, interface{}, error) {
@@ -201,14 +191,10 @@ func GetCurrentActivity(ctx context.Context, req *mcp.CallToolRequest, args Curr
 
 	var result []map[string]interface{}
 	for _, tl := range timeLogs {
-		duration := time.Since(tl.StartTime)
-		hours := int(duration.Hours())
-		minutes := int(duration.Minutes()) % 60
-
 		entry := map[string]interface{}{
 			"id":         tl.ID,
-			"start_time": tl.StartTime.In(singaporeLocation).Format("2006-01-02 15:04:05"),
-			"duration":   fmt.Sprintf("%dh %dm", hours, minutes),
+			"start_time": formatSGDateTime(tl.StartTime),
+			"duration":   formatDuration(time.Since(tl.StartTime)),
 			"remarks":    tl.Remark,
 		}
 
@@ -220,8 +206,7 @@ func GetCurrentActivity(ctx context.Context, req *mcp.CallToolRequest, args Curr
 		"count":       len(result),
 	}
 
-	summaryText := fmt.Sprintf("Found %d active time logs", len(result))
-	return formatMCPResponse(summaryText, response)
+	return formatMCPResponse(fmt.Sprintf("Found %d active time logs", len(result)), response)
 }
 
 func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args ConstraintParams) (*mcp.CallToolResult, interface{}, error) {
@@ -233,22 +218,18 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 	var result []map[string]interface{}
 	for _, constraint := range constraints {
 		isActive := constraint.IsActive != nil && *constraint.IsActive
-		createdAt := ""
-		if constraint.CreatedAt != nil {
-			createdAt = constraint.CreatedAt.In(singaporeLocation).Format("2006-01-02 15:04:05")
-		}
 
 		entry := map[string]interface{}{
 			"id":               constraint.ID,
 			"description":      constraint.Description,
 			"punishment_quote": constraint.PunishmentQuote,
-			"start_date":       constraint.StartDate.In(singaporeLocation).Format("2006-01-02"),
+			"start_date":       formatSGDate(constraint.StartDate),
 			"is_active":        isActive,
-			"created_at":       createdAt,
+			"created_at":       formatSGDateTimePtr(constraint.CreatedAt),
 		}
 
 		if constraint.EndDate != nil {
-			entry["end_date"] = constraint.EndDate.In(singaporeLocation).Format("2006-01-02")
+			entry["end_date"] = formatSGDate(*constraint.EndDate)
 		}
 		if constraint.EndReason != nil && *constraint.EndReason != "" {
 			entry["end_reason"] = *constraint.EndReason
@@ -262,6 +243,5 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 		"count":       len(result),
 	}
 
-	summaryText := fmt.Sprintf("Found %d active constraints", len(result))
-	return formatMCPResponse(summaryText, response)
+	return formatMCPResponse(fmt.Sprintf("Found %d active constraints", len(result)), response)
 }

@@ -8,15 +8,63 @@ import (
 	"os"
 	"strings"
 
+	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/model"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"gorm.io/gorm"
 )
 
+// TimelogMCPServer is the main server struct
+type TimelogMCPServer struct {
+	db     *gorm.DB
+	config *config.Config
+}
+
+// Tool parameter structs
+type DateRangeParams struct {
+	StartDate string `json:"start_date" jsonschema:"Start date in YYYY-MM-DD format,required"`
+	EndDate   string `json:"end_date" jsonschema:"End date in YYYY-MM-DD format,required"`
+}
+
+type TaskStatusParams struct {
+	Status string `json:"status" jsonschema:"Task status filter (completed/pending/all),required"`
+}
+
+type CurrentActivityParams struct{}
+
+type ConstraintParams struct{}
+
 var server *TimelogMCPServer
+
+// NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
+func NewTimelogMCPServer() *TimelogMCPServer {
+	configPath := config.ResolveConfigPath("config.yml")
+	cfg := config.GetConfig(configPath)
+
+	InitMCPLogger(cfg)
+	LogMCPDebug("MCP server initializing", map[string]interface{}{
+		"config_path":         configPath,
+		"mcp_logging_enabled": cfg.MCP.Enabled,
+	})
+
+	cfg.Log.ORMLogLevel = 1
+
+	model.InitDao(cfg, nil)
+	dao := model.GetDao()
+
+	LogMCPDebug("Database initialized", map[string]interface{}{
+		"database_path": cfg.Database.Host,
+	})
+
+	return &TimelogMCPServer{
+		db:     dao.Db(),
+		config: cfg,
+	}
+}
 
 func main() {
 	server = NewTimelogMCPServer()
 
-	// Create MCP server with implementation
 	mcpServer := mcp.NewServer(&mcp.Implementation{
 		Name:    "timelog",
 		Version: "1.0.0",
@@ -53,7 +101,6 @@ func main() {
 		listenAddr := server.config.MCP.ListenAddr
 		token := server.config.MCP.Token
 
-		// Fail fast: require authentication token for HTTP transport
 		if token == "" {
 			fmt.Fprintln(os.Stderr, "FATAL: HTTP transport requires authentication token for security.")
 			fmt.Fprintln(os.Stderr, "Set token via: MCP.Token in config.yml OR MCP_TOKEN environment variable")
@@ -78,7 +125,6 @@ func main() {
 					return
 				}
 				provided := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
-				// Use constant-time comparison to prevent timing attacks
 				if subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
 					w.WriteHeader(http.StatusUnauthorized)
 					return
@@ -97,7 +143,6 @@ func main() {
 			LogMCPError("http_server", err, map[string]interface{}{"addr": listenAddr})
 		}
 	default:
-		// Run MCP server - no logging to avoid stdout contamination
 		ctx := context.Background()
 		transport := &mcp.StdioTransport{}
 		if err := mcpServer.Run(ctx, transport); err != nil {
