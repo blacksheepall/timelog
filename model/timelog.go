@@ -4,13 +4,22 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"gorm.io/gorm"
 )
 
 // --- CRUD ---
 
 // CreateTimeLog 新增一条时间日志
+// 如果当前已存在 ongoing（end_time 为 NULL）的 timelog，则禁止写入
 func CreateTimeLog(db *gorm.DB, tl *gen.Timelog) error {
+	var count int64
+	if err := db.Model(&gen.Timelog{}).Where("end_time IS NULL").Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return errs.ErrOngoingTimeLogExists
+	}
 	return db.Create(tl).Error
 }
 
