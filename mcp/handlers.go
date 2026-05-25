@@ -83,7 +83,40 @@ func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoPar
 }
 
 func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args DateRangeParams) (*mcp.CallToolResult, interface{}, error) {
-	timeLogs, err := model.ListTimeLogsByLocalDateRange(server.db, args.StartDate, args.EndDate)
+	if args.ActiveOnly {
+		timeLogs, err := model.ListTimeLogsWithOptions(server.db, 0, "start_time DESC", "end_time IS NULL")
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get current activity: %w", err)
+		}
+
+		var result []map[string]interface{}
+		for _, tl := range timeLogs {
+			entry := map[string]interface{}{
+				"id":         tl.ID,
+				"start_time": formatSGDateTime(tl.StartTime),
+				"duration":   formatDuration(time.Since(tl.StartTime)),
+				"remarks":    tl.Remark,
+			}
+			result = append(result, entry)
+		}
+
+		response := map[string]interface{}{
+			"active_logs": result,
+			"count":       len(result),
+		}
+		return formatMCPResponse(fmt.Sprintf("Found %d active time logs", len(result)), response)
+	}
+
+	startDate := args.StartDate
+	endDate := args.EndDate
+	if startDate == "" {
+		startDate = time.Now().In(singaporeLocation).Format("2006-01-02")
+	}
+	if endDate == "" {
+		endDate = startDate
+	}
+
+	timeLogs, err := model.ListTimeLogsByLocalDateRange(server.db, startDate, endDate)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get time logs by date range: %w", err)
 	}
@@ -119,11 +152,11 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 	response := map[string]interface{}{
 		"time_logs":      result,
 		"count":          len(result),
-		"date_range":     fmt.Sprintf("%s to %s", args.StartDate, args.EndDate),
+		"date_range":     fmt.Sprintf("%s to %s", startDate, endDate),
 		"total_duration": formatDuration(totalDuration),
 	}
 
-	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %s", len(result), args.StartDate, args.EndDate, formatDuration(totalDuration))
+	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %s", len(result), startDate, endDate, formatDuration(totalDuration))
 	return formatMCPResponse(summaryText, response)
 }
 
@@ -181,32 +214,6 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 	}
 
 	return formatMCPResponse(fmt.Sprintf("Found %d %s tasks", len(result), args.Status), response)
-}
-
-func GetCurrentActivity(ctx context.Context, req *mcp.CallToolRequest, args CurrentActivityParams) (*mcp.CallToolResult, interface{}, error) {
-	timeLogs, err := model.ListTimeLogsWithOptions(server.db, 0, "start_time DESC", "end_time IS NULL")
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get current activity: %w", err)
-	}
-
-	var result []map[string]interface{}
-	for _, tl := range timeLogs {
-		entry := map[string]interface{}{
-			"id":         tl.ID,
-			"start_time": formatSGDateTime(tl.StartTime),
-			"duration":   formatDuration(time.Since(tl.StartTime)),
-			"remarks":    tl.Remark,
-		}
-
-		result = append(result, entry)
-	}
-
-	response := map[string]interface{}{
-		"active_logs": result,
-		"count":       len(result),
-	}
-
-	return formatMCPResponse(fmt.Sprintf("Found %d active time logs", len(result)), response)
 }
 
 func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args ConstraintParams) (*mcp.CallToolResult, interface{}, error) {

@@ -22,15 +22,14 @@ type TimelogMCPServer struct {
 
 // Tool parameter structs
 type DateRangeParams struct {
-	StartDate string `json:"start_date" jsonschema:"Start date in YYYY-MM-DD format,required"`
-	EndDate   string `json:"end_date" jsonschema:"End date in YYYY-MM-DD format,required"`
+	StartDate  string `json:"start_date" jsonschema:"Start date in YYYY-MM-DD format"`
+	EndDate    string `json:"end_date" jsonschema:"End date in YYYY-MM-DD format"`
+	ActiveOnly bool   `json:"active_only" jsonschema:"If true, return only ongoing time logs and ignore date range"`
 }
 
 type TaskStatusParams struct {
 	Status string `json:"status" jsonschema:"Task status filter (completed/pending/all),required"`
 }
-
-type CurrentActivityParams struct{}
 
 type ConstraintParams struct{}
 
@@ -79,11 +78,6 @@ func main() {
 		Name:        "get_tasks_by_status",
 		Description: "Get tasks filtered by completion status",
 	}, GetTasksByStatus)
-
-	mcp.AddTool(mcpServer, &mcp.Tool{
-		Name:        "get_current_activity",
-		Description: "Get currently active/running time logs",
-	}, GetCurrentActivity)
 
 	mcp.AddTool(mcpServer, &mcp.Tool{
 		Name:        "get_active_constraints",
