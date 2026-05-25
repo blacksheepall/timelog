@@ -35,7 +35,7 @@ func formatMCPResponse(summaryText string, data interface{}) (*mcp.CallToolResul
 		return nil, nil, fmt.Errorf("failed to marshal response: %w", err)
 	}
 
-	responseText := fmt.Sprintf("<STRICT_JSON>\n%s\n</STRICT_JSON>", string(jsonBytes))
+	responseText := string(jsonBytes)
 
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{&mcp.TextContent{
