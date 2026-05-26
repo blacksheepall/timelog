@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -251,4 +252,166 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 	}
 
 	return formatMCPResponse(fmt.Sprintf("Found %d active constraints", len(result)), response)
+}
+
+func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args CategoryListParams) (*mcp.CallToolResult, interface{}, error) {
+	categories, err := model.ListCategories(server.db)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list categories: %w", err)
+	}
+
+	var result []map[string]interface{}
+	for _, cat := range categories {
+		entry := map[string]interface{}{
+			"id":    cat.ID,
+			"name":  cat.Name,
+			"level": int32(0),
+		}
+		if cat.Level != nil {
+			entry["level"] = *cat.Level
+		}
+		if cat.Color != nil {
+			entry["color"] = *cat.Color
+		}
+		if cat.ParentID != nil && *cat.ParentID > 0 {
+			entry["parent_id"] = *cat.ParentID
+		}
+		result = append(result, entry)
+	}
+
+	response := map[string]interface{}{
+		"categories": result,
+		"count":      len(result),
+	}
+
+	return formatMCPResponse(fmt.Sprintf("Found %d categories", len(result)), response)
+}
+
+func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
+	_, err := model.GetCategoryByID(server.db, args.CategoryID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("category not found: %w", err)
+	}
+
+	tl := &gen.Timelog{
+		CategoryID: args.CategoryID,
+	}
+
+	defaultUserID := int32(1)
+	tl.UserID = &defaultUserID
+
+	if args.StartTime != "" {
+		st, err := time.ParseInLocation("2006-01-02 15:04:05", args.StartTime, singaporeLocation)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid start_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
+		}
+		tl.StartTime = st.UTC()
+	} else {
+		tl.StartTime = time.Now().UTC()
+	}
+
+	if args.EndTime != "" {
+		et, err := time.ParseInLocation("2006-01-02 15:04:05", args.EndTime, singaporeLocation)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid end_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
+		}
+		etUTC := et.UTC()
+		tl.EndTime = &etUTC
+	}
+
+	if args.TaskID > 0 {
+		tl.TaskID = &args.TaskID
+	}
+
+	if args.Remark != "" {
+		tl.Remark = &args.Remark
+	}
+
+	if err := model.CreateTimeLog(server.db, tl); err != nil {
+		return nil, nil, fmt.Errorf("failed to create time log: %w", err)
+	}
+
+	createdLog, err := model.GetTimeLogByID(server.db, *tl.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve created time log: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"id":          *createdLog.ID,
+		"category_id": createdLog.CategoryID,
+		"start_time":  formatSGDateTime(createdLog.StartTime),
+		"remark":      createdLog.Remark,
+	}
+	if createdLog.EndTime != nil {
+		response["end_time"] = formatSGDateTime(*createdLog.EndTime)
+	}
+	if createdLog.TaskID != nil {
+		response["task_id"] = *createdLog.TaskID
+	}
+
+	return formatMCPResponse("Time log created successfully", response)
+}
+
+func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
+	tl, err := model.GetTimeLogByID(server.db, args.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("time log not found: %w", err)
+	}
+
+	if args.CategoryID > 0 {
+		_, err := model.GetCategoryByID(server.db, args.CategoryID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("category not found: %w", err)
+		}
+		tl.CategoryID = args.CategoryID
+	}
+
+	if args.StartTime != "" {
+		st, err := time.ParseInLocation("2006-01-02 15:04:05", args.StartTime, singaporeLocation)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid start_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
+		}
+		tl.StartTime = st.UTC()
+	}
+
+	if args.EndTime != "" {
+		et, err := time.ParseInLocation("2006-01-02 15:04:05", args.EndTime, singaporeLocation)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid end_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
+		}
+		etUTC := et.UTC()
+		tl.EndTime = &etUTC
+	}
+
+	if args.TaskID > 0 {
+		tl.TaskID = &args.TaskID
+	}
+
+	if args.Remark != "" {
+		tl.Remark = &args.Remark
+	}
+
+	if err := model.UpdateTimeLog(server.db, tl); err != nil {
+		return nil, nil, fmt.Errorf("failed to update time log: %w", err)
+	}
+
+	updatedLog, err := model.GetTimeLogByID(server.db, args.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to retrieve updated time log: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"id":          *updatedLog.ID,
+		"category_id": updatedLog.CategoryID,
+		"start_time":  formatSGDateTime(updatedLog.StartTime),
+		"remark":      updatedLog.Remark,
+	}
+	if updatedLog.EndTime != nil {
+		response["end_time"] = formatSGDateTime(*updatedLog.EndTime)
+	}
+	if updatedLog.TaskID != nil {
+		response["task_id"] = *updatedLog.TaskID
+	}
+
+	return formatMCPResponse("Time log updated successfully", response)
 }

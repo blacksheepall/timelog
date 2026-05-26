@@ -33,6 +33,25 @@ type TaskStatusParams struct {
 
 type ConstraintParams struct{}
 
+type CategoryListParams struct{}
+
+type CreateTimeLogParams struct {
+	CategoryID int32  `json:"category_id" jsonschema:"Category ID,required"`
+	StartTime  string `json:"start_time" jsonschema:"Start time in YYYY-MM-DD HH:MM:SS format (SGT), optional, defaults to now"`
+	EndTime    string `json:"end_time" jsonschema:"End time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	TaskID     int32  `json:"task_id" jsonschema:"Associated task ID, optional"`
+	Remark     string `json:"remark" jsonschema:"Optional remark or description"`
+}
+
+type UpdateTimeLogParams struct {
+	ID         int32  `json:"id" jsonschema:"Time log ID,required"`
+	CategoryID int32  `json:"category_id" jsonschema:"New category ID, optional"`
+	StartTime  string `json:"start_time" jsonschema:"New start time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	EndTime    string `json:"end_time" jsonschema:"New end time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	TaskID     int32  `json:"task_id" jsonschema:"Associated task ID, optional"`
+	Remark     string `json:"remark" jsonschema:"New remark, optional"`
+}
+
 var server *TimelogMCPServer
 
 // NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
@@ -88,6 +107,21 @@ func main() {
 		Name:        "get_date_info",
 		Description: "Get current date, time, today, yesterday, and this week's date range",
 	}, GetDateInfo)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "list_categories",
+		Description: "List all available categories for time logs",
+	}, ListCategories)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "create_timelog",
+		Description: "Create a new time log. If there is already an ongoing time log (without end_time), creation will be rejected",
+	}, CreateTimeLog)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "update_timelog",
+		Description: "Update an existing time log, such as setting end_time to stop the current activity",
+	}, UpdateTimeLog)
 
 	transportMode := server.config.MCP.Transport
 	switch transportMode {
