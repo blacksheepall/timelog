@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	DevMode  bool `yaml:"dev_mode" env-default:"false"`
 	Database struct {
 		Host string `yaml:"host"`
 	} `yaml:"database"`

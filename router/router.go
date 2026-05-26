@@ -47,7 +47,7 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	setupConstraintRoutes(protected)
 
 	// 注册通用鉴权路由
-	setupAuthRoutes(api)
+	setupAuthRoutes(api, cfg)
 
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {
