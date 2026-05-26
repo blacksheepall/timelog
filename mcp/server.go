@@ -37,19 +37,19 @@ type CategoryListParams struct{}
 
 type CreateTimeLogParams struct {
 	CategoryID int32  `json:"category_id" jsonschema:"Category ID,required"`
-	StartTime  string `json:"start_time" jsonschema:"Start time in YYYY-MM-DD HH:MM:SS format (SGT), optional, defaults to now"`
-	EndTime    string `json:"end_time" jsonschema:"End time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
-	TaskID     int32  `json:"task_id" jsonschema:"Associated task ID, optional"`
-	Remark     string `json:"remark" jsonschema:"Optional remark or description"`
+	StartTime  string `json:"start_time,omitempty" jsonschema:"Start time in YYYY-MM-DD HH:MM:SS format (SGT), defaults to now"`
+	EndTime    string `json:"end_time,omitempty" jsonschema:"End time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	TaskID     int32  `json:"task_id,omitempty" jsonschema:"Associated task ID, optional"`
+	Remark     string `json:"remark,omitempty" jsonschema:"Optional remark or description"`
 }
 
 type UpdateTimeLogParams struct {
 	ID         int32  `json:"id" jsonschema:"Time log ID,required"`
-	CategoryID int32  `json:"category_id" jsonschema:"New category ID, optional"`
-	StartTime  string `json:"start_time" jsonschema:"New start time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
-	EndTime    string `json:"end_time" jsonschema:"New end time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
-	TaskID     int32  `json:"task_id" jsonschema:"Associated task ID, optional"`
-	Remark     string `json:"remark" jsonschema:"New remark, optional"`
+	CategoryID int32  `json:"category_id,omitempty" jsonschema:"New category ID, optional"`
+	StartTime  string `json:"start_time,omitempty" jsonschema:"New start time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	EndTime    string `json:"end_time,omitempty" jsonschema:"New end time in YYYY-MM-DD HH:MM:SS format (SGT), optional"`
+	TaskID     int32  `json:"task_id,omitempty" jsonschema:"Associated task ID, optional"`
+	Remark     string `json:"remark,omitempty" jsonschema:"New remark, optional"`
 }
 
 var server *TimelogMCPServer
