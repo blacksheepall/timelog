@@ -26,6 +26,7 @@ var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
 		p.ErrorMessage,
 	)
 })
+
 func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles embed.FS) *gin.Engine {
 	r.Use(GinLogger)
 	r.Use(middleware.Cors(cfg))
@@ -44,6 +45,9 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 
 	// 注册 Constraint 路由
 	setupConstraintRoutes(protected)
+
+	// 注册通用鉴权路由
+	setupAuthRoutes(api)
 
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {
