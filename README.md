@@ -89,11 +89,11 @@ make passkey-temp revoke <id>
 
 ### Bind device
 
-Open `https://localhost:3000/passkey/register` and use the temp password to create a passkey.
+Open `https://localhost:5173/passkey/register` and use the temp password to create a passkey.
 
 ### Login
 
-Open `https://localhost:3000/login` and complete the passkey prompt.
+Open `https://localhost:5173/login` and complete the passkey prompt.
 
 ## Migrate
 

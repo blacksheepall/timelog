@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-The development server will run on http://localhost:3000 and proxy API requests to the Go backend.
+The development server will run on http://localhost:5173 and proxy API requests to the Go backend.
 
 ### Building for Production
 
@@ -47,7 +47,7 @@ The built files will be in the `dist/` directory and can be served by the Go bac
 
 1. Start the Go backend server
 2. Run `npm run dev` for development or `npm run build` for production
-3. Open http://localhost:3000 (dev) or http://localhost:8080 (production)
+3. Open http://localhost:5173 (dev) or http://localhost:8080 (production)
 
 ## API Integration
 

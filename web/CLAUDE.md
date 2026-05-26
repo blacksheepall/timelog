@@ -57,7 +57,7 @@ pnpm run dev
 pnpm run type-check
 ```
 
-The development server runs on http://localhost:3000 and proxies API requests to the Go backend on port 8083.
+The development server runs on http://localhost:5173 and proxies API requests to the Go backend on port 8083.
 
 ### Building for Production
 
@@ -76,8 +76,8 @@ Built files go to `dist/` directory and are served by the Go backend at producti
 **Development Mode:**
 
 1. Start Go backend: `./main` (runs on port 8083)
-2. Start frontend dev server: `pnpm run dev` (runs on port 3000)
-3. Access at http://localhost:3000
+2. Start frontend dev server: `pnpm run dev` (runs on port 5173)
+3. Access at http://localhost:5173
 
 **Production Mode:**
 

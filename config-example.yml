@@ -21,7 +21,7 @@ passkey:
   rp_id: 'localhost'
   rp_name: 'TimeLog'
   rp_origins:
-    - 'http://localhost:3000'
+    - 'http://localhost:5173'
     - 'http://localhost:8083'
   token_ttl: 86400
   temp_password:
