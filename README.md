@@ -62,7 +62,7 @@ server:
   key_file: ./certs/key.pem
 ```
 
-**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. The application will be accessible at `https://localhost:8083` (or your configured port).
+**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. The application will be accessible at `https://localhost:8080` (or your configured port).
 
 ### Generate temp password for the current app instance
 

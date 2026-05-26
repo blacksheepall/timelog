@@ -42,7 +42,7 @@ A comprehensive Vue 3 + TypeScript + Tailwind CSS single-page application (SPA) 
 ### Prerequisites
 
 - Node.js 18+ and pnpm (preferred package manager)
-- Go backend running on port 8083
+- Go backend running on port 8080
 
 ### Installation
 
@@ -57,7 +57,7 @@ pnpm run dev
 pnpm run type-check
 ```
 
-The development server runs on http://localhost:5173 and proxies API requests to the Go backend on port 8083.
+The development server runs on http://localhost:5173 and proxies API requests to the Go backend on port 8080.
 
 ### Building for Production
 
@@ -75,15 +75,15 @@ Built files go to `dist/` directory and are served by the Go backend at producti
 
 **Development Mode:**
 
-1. Start Go backend: `./main` (runs on port 8083)
+1. Start Go backend: `./main` (runs on port 8080)
 2. Start frontend dev server: `pnpm run dev` (runs on port 5173)
 3. Access at http://localhost:5173
 
 **Production Mode:**
 
 1. Build frontend: `pnpm run build`
-2. Start backend: `./main` (serves both API and frontend on port 8083)
-3. Access at http://localhost:8083
+2. Start backend: `./main` (serves both API and frontend on port 8080)
+3. Access at http://localhost:8080
 
 ## API Integration
 

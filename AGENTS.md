@@ -22,7 +22,7 @@
 ## Config And Runtime Gotchas
 - App startup hardcodes `config.yml` (`main.go`, `cmd/passkey-temp-admin/main.go`). Tests hardcode `config-test.yml` (`test/setup_test.go`). If those files are missing, startup panics.
 - Both `config.yml` and `config-test.yml` are gitignored. Copy from `config-example.yml` when needed.
-- Vite dev server runs on `http://localhost:5173` and proxies `/api` to `http://localhost:8083`.
+- Vite dev server runs on `http://localhost:5173` and proxies `/api` to `http://localhost:8080`.
 - Passkeys require HTTPS. Cert generation lives in `scripts/generate-certs.sh`; see `README.md` for the exact setup.
 
 ## Verified Code Boundaries
