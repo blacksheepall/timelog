@@ -56,6 +56,7 @@
 
     <TimeLogList
       :time-logs="filteredTimeLogs"
+      :categories="categories"
       :loading="loading"
       :error="error"
       @edit="handleEdit"

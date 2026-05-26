@@ -66,13 +66,14 @@
             </td>
             <td class="px-6 py-4 text-sm text-gray-900">
               <span
-                v-if="log.category"
+                v-if="getCategory(log.category_id)"
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                :style="{ backgroundColor: log.category.color }"
-                :title="log.category.description"
+                :style="{ backgroundColor: getCategory(log.category_id)!.color }"
+                :title="getCategory(log.category_id)!.description"
               >
-                {{ log.category.name }}
+                {{ getCategory(log.category_id)!.name }}
               </span>
+              <span v-else class="text-gray-400">—</span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
               {{ log.remark }}
@@ -93,14 +94,19 @@
 </template>
 
 <script setup lang="ts">
-  import type { TimeLog } from '@/types'
+  import type { TimeLog, Category } from '@/types'
   import { formatDateTime, calculateDuration } from '@/utils/date'
 
-  defineProps<{
+  const props = defineProps<{
     timeLogs: TimeLog[]
+    categories: Category[]
     loading: boolean
     error: string | null
   }>()
+
+  const getCategory = (categoryId: number): Category | undefined => {
+    return props.categories.find(c => c.id === categoryId)
+  }
 
   defineEmits<{
     edit: [log: TimeLog]

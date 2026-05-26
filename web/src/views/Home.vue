@@ -110,12 +110,13 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <span
-                v-if="log.category"
+                v-if="getCategory(log.category_id)"
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                :style="{ backgroundColor: log.category.color }"
+                :style="{ backgroundColor: getCategory(log.category_id)!.color }"
               >
-                {{ log.category.name }}
+                {{ getCategory(log.category_id)!.name }}
               </span>
+              <span v-else class="text-gray-400">—</span>
               <div>
                 <p class="text-sm font-medium text-gray-900">{{ log.remark || 'No remarks' }}</p>
                 <p class="text-xs text-gray-500">
@@ -142,14 +143,19 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import { ClockIcon, PlayIcon, StopIcon, TagIcon } from '@heroicons/vue/24/outline'
-  import { timelogAPI } from '@/api'
+  import { timelogAPI, categoryAPI } from '@/api'
   import { formatDateTime, calculateDuration } from '@/utils/date'
   import { parseISO } from 'date-fns'
-  import type { TimeLog } from '@/types'
+  import type { TimeLog, Category } from '@/types'
 
   const loading = ref(false)
   const recentLogs = ref<TimeLog[]>([])
   const todayLogs = ref<TimeLog[]>([])
+  const categories = ref<Category[]>([])
+
+  const getCategory = (categoryId: number): Category | undefined => {
+    return categories.value.find(c => c.id === categoryId)
+  }
 
   // 今日统计数据
   const todayStats = computed(() => {
@@ -178,7 +184,7 @@
 
   // 分类时长统计
   const categoryStats = computed(() => {
-    const stats: Record<number, { category: any; minutes: number }> = {}
+    const stats: Record<number, { category: Category; minutes: number }> = {}
 
     // 获取今天的开始和结束时间（UTC）
     const today = new Date()
@@ -188,7 +194,8 @@
 
     // 计算每个分类的总时长
     todayLogs.value.forEach(log => {
-      if (!log.category) return
+      const category = getCategory(log.category_id)
+      if (!category) return
 
       const start = parseISO(log.start_time)
       const end = log.end_time ? parseISO(log.end_time) : todayEnd
@@ -206,7 +213,7 @@
 
       if (!stats[log.category_id]) {
         stats[log.category_id] = {
-          category: log.category,
+          category,
           minutes: 0,
         }
       }
@@ -286,7 +293,17 @@
     }
   }
 
+  const loadCategories = async () => {
+    try {
+      const response = await categoryAPI.getAll()
+      categories.value = response.data || []
+    } catch (err) {
+      console.error('Error loading categories:', err)
+    }
+  }
+
   onMounted(() => {
     loadRecentLogs()
+    loadCategories()
   })
 </script>
