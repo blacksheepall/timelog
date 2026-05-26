@@ -22,8 +22,8 @@ type TimelogMCPServer struct {
 
 // Tool parameter structs
 type DateRangeParams struct {
-	StartDate  string `json:"start_date" jsonschema:"Start date in YYYY-MM-DD format"`
-	EndDate    string `json:"end_date" jsonschema:"End date in YYYY-MM-DD format"`
+	StartDate  string `json:"start_date,omitempty" jsonschema:"Start date in YYYY-MM-DD format"`
+	EndDate    string `json:"end_date,omitempty" jsonschema:"End date in YYYY-MM-DD format"`
 	ActiveOnly bool   `json:"active_only" jsonschema:"If true, return only ongoing time logs and ignore date range"`
 }
 
