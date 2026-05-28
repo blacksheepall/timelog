@@ -188,9 +188,9 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, inject } from 'vue'
   import { ClockIcon, PlayIcon } from '@heroicons/vue/24/outline'
-  import { timelogAPI } from '@/api'
+  import { timelogAPI, categoryAPI } from '@/api'
   import { formatDate } from '@/utils/date'
-  import type { TimeLog } from '@/types'
+  import type { TimeLog, Category } from '@/types'
 
   // 注入全局通知功能
   const showNotification = inject('showNotification') as (
@@ -200,6 +200,11 @@
 
   const loading = ref(false)
   const timeLogs = ref<TimeLog[]>([])
+  const categories = ref<Category[]>([])
+
+  const getCategory = (categoryId: number): Category | undefined => {
+    return categories.value.find(c => c.id === categoryId)
+  }
 
   // 日期范围
   const dateRange = ref({
@@ -265,7 +270,8 @@
     let totalMinutes = 0
 
     logs.forEach(log => {
-      if (!log.category) return
+      const category = getCategory(log.category_id)
+      if (!category) return
 
       const start = new Date(log.start_time)
       const end = new Date(log.end_time!)
@@ -279,7 +285,7 @@
         existing.count += 1
       } else {
         tagMap.set(log.category_id, {
-          category: log.category,
+          category,
           minutes,
           count: 1,
         })
@@ -394,7 +400,17 @@
     }
   }
 
+  const loadCategories = async () => {
+    try {
+      const response = await categoryAPI.getAll()
+      categories.value = response.data || []
+    } catch (err) {
+      console.error('Error loading categories:', err)
+    }
+  }
+
   onMounted(() => {
     loadTimeLogs()
+    loadCategories()
   })
 </script>
