@@ -35,6 +35,7 @@ certs/
 
 docs/docs.go
 docs/swagger*
+docs/superpowers/**
 app.log
 mcp.log
 main
