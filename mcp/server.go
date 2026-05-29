@@ -10,6 +10,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"gorm.io/gorm"
 )
@@ -60,6 +61,7 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 	cfg := config.GetConfig(configPath)
 
 	InitMCPLogger(cfg)
+	service.InitService(nil, cfg)
 	LogMCPDebug("MCP server initializing", map[string]interface{}{
 		"config_path":         configPath,
 		"mcp_logging_enabled": cfg.MCP.Enabled,
