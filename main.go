@@ -24,8 +24,12 @@ func main() {
 	cfg := config.GetConfig("config.yml")
 	logger := log.SetZapLogger(*cfg)
 
-	service.InitService(logger, cfg)
-	model.InitDao(cfg, logger)
+	dao, err := model.NewDao(cfg, logger)
+	if err != nil {
+		panic("Failed to initialize database: " + err.Error())
+	}
+	model.RegisterDao(dao, logger)
+	service.InitService(logger, cfg, dao)
 	if cfg.Passkey.Enabled {
 		if err := service.InitWebAuthnWithConfig(cfg); err != nil {
 			panic("Failed to initialize WebAuthn: " + err.Error())

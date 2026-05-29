@@ -61,7 +61,6 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 	cfg := config.GetConfig(configPath)
 
 	InitMCPLogger(cfg)
-	service.InitService(nil, cfg)
 	LogMCPDebug("MCP server initializing", map[string]interface{}{
 		"config_path":         configPath,
 		"mcp_logging_enabled": cfg.MCP.Enabled,
@@ -69,8 +68,12 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 
 	cfg.Log.ORMLogLevel = 1
 
-	model.InitDao(cfg, nil)
-	dao := model.GetDao()
+	dao, err := model.NewDao(cfg, nil)
+	if err != nil {
+		panic("Failed to initialize database: " + err.Error())
+	}
+	model.RegisterDao(dao, nil)
+	service.InitService(nil, cfg, dao)
 
 	LogMCPDebug("Database initialized", map[string]interface{}{
 		"database_path": cfg.Database.Host,

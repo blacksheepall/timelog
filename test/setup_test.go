@@ -104,11 +104,15 @@ func dropAllTables(db *sql.DB) error {
 }
 
 func daoForTest(cfg *config.Config, logi logger.Logger) {
-	model.InitDao(cfg, logi)
+	dao, err := model.NewDao(cfg, logi)
+	if err != nil {
+		panic(err)
+	}
+	model.RegisterDao(dao, logi)
 }
 
 func serviceForTest(cfg *config.Config, logi logger.Logger) {
-	service.InitService(logi, cfg)
+	service.InitService(logi, cfg, model.GetDao())
 }
 
 type FakeLogger struct{}
