@@ -63,16 +63,11 @@ mcp:
 
 # Passkey temp password management
 # Usage:
-#   make passkey-temp create          # Create with default TTL (from config.yml)
-#   make passkey-temp create 900      # Create with custom TTL (seconds)
-#   make passkey-temp list            # List active temp passwords
-#   make passkey-temp revoke <id>     # Revoke a temp password by ID
+#   make passkey-temp                    # Create with default TTL (from config.yml)
+#   make passkey-temp PASSKEY_TEMP_TTL=900  # Create with custom TTL (seconds)
+PASSKEY_TEMP_TTL ?=
 passkey-temp:
-	@go run ./cmd/passkey-temp-admin $(filter-out $@,$(MAKECMDGOALS))
-
-# Prevent make from interpreting passkey-temp subcommands as targets
-%:
-	@:
+	@go run ./cmd/passkey-temp-admin $(PASSKEY_TEMP_TTL)
 
 # Migrate target
 migrate:
