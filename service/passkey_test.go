@@ -27,8 +27,12 @@ func setupTestModel() *model.Dao {
 	cfg := &config.Config{}
 	cfg.Database.Host = ":memory:"
 	cfg.Log.ORMLogLevel = 1
-	model.InitDao(cfg, FakeLogger{})
-	return model.GetDao()
+	dao, err := model.NewDao(cfg, FakeLogger{})
+	if err != nil {
+		panic(err)
+	}
+	InitService(FakeLogger{}, cfg, dao)
+	return dao
 }
 
 func TestPasskeySessionKeyNamespacing(t *testing.T) {

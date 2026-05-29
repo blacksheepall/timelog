@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"os"
 	"path/filepath"
 	"sort"
@@ -46,30 +47,42 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 
 func strPtr(s string) *string { return &s }
 
-var testMigrationsOnce sync.Once
+var (
+	testMigrationsMu sync.Mutex
+	migratedTestDBs  = map[*sql.DB]struct{}{}
+)
 
 func applyTestMigrations(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	testMigrationsOnce.Do(func() {
-		rawDB := dao.RawDB
-		if rawDB == nil {
-			t.Fatal("raw database is nil")
-		}
+	rawDB := dao.RawDB
+	if rawDB == nil {
+		t.Fatal("raw database is nil")
+	}
 
-		migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
+	testMigrationsMu.Lock()
+	if _, done := migratedTestDBs[rawDB]; done {
+		testMigrationsMu.Unlock()
+		return
+	}
+	testMigrationsMu.Unlock()
+
+	migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
+	if err != nil {
+		t.Fatalf("list migrations: %v", err)
+	}
+	sort.Strings(migrationFiles)
+
+	for _, migrationFile := range migrationFiles {
+		content, err := os.ReadFile(migrationFile)
 		if err != nil {
-			t.Fatalf("list migrations: %v", err)
+			t.Fatalf("read migration %s: %v", migrationFile, err)
 		}
-		sort.Strings(migrationFiles)
+		if _, err := rawDB.Exec(string(content)); err != nil {
+			t.Fatalf("apply migration %s: %v", migrationFile, err)
+		}
+	}
 
-		for _, migrationFile := range migrationFiles {
-			content, err := os.ReadFile(migrationFile)
-			if err != nil {
-				t.Fatalf("read migration %s: %v", migrationFile, err)
-			}
-			if _, err := rawDB.Exec(string(content)); err != nil {
-				t.Fatalf("apply migration %s: %v", migrationFile, err)
-			}
-		}
-	})
+	testMigrationsMu.Lock()
+	migratedTestDBs[rawDB] = struct{}{}
+	testMigrationsMu.Unlock()
 }
