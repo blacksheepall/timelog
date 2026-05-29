@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,14 +15,15 @@ import (
 func TestListTimeLogsByLocalDateRange(t *testing.T) {
 	dao := setupTestModel()
 	applyTestMigrations(t, dao)
+	seedTestCategory(t, dao)
 	db := dao.Db()
 
 	loc := model.GetSingaporeLocation()
-	start := time.Date(2026, 5, 29, 10, 0, 0, 0, loc).UTC()
-	end := time.Date(2026, 5, 29, 12, 0, 0, 0, loc).UTC()
+	start := time.Date(2026, 7, 15, 10, 0, 0, 0, loc).UTC()
+	end := time.Date(2026, 7, 15, 12, 0, 0, 0, loc).UTC()
 
 	inRange := &gen.Timelog{CategoryID: 1, StartTime: start, Remark: strPtr("in")}
-	outRange := &gen.Timelog{CategoryID: 1, StartTime: time.Date(2026, 5, 28, 10, 0, 0, 0, loc).UTC(), Remark: strPtr("out")}
+	outRange := &gen.Timelog{CategoryID: 1, StartTime: time.Date(2026, 7, 14, 10, 0, 0, 0, loc).UTC(), Remark: strPtr("out")}
 	endUTC := end
 	inRange.EndTime = &endUTC
 	outEnd := time.Date(2026, 5, 28, 12, 0, 0, 0, loc).UTC()
@@ -33,7 +35,7 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 		t.Fatalf("seed out-of-range log: %v", err)
 	}
 
-	logs, err := ListTimeLogsByLocalDateRange("2026-05-29", "2026-05-29")
+	logs, err := ListTimeLogsByLocalDateRange("2026-07-15", "2026-07-15")
 	if err != nil {
 		t.Fatalf("ListTimeLogsByLocalDateRange: %v", err)
 	}
@@ -44,26 +46,30 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 
 func strPtr(s string) *string { return &s }
 
+var testMigrationsOnce sync.Once
+
 func applyTestMigrations(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	rawDB := dao.RawDB
-	if rawDB == nil {
-		t.Fatal("raw database is nil")
-	}
+	testMigrationsOnce.Do(func() {
+		rawDB := dao.RawDB
+		if rawDB == nil {
+			t.Fatal("raw database is nil")
+		}
 
-	migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
-	if err != nil {
-		t.Fatalf("list migrations: %v", err)
-	}
-	sort.Strings(migrationFiles)
-
-	for _, migrationFile := range migrationFiles {
-		content, err := os.ReadFile(migrationFile)
+		migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
 		if err != nil {
-			t.Fatalf("read migration %s: %v", migrationFile, err)
+			t.Fatalf("list migrations: %v", err)
 		}
-		if _, err := rawDB.Exec(string(content)); err != nil {
-			t.Fatalf("apply migration %s: %v", migrationFile, err)
+		sort.Strings(migrationFiles)
+
+		for _, migrationFile := range migrationFiles {
+			content, err := os.ReadFile(migrationFile)
+			if err != nil {
+				t.Fatalf("read migration %s: %v", migrationFile, err)
+			}
+			if _, err := rawDB.Exec(string(content)); err != nil {
+				t.Fatalf("apply migration %s: %v", migrationFile, err)
+			}
 		}
-	}
+	})
 }
