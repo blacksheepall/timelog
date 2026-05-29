@@ -3,14 +3,12 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/service"
 )
 
 func TestCategoryTreeStructure(t *testing.T) {
-	// Clean up test data
-	db := model.GetDao().Db()
+	db := testDB().Db()
 	db.Exec("DELETE FROM categories")
 
 	// Create test hierarchy: Root -> Child -> Grandchild
@@ -87,8 +85,7 @@ func TestCategoryTreeStructure(t *testing.T) {
 }
 
 func TestCategoryTreeMultipleRoots(t *testing.T) {
-	// Clean up test data
-	db := model.GetDao().Db()
+	db := testDB().Db()
 	db.Exec("DELETE FROM categories")
 
 	// Create multiple root categories with children

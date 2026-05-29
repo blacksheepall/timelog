@@ -16,17 +16,34 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
+var testDAO *model.Dao
+
 func TestMain(m *testing.M) {
 	cfg := loadTestConfig()
 	gin.SetMode(gin.DebugMode)
-	serviceForTest(cfg, FakeLogger{})
-	daoForTest(cfg, FakeLogger{})
+	testDAO = mustNewTestDAO(cfg, FakeLogger{})
+	service.InitService(FakeLogger{}, cfg, testDAO)
 
 	if cfg.Test.Flush {
-		flushDb()
+		flushDb(testDAO)
 	}
 
 	os.Exit(m.Run())
+}
+
+func mustNewTestDAO(cfg *config.Config, logi logger.Logger) *model.Dao {
+	dao, err := model.NewDao(cfg, logi)
+	if err != nil {
+		panic(err)
+	}
+	return dao
+}
+
+func testDB() *model.Dao {
+	if testDAO == nil {
+		panic("integration test DAO is not initialized")
+	}
+	return testDAO
 }
 
 func loadTestConfig() *config.Config {
@@ -44,13 +61,13 @@ func loadTestConfig() *config.Config {
 	return cfg
 }
 
-func flushDb() {
+func flushDb(dao *model.Dao) {
 	migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
 	if err != nil {
 		panic(err)
 	}
 
-	rawDB := model.GetDao().RawDB
+	rawDB := dao.RawDB
 	if rawDB == nil {
 		panic("raw database is nil")
 	}
@@ -101,18 +118,6 @@ func dropAllTables(db *sql.DB) error {
 	}
 
 	return nil
-}
-
-func daoForTest(cfg *config.Config, logi logger.Logger) {
-	dao, err := model.NewDao(cfg, logi)
-	if err != nil {
-		panic(err)
-	}
-	model.RegisterDao(dao, logi)
-}
-
-func serviceForTest(cfg *config.Config, logi logger.Logger) {
-	service.InitService(logi, cfg, model.GetDao())
 }
 
 type FakeLogger struct{}
