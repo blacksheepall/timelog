@@ -34,6 +34,7 @@ certs/
 *.db
 
 docs/docs.go
+docs/superpowers/**
 docs/swagger*
 docs/superpowers/**
 app.log
@@ -52,3 +53,4 @@ model/gen/
 .vscode
 .worktrees/
 bin/*
+.local/
