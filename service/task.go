@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/blacksheepaul/timelog/model"
@@ -25,6 +26,36 @@ func GetTaskByID(id int32) (*gen.Task, error) {
 func GetAllTasks(includeSuspended bool, includeCompleted bool) ([]gen.Task, error) {
 	dao := getDao()
 	return model.GetAllTasks(dao.Db(), includeSuspended, includeCompleted)
+}
+
+// ListTasksByCompletionStatus returns tasks filtered by completion state.
+// status must be "completed", "pending", or "all".
+func ListTasksByCompletionStatus(status string) ([]gen.Task, error) {
+	tasks, err := GetAllTasks(true, true)
+	if err != nil {
+		return nil, err
+	}
+	if status == "all" {
+		return tasks, nil
+	}
+
+	filtered := make([]gen.Task, 0, len(tasks))
+	for _, task := range tasks {
+		isCompleted := task.IsCompleted != nil && *task.IsCompleted
+		switch status {
+		case "completed":
+			if isCompleted {
+				filtered = append(filtered, task)
+			}
+		case "pending":
+			if !isCompleted {
+				filtered = append(filtered, task)
+			}
+		default:
+			return nil, fmt.Errorf("invalid status %q: want completed, pending, or all", status)
+		}
+	}
+	return filtered, nil
 }
 
 // GetTasksByDate 根据日期获取任务

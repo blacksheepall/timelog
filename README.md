@@ -66,26 +66,26 @@ server:
 
 ### Generate temp password for the current app instance
 
-If you need a temp password that the current app instance can immediately accept, use the DB-backed admin command:
+If you need a temp password that the current app instance can immediately accept, use the DB-backed command:
 
 ```bash
-make passkey-temp create
+make passkey-temp
 ```
 
 Optional: specify TTL seconds (defaults to config `passkey.temp_password.ttl`).
 
 ```bash
-make passkey-temp create 900
+make passkey-temp PASSKEY_TEMP_TTL=900
+```
+
+Or run the CLI directly:
+
+```bash
+go run ./cmd/passkey-temp-admin
+go run ./cmd/passkey-temp-admin 900
 ```
 
 If your config file is not at the project root, set `TIMELOG_CONFIG_PATH` before running the command.
-
-### List or revoke DB-backed temp passwords
-
-```bash
-make passkey-temp list
-make passkey-temp revoke <id>
-```
 
 ### Bind device
 

@@ -7,45 +7,9 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
-
-var singaporeLocation *time.Location
-
-func init() {
-	var err error
-	singaporeLocation, err = time.LoadLocation("Asia/Singapore")
-	if err != nil {
-		singaporeLocation = time.FixedZone("SGT", 8*60*60)
-	}
-}
-
-func formatSGDateTime(t time.Time) string {
-	return t.In(singaporeLocation).Format("2006-01-02 15:04:05")
-}
-
-func formatSGDate(t time.Time) string {
-	return t.In(singaporeLocation).Format("2006-01-02")
-}
-
-func formatSGDateTimePtr(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.In(singaporeLocation).Format("2006-01-02 15:04:05")
-}
-
-func formatSGDatePtr(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.In(singaporeLocation).Format("2006-01-02")
-}
-
-func formatDuration(d time.Duration) string {
-	return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
-}
 
 func formatMCPResponse(summaryText string, data map[string]interface{}) (*mcp.CallToolResult, interface{}, error) {
 	data["_summary"] = summaryText
@@ -62,11 +26,11 @@ func formatMCPResponse(summaryText string, data map[string]interface{}) (*mcp.Ca
 	}, nil, nil
 }
 
-// Tool handlers with correct MCP signature
 type DateInfoParams struct{}
 
 func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoParams) (*mcp.CallToolResult, interface{}, error) {
-	now := time.Now().In(singaporeLocation)
+	loc := model.GetSingaporeLocation()
+	now := time.Now().In(loc)
 	weekday := now.Weekday()
 	daysSinceMonday := (int(weekday) + 6) % 7
 	monday := now.AddDate(0, 0, -daysSinceMonday)
@@ -74,8 +38,8 @@ func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoPar
 
 	response := map[string]interface{}{
 		"timezone":   "Asia/Singapore (SGT, UTC+8)",
-		"now":        formatSGDateTime(now),
-		"today":      now.Format("2006-01-02"),
+		"now":        service.FormatSGDateTime(now),
+		"today":      service.TodaySGDateString(),
 		"yesterday":  now.AddDate(0, 0, -1).Format("2006-01-02"),
 		"weekday":    weekday.String(),
 		"week_range": []string{monday.Format("2006-01-02"), sunday.Format("2006-01-02")},
@@ -85,7 +49,7 @@ func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoPar
 
 func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args DateRangeParams) (*mcp.CallToolResult, interface{}, error) {
 	if args.ActiveOnly {
-		timeLogs, err := model.ListTimeLogsWithOptions(server.db, 0, "start_time DESC", "end_time IS NULL")
+		timeLogs, err := service.ListActiveTimeLogs()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get current activity: %w", err)
 		}
@@ -94,8 +58,8 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 		for _, tl := range timeLogs {
 			entry := map[string]interface{}{
 				"id":         tl.ID,
-				"start_time": formatSGDateTime(tl.StartTime),
-				"duration":   formatDuration(time.Since(tl.StartTime)),
+				"start_time": service.FormatSGDateTime(tl.StartTime),
+				"duration":   service.FormatDuration(time.Since(tl.StartTime)),
 				"remarks":    tl.Remark,
 			}
 			result = append(result, entry)
@@ -111,13 +75,13 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 	startDate := args.StartDate
 	endDate := args.EndDate
 	if startDate == "" {
-		startDate = time.Now().In(singaporeLocation).Format("2006-01-02")
+		startDate = service.TodaySGDateString()
 	}
 	if endDate == "" {
 		endDate = startDate
 	}
 
-	timeLogs, err := model.ListTimeLogsByLocalDateRange(server.db, startDate, endDate)
+	timeLogs, err := service.ListTimeLogsByLocalDateRange(startDate, endDate)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get time logs by date range: %w", err)
 	}
@@ -132,19 +96,19 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 		if tl.EndTime != nil {
 			duration = tl.EndTime.Sub(tl.StartTime)
 			totalDuration += duration
-			durationStr = formatDuration(duration)
+			durationStr = service.FormatDuration(duration)
 		}
 
 		entry := map[string]interface{}{
 			"id":         tl.ID,
-			"start_time": formatSGDateTime(tl.StartTime),
+			"start_time": service.FormatSGDateTime(tl.StartTime),
 			"end_time":   nil,
 			"duration":   durationStr,
 			"remarks":    tl.Remark,
 		}
 
 		if tl.EndTime != nil {
-			entry["end_time"] = formatSGDateTime(*tl.EndTime)
+			entry["end_time"] = service.FormatSGDateTime(*tl.EndTime)
 		}
 
 		result = append(result, entry)
@@ -154,15 +118,15 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 		"time_logs":      result,
 		"count":          len(result),
 		"date_range":     fmt.Sprintf("%s to %s", startDate, endDate),
-		"total_duration": formatDuration(totalDuration),
+		"total_duration": service.FormatDuration(totalDuration),
 	}
 
-	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %s", len(result), startDate, endDate, formatDuration(totalDuration))
+	summaryText := fmt.Sprintf("Found %d time logs from %s to %s, total duration: %s", len(result), startDate, endDate, service.FormatDuration(totalDuration))
 	return formatMCPResponse(summaryText, response)
 }
 
 func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskStatusParams) (*mcp.CallToolResult, interface{}, error) {
-	tasks, err := model.GetAllTasks(server.db, true, true)
+	tasks, err := service.ListTasksByCompletionStatus(args.Status)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get tasks: %w", err)
 	}
@@ -171,17 +135,10 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 	for _, task := range tasks {
 		isCompleted := task.IsCompleted != nil && *task.IsCompleted
 
-		if args.Status == "completed" && !isCompleted {
-			continue
-		}
-		if args.Status == "pending" && isCompleted {
-			continue
-		}
-
 		categoryName := ""
 		categoryColor := ""
 		if task.CategoryID > 0 {
-			if cat, err := model.GetCategoryByID(server.db, int32(task.CategoryID)); err == nil && cat != nil {
+			if cat, err := service.GetCategoryByID(int32(task.CategoryID)); err == nil && cat != nil {
 				categoryName = cat.Name
 				if cat.Color != nil {
 					categoryColor = *cat.Color
@@ -195,14 +152,14 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 			"description":       task.Description,
 			"category":          categoryName,
 			"category_color":    categoryColor,
-			"due_date":          formatSGDate(task.DueDate),
+			"due_date":          service.FormatSGDate(task.DueDate),
 			"estimated_minutes": task.EstimatedMinutes,
 			"is_completed":      isCompleted,
-			"created_at":        formatSGDateTimePtr(task.CreatedAt),
+			"created_at":        service.FormatSGDateTimePtr(task.CreatedAt),
 		}
 
 		if task.CompletedAt != nil {
-			entry["completed_at"] = formatSGDateTime(*task.CompletedAt)
+			entry["completed_at"] = service.FormatSGDateTime(*task.CompletedAt)
 		}
 
 		result = append(result, entry)
@@ -218,7 +175,7 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 }
 
 func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args ConstraintParams) (*mcp.CallToolResult, interface{}, error) {
-	constraints, err := model.GetActiveConstraints(server.db)
+	constraints, err := service.GetActiveConstraints()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get active constraints: %w", err)
 	}
@@ -231,13 +188,13 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 			"id":               constraint.ID,
 			"description":      constraint.Description,
 			"punishment_quote": constraint.PunishmentQuote,
-			"start_date":       formatSGDate(constraint.StartDate),
+			"start_date":       service.FormatSGDate(constraint.StartDate),
 			"is_active":        isActive,
-			"created_at":       formatSGDateTimePtr(constraint.CreatedAt),
+			"created_at":       service.FormatSGDateTimePtr(constraint.CreatedAt),
 		}
 
 		if constraint.EndDate != nil {
-			entry["end_date"] = formatSGDate(*constraint.EndDate)
+			entry["end_date"] = service.FormatSGDate(*constraint.EndDate)
 		}
 		if constraint.EndReason != nil && *constraint.EndReason != "" {
 			entry["end_reason"] = *constraint.EndReason
@@ -255,7 +212,7 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 }
 
 func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args CategoryListParams) (*mcp.CallToolResult, interface{}, error) {
-	categories, err := model.ListCategories(server.db)
+	categories, err := service.ListCategories()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list categories: %w", err)
 	}
@@ -288,62 +245,25 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 }
 
 func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	_, err := model.GetCategoryByID(server.db, args.CategoryID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("category not found: %w", err)
-	}
-
-	tl := &gen.Timelog{
+	createdLog, err := service.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
 		CategoryID: args.CategoryID,
-	}
-
-	defaultUserID := int32(1)
-	tl.UserID = &defaultUserID
-
-	if args.StartTime != "" {
-		st, err := time.ParseInLocation("2006-01-02 15:04:05", args.StartTime, singaporeLocation)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid start_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
-		}
-		tl.StartTime = st.UTC()
-	} else {
-		tl.StartTime = time.Now().UTC()
-	}
-
-	if args.EndTime != "" {
-		et, err := time.ParseInLocation("2006-01-02 15:04:05", args.EndTime, singaporeLocation)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid end_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
-		}
-		etUTC := et.UTC()
-		tl.EndTime = &etUTC
-	}
-
-	if args.TaskID > 0 {
-		tl.TaskID = &args.TaskID
-	}
-
-	if args.Remark != "" {
-		tl.Remark = &args.Remark
-	}
-
-	if err := model.CreateTimeLog(server.db, tl); err != nil {
-		return nil, nil, fmt.Errorf("failed to create time log: %w", err)
-	}
-
-	createdLog, err := model.GetTimeLogByID(server.db, *tl.ID)
+		StartTime:  args.StartTime,
+		EndTime:    args.EndTime,
+		TaskID:     args.TaskID,
+		Remark:     args.Remark,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to retrieve created time log: %w", err)
+		return nil, nil, err
 	}
 
 	response := map[string]interface{}{
 		"id":          *createdLog.ID,
 		"category_id": createdLog.CategoryID,
-		"start_time":  formatSGDateTime(createdLog.StartTime),
+		"start_time":  service.FormatSGDateTime(createdLog.StartTime),
 		"remark":      createdLog.Remark,
 	}
 	if createdLog.EndTime != nil {
-		response["end_time"] = formatSGDateTime(*createdLog.EndTime)
+		response["end_time"] = service.FormatSGDateTime(*createdLog.EndTime)
 	}
 	if createdLog.TaskID != nil {
 		response["task_id"] = *createdLog.TaskID
@@ -353,61 +273,26 @@ func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTim
 }
 
 func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	tl, err := model.GetTimeLogByID(server.db, args.ID)
+	updatedLog, err := service.UpdateTimeLogFromMCPInput(service.UpdateTimeLogMCPInput{
+		ID:         args.ID,
+		CategoryID: args.CategoryID,
+		StartTime:  args.StartTime,
+		EndTime:    args.EndTime,
+		TaskID:     args.TaskID,
+		Remark:     args.Remark,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("time log not found: %w", err)
-	}
-
-	if args.CategoryID > 0 {
-		_, err := model.GetCategoryByID(server.db, args.CategoryID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("category not found: %w", err)
-		}
-		tl.CategoryID = args.CategoryID
-	}
-
-	if args.StartTime != "" {
-		st, err := time.ParseInLocation("2006-01-02 15:04:05", args.StartTime, singaporeLocation)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid start_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
-		}
-		tl.StartTime = st.UTC()
-	}
-
-	if args.EndTime != "" {
-		et, err := time.ParseInLocation("2006-01-02 15:04:05", args.EndTime, singaporeLocation)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid end_time format, expected YYYY-MM-DD HH:MM:SS: %w", err)
-		}
-		etUTC := et.UTC()
-		tl.EndTime = &etUTC
-	}
-
-	if args.TaskID > 0 {
-		tl.TaskID = &args.TaskID
-	}
-
-	if args.Remark != "" {
-		tl.Remark = &args.Remark
-	}
-
-	if err := model.UpdateTimeLog(server.db, tl); err != nil {
-		return nil, nil, fmt.Errorf("failed to update time log: %w", err)
-	}
-
-	updatedLog, err := model.GetTimeLogByID(server.db, args.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to retrieve updated time log: %w", err)
+		return nil, nil, err
 	}
 
 	response := map[string]interface{}{
 		"id":          *updatedLog.ID,
 		"category_id": updatedLog.CategoryID,
-		"start_time":  formatSGDateTime(updatedLog.StartTime),
+		"start_time":  service.FormatSGDateTime(updatedLog.StartTime),
 		"remark":      updatedLog.Remark,
 	}
 	if updatedLog.EndTime != nil {
-		response["end_time"] = formatSGDateTime(*updatedLog.EndTime)
+		response["end_time"] = service.FormatSGDateTime(*updatedLog.EndTime)
 	}
 	if updatedLog.TaskID != nil {
 		response["task_id"] = *updatedLog.TaskID

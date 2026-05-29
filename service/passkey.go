@@ -38,6 +38,7 @@ func InitWebAuthnWithConfig(cfg *config.Config) error {
 	webAuthnProvider = func() *webauthn.WebAuthn {
 		return instance
 	}
+	setWebAuthn(instance)
 	return nil
 }
 

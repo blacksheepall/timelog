@@ -39,7 +39,7 @@ func ErrorResponse(status int, message string) ApiResponse {
 }
 
 // RegisterTimeLogRoutes 注册 TimeLog 相关路由
-func RegisterTimeLogRoutes(group *gin.RouterGroup) {
+func RegisterTimeLogRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.POST("/timelogs", createTimeLogHandler)
 	group.GET("/timelogs", listTimeLogsHandler)
 	group.GET("/timelogs/:id", getTimeLogHandler)

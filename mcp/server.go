@@ -10,6 +10,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"gorm.io/gorm"
 )
@@ -67,8 +68,12 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 
 	cfg.Log.ORMLogLevel = 1
 
-	model.InitDao(cfg, nil)
-	dao := model.GetDao()
+	dao, err := model.NewDao(cfg, nil)
+	if err != nil {
+		panic("Failed to initialize database: " + err.Error())
+	}
+	model.RegisterDao(dao, nil)
+	service.InitService(nil, cfg, dao)
 
 	LogMCPDebug("Database initialized", map[string]interface{}{
 		"database_path": cfg.Database.Host,

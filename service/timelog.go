@@ -31,6 +31,13 @@ func ListTimeLogsWithOptions(limit int, orderBy string, conds ...interface{}) ([
 	return model.ListTimeLogsWithOptions(db, limit, orderBy, conds...)
 }
 
+// ListTimeLogsByLocalDateRange queries timelogs whose start_time falls within
+// the inclusive local-date range in Asia/Singapore (YYYY-MM-DD strings).
+func ListTimeLogsByLocalDateRange(startDate, endDate string) ([]gen.Timelog, error) {
+	db := getDao().Db()
+	return model.ListTimeLogsByLocalDateRange(db, startDate, endDate)
+}
+
 // UpdateTimeLog 更新一条时间日志
 func UpdateTimeLog(tl *gen.Timelog) error {
 	db := getDao().Db()

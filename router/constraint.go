@@ -11,7 +11,7 @@ import (
 )
 
 // 添加约束相关路由
-func setupConstraintRoutes(group *gin.RouterGroup) {
+func setupConstraintRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.GET("/constraints", listConstraintsHandler)
 	group.POST("/constraints", createConstraintHandler)
 	group.GET("/constraints/:id", getConstraintHandler)

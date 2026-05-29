@@ -3,11 +3,12 @@ package middleware
 import (
 	"strings"
 
+	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/gin-gonic/gin"
 )
 
-func Auth() gin.HandlerFunc {
+func Auth(dao *model.Dao) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session, err := GetSessionFromHeader(c)
 		if err != nil {
@@ -15,7 +16,7 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
-		if !isValidUserToken(session) {
+		if !isValidUserToken(dao, session) {
 			c.AbortWithStatusJSON(401, gin.H{
 				"msg": "Invalid or expired token",
 			})
@@ -26,14 +27,10 @@ func Auth() gin.HandlerFunc {
 	}
 }
 
-var tokenValidator = isValidUserTokenWithPrefix
-
-func isValidUserToken(token string) bool {
-	return tokenValidator(token)
-}
-
-func isValidUserTokenWithPrefix(token string) bool {
-	dao := getMiddlewareDAO()
+func isValidUserToken(dao *model.Dao, token string) bool {
+	if dao == nil {
+		return false
+	}
 	// Only accept keys with auth_token: prefix to prevent passkey session misuse
 	if _, ok := dao.GetCache("auth_token:" + token); ok {
 		return true

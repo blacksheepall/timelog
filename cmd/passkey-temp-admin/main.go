@@ -1,10 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/blacksheepaul/timelog/core/config"
 	log "github.com/blacksheepaul/timelog/core/logger"
@@ -12,70 +13,60 @@ import (
 	"github.com/blacksheepaul/timelog/service"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
+func resolveTTL(args []string, defaultTTL int) (int, error) {
+	if len(args) > 1 {
+		return 0, errors.New("too many positional arguments")
+	}
+	if len(args) == 0 {
+		return defaultTTL, nil
 	}
 
-	cfg := config.GetConfig("config.yml")
-	logger := log.SetZapLogger(*cfg)
-	service.InitService(logger, cfg)
-	model.InitDao(cfg, logger)
-
-	command := strings.ToLower(os.Args[1])
-	switch command {
-	case "create":
-		ttl := cfg.Passkey.TempPassword.TTL
-		if len(os.Args) >= 3 {
-			value, err := strconv.Atoi(os.Args[2])
-			if err != nil {
-				fmt.Printf("invalid ttl: %v\n", err)
-				os.Exit(1)
-			}
-			ttl = value
-		}
-		record, password, err := service.CreateTempPassword(ttl)
-		if err != nil {
-			fmt.Printf("failed to create temp password: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("temp password: %s\n", password)
-		fmt.Printf("expires at: %s\n", record.ExpiresAt.Format("2006-01-02 15:04:05"))
-	case "list":
-		passwords, err := service.ListTempPasswords()
-		if err != nil {
-			fmt.Printf("failed to list temp passwords: %v\n", err)
-			os.Exit(1)
-		}
-		if len(passwords) == 0 {
-			fmt.Println("no temp passwords found")
-			return
-		}
-		for _, password := range passwords {
-			fmt.Printf("id: %d\t expires_at: %s\n", password.ID, password.ExpiresAt.Format("2006-01-02 15:04:05"))
-		}
-	case "revoke":
-		if len(os.Args) < 3 {
-			fmt.Println("revoke requires an id")
-			os.Exit(1)
-		}
-		id, err := strconv.Atoi(os.Args[2])
-		if err != nil {
-			fmt.Printf("invalid id: %v\n", err)
-			os.Exit(1)
-		}
-		if err := service.DeleteTempPassword(uint(id)); err != nil {
-			fmt.Printf("failed to revoke temp password: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Println("revoked")
-	default:
-		printUsage()
-		os.Exit(1)
+	ttl, err := strconv.Atoi(args[0])
+	if err != nil {
+		return 0, fmt.Errorf("invalid ttl: %w", err)
 	}
+	if ttl < 0 {
+		return 0, errors.New("ttl must be >= 0")
+	}
+
+	return ttl, nil
 }
 
-func printUsage() {
-	fmt.Println("Usage: go run ./cmd/passkey-temp-admin <create|list|revoke> [ttl|id]")
+func usage() string {
+	return "Usage: go run ./cmd/passkey-temp-admin [ttl]"
+}
+
+func runCreate(args []string, cfg *config.Config, stdout io.Writer) error {
+	ttl, err := resolveTTL(args, cfg.Passkey.TempPassword.TTL)
+	if err != nil {
+		return err
+	}
+
+	record, password, err := service.CreateTempPassword(ttl)
+	if err != nil {
+		return fmt.Errorf("failed to create temp password: %w", err)
+	}
+
+	fmt.Fprintf(stdout, "temp password: %s\n", password)
+	fmt.Fprintf(stdout, "expires at: %s\n", record.ExpiresAt.Format("2006-01-02 15:04:05"))
+	return nil
+}
+
+func main() {
+	cfg := config.GetConfig("config.yml")
+	logger := log.SetZapLogger(*cfg)
+
+	dao, err := model.NewDao(cfg, logger)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize database: %v\n", err)
+		os.Exit(1)
+	}
+	model.RegisterDao(dao, logger)
+	service.InitService(logger, cfg, dao)
+
+	if err := runCreate(os.Args[1:], cfg, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintln(os.Stderr, usage())
+		os.Exit(1)
+	}
 }

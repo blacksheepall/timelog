@@ -68,11 +68,15 @@ The `/health` endpoint does not require authentication.
 
 Keep this list synchronized with `mcp/server.go`:
 
-- `get_timelogs_by_date_range`
+- `get_timelogs_by_date_range` — use `"active_only": true` to fetch ongoing time logs
 - `get_tasks_by_status`
-- `get_current_activity`
 - `get_active_constraints`
 - `get_date_info`
+- `list_categories`
+- `create_timelog`
+- `update_timelog`
+
+MCP tools call the same `service` layer as the HTTP API. Transport-specific JSON shaping stays in MCP handlers; business rules live in `service/`.
 
 ## Maintenance Rules
 

@@ -11,7 +11,7 @@ import (
 )
 
 // 添加任务相关路由
-func setupTaskRoutes(group *gin.RouterGroup) {
+func setupTaskRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.GET("/tasks", listTasksHandler)
 	group.POST("/tasks", createTaskHandler)
 	group.GET("/tasks/:id", getTaskHandler)
