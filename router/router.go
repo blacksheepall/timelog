@@ -27,31 +27,31 @@ var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
 	)
 })
 
-func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles embed.FS) *gin.Engine {
+func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles embed.FS, deps Dependencies) *gin.Engine {
 	r.Use(GinLogger)
 	r.Use(middleware.Cors(cfg))
 
 	api := r.Group("/api")
 	protected := api.Group("")
 	if cfg.Passkey.Enabled {
-		protected.Use(middleware.Auth())
+		protected.Use(middleware.Auth(deps.DAO))
 	}
 
 	// 注册 TimeLog 路由
-	RegisterTimeLogRoutes(protected)
+	RegisterTimeLogRoutes(protected, deps)
 
 	// 注册 Task 路由
-	setupTaskRoutes(protected)
+	setupTaskRoutes(protected, deps)
 
 	// 注册 Constraint 路由
-	setupConstraintRoutes(protected)
+	setupConstraintRoutes(protected, deps)
 
 	// 注册通用鉴权路由
 	setupAuthRoutes(api, cfg)
 
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {
-		setupPasskeyRoutes(api, protected, cfg)
+		setupPasskeyRoutes(api, protected, cfg, deps)
 	}
 
 	// 注册 Swagger 文档路由（仅非 prod 构建）

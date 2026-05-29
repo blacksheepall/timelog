@@ -29,14 +29,17 @@ func main() {
 		panic("Failed to initialize database: " + err.Error())
 	}
 	model.RegisterDao(dao, logger)
-	service.InitService(logger, cfg, dao)
+	svc := service.InitService(logger, cfg, dao)
 	if cfg.Passkey.Enabled {
 		if err := service.InitWebAuthnWithConfig(cfg); err != nil {
 			panic("Failed to initialize WebAuthn: " + err.Error())
 		}
 	}
 
-	r := router.Register(gin.New(), cfg, logger, staticFiles)
+	r := router.Register(gin.New(), cfg, logger, staticFiles, router.Dependencies{
+		Service: svc,
+		DAO:     dao,
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

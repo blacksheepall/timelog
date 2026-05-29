@@ -30,7 +30,7 @@ type passkeyCredentialDTO struct {
 	CreatedAt  string `json:"created_at"`
 }
 
-func setupPasskeyRoutes(public *gin.RouterGroup, protected *gin.RouterGroup, cfg *config.Config) {
+func setupPasskeyRoutes(public *gin.RouterGroup, protected *gin.RouterGroup, cfg *config.Config, deps Dependencies) {
 	public.POST("/passkey/register/begin", passkeyRegisterBeginHandler(cfg))
 	public.POST("/passkey/register/finish", passkeyRegisterFinishHandler())
 	public.POST("/passkey/login/begin", passkeyLoginBeginHandler(cfg))
