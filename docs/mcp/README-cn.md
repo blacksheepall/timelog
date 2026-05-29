@@ -68,11 +68,15 @@ Authorization: Bearer <token>
 
 使用以下工具与 TimeLog 数据交互（保持与 `mcp/server.go` 同步）：
 
-- `get_timelogs_by_date_range` - 获取指定日期范围内的时间记录
+- `get_timelogs_by_date_range` - 获取指定日期范围内的时间记录；设置 `"active_only": true` 可获取正在进行的计时
 - `get_tasks_by_status` - 按完成状态筛选任务
-- `get_current_activity` - 获取当前活跃/正在进行的计时
 - `get_active_constraints` - 了解当前自我约束和外部条件
 - `get_date_info` - 获取当前日期、时间、今天、昨天以及本周日期范围
+- `list_categories` - 列出所有可用分类
+- `create_timelog` - 创建时间记录
+- `update_timelog` - 更新时间记录
+
+MCP 工具与 HTTP API 共用同一套 `service` 业务层；MCP handler 只负责传输层 JSON 格式化，业务规则集中在 `service/`。
 
 ## 维护规则
 
