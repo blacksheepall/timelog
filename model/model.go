@@ -64,20 +64,44 @@ func (tx *TxDao) Rollback() error {
 var _ DBProvider = (*Dao)(nil)
 var _ DBProvider = (*TxDao)(nil)
 
+// NewDao opens SQLite and returns a DAO without mutating package globals.
+func NewDao(cfg *config.Config, _ logger.Logger) (*Dao, error) {
+	db, err := gorm.Open(sqlite.Open(cfg.Database.Host), &gorm.Config{
+		Logger: gl.Default.LogMode(gl.LogLevel(cfg.Log.ORMLogLevel)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Dao{
+		db:    db,
+		RawDB: raw,
+		cache: cache.New(5*time.Minute, 10*time.Minute),
+	}, nil
+}
+
+// RegisterDao installs a DAO constructed via NewDao for legacy call sites that
+// still use GetDao during the migration.
+func RegisterDao(d *Dao, loggerInstance logger.Logger) {
+	once.Do(func() {
+		dao = d
+		log = loggerInstance
+	})
+}
+
 func InitDao(cfg *config.Config, loggerInstance logger.Logger) {
 	once.Do(func() {
-		if db, err := gorm.Open(sqlite.Open(cfg.Database.Host), &gorm.Config{
-			Logger: gl.Default.LogMode(gl.LogLevel(cfg.Log.ORMLogLevel)),
-		}); err != nil {
+		d, err := NewDao(cfg, loggerInstance)
+		if err != nil {
 			panic(err)
-		} else {
-			log = loggerInstance
-			raw, _ := db.DB()
-			dao = &Dao{db: db, RawDB: raw}
 		}
-
-		dao.cache = cache.New(5*time.Minute, 10*time.Minute)
-
+		dao = d
+		log = loggerInstance
 	})
 }
 
