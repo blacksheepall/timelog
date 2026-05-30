@@ -277,18 +277,20 @@
     submitting.value = true
 
     try {
-      const data = {
-        name: form.name.trim(),
-        color: form.color,
-        description: form.description.trim(),
-        parent_id: form.parent_id,
-      }
-
       if (editingCategory.value) {
-        await categoryAPI.update(editingCategory.value.id, data)
+        await categoryAPI.update(editingCategory.value.id, {
+          name: form.name.trim(),
+          color: form.color,
+          description: form.description.trim(),
+        })
         showNotification('success', 'Category updated successfully')
       } else {
-        await categoryAPI.create(data)
+        await categoryAPI.create({
+          name: form.name.trim(),
+          color: form.color,
+          description: form.description.trim(),
+          parent_id: form.parent_id ?? undefined,
+        })
         showNotification('success', 'Category created successfully')
       }
 
