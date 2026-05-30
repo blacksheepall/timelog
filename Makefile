@@ -92,15 +92,15 @@ gen-certs:
 		-out certs/cert.pem \
 		-days 365 \
 		-nodes \
-		-subj "/CN=localhost" \
-		-addext "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:192.168.8.22" \
+		-subj "/CN=timelog.local" \
+		-addext "subjectAltName=DNS:timelog.local,DNS:localhost,IP:127.0.0.1" \
 		2>/dev/null || \
 	openssl req -x509 -newkey rsa:4096 \
 		-keyout certs/key.pem \
 		-out certs/cert.pem \
 		-days 365 \
 		-nodes \
-		-subj "/CN=localhost"
+		-subj "/CN=timelog.local"
 	@echo "Certificates generated in ./certs/"
 	@echo "  - certs/cert.pem"
 	@echo "  - certs/key.pem"
