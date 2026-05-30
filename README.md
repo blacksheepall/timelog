@@ -12,6 +12,11 @@ Core functions:
 
 # How to build and run
 
+For development setup, generated-file rules, and required checks before committing, read:
+
+- 中文（主文档）：[development-cn.md](docs/development-cn.md)
+- English (AI Translated): [development.md](docs/development.md)
+
 ## API Documentation (Development/Testing Only)
 
 Non-`prod` builds serve Redoc at `/docs/redoc.html` (legacy redirect: `/swagger`).
@@ -54,6 +59,7 @@ make gen-certs
 ```
 
 This creates `certs/cert.pem` and `certs/key.pem` in the project root.
+The default passkey config uses `timelog.local`; for local testing, make sure it resolves to `127.0.0.1` (for example, add `127.0.0.1 timelog.local` to `/etc/hosts`).
 
 Update your `config.yml`:
 
@@ -64,7 +70,7 @@ server:
   key_file: ./certs/key.pem
 ```
 
-**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. The application will be accessible at `https://localhost:8080` (or your configured port).
+**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. With the default passkey config, access the application at `https://timelog.local:8080` (or update `passkey.rp_origins` if you use a different origin).
 
 ### Generate temp password for the current app instance
 
@@ -91,11 +97,11 @@ If your config file is not at the project root, set `TIMELOG_CONFIG_PATH` before
 
 ### Bind device
 
-Open `https://localhost:5173/passkey/register` and use the temp password to create a passkey.
+Open `https://timelog.local:8080/passkey/register` and use the temp password to create a passkey.
 
 ### Login
 
-Open `https://localhost:5173/login` and complete the passkey prompt.
+Open `https://timelog.local:8080/login` and complete the passkey prompt.
 
 ## Migrate
 
@@ -111,11 +117,9 @@ forward
 
 ```bash
 migrate -database "sqlite3://dev.db" --path model/migrations/ up
-# or use make target (defaults to dev environment)
-make migrate
-# or explicitly specify environment
-make migrate env=prod
+# or use make target (Makefile defaults to prod; use env=dev for local development)
 make migrate env=dev
+make migrate env=prod
 ```
 
 # Launch

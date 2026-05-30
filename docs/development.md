@@ -1,0 +1,264 @@
+# TimeLog Developer Guide
+
+AI Translated from `docs/development-cn.md`. The Chinese version is the source of truth; update it first, then refresh this translation.
+
+## Project Overview
+
+TimeLog is a local-first full-stack time logging app:
+
+- Backend: Go, with `main.go` as the entry point.
+- Frontend: Vue 3 + Vite under `web/`.
+- Database: SQLite, with migrations under `model/migrations/`.
+- API: HTTP routes live in `router/`, business logic in `service/`, persistence in `model/`.
+- API contract: DTOs come from `api/proto/timelog/v1/`; REST paths come from `api/openapi/rest.yaml`.
+- Documentation: non-`prod` builds expose Redoc at `/docs/redoc.html`; the legacy `/swagger` path redirects there.
+- MCP: the MCP server lives in `mcp/`; see `docs/mcp/`.
+
+For production and local binary runs, Go embeds `web/dist` from `main.go` and serves both the API and SPA. That means `web/dist` must exist before compiling the main Go binary for the first time.
+
+## Fresh Checkout
+
+Install these tools first:
+
+- Go: use the version declared in `go.mod`.
+- Node.js + pnpm: the frontend and Buf CLI depend on `web/` dev dependencies.
+- SQLite migration CLI: installed through `make install-deps`.
+
+Recommended setup:
+
+```bash
+cp config-example.yml config.yml
+cp config-example.yml config-test.yml
+make gen-certs
+make install-deps
+cd web && pnpm install && cd ..
+make gen-api
+make migrate env=dev
+make buildx
+```
+
+Notes:
+
+- `config.yml` and `config-test.yml` are gitignored and must be created locally.
+- `config-example.yml` enables HTTPS by default and references `certs/cert.pem` / `certs/key.pem`. If you keep the default config, run `make gen-certs` first; for plain HTTP development, you can set `server.https_enabled` to `false` in your local `config.yml`.
+- The default frontend proxy and passkey RP origins use `timelog.local`. For local development, make sure `timelog.local` resolves to `127.0.0.1`, for example by adding `127.0.0.1 timelog.local` to `/etc/hosts`.
+- `make install-deps` installs Go-side development tools, including `protoc-gen-jsonschema`, `gentool`, and `migrate` with the SQLite driver.
+- The Buf CLI comes from `web/node_modules/.bin/buf`, so a fresh checkout needs frontend dependencies installed first. `make gen-api` also tries to run `cd web && pnpm install` when Buf is missing.
+- `Makefile` defaults `env` to `prod`. Use `make migrate env=dev` explicitly for the development database; otherwise migration targets operate on `prod.db`.
+- `make buildx` builds the frontend first, then compiles the Go binary. It is the safest full build entry point.
+
+## Daily Development
+
+### Backend + Frontend Dev Mode
+
+The common development setup is a backend on `8080` and the Vite dev server on `5173`, with `/api` proxied to the backend:
+
+```bash
+make buildx
+./main
+```
+
+In another terminal:
+
+```bash
+cd web
+pnpm run dev
+```
+
+Open `http://localhost:5173`. The default Vite proxy targets `https://timelog.local:8080`; if proxying fails, first confirm that `timelog.local` resolves to your machine and that the backend HTTPS certificate has been generated.
+
+If passkey is enabled, prefer using the full-build backend HTTPS origin, such as `https://timelog.local:8080`. The passkey RP origin must match `passkey.rp_origins` in `config.yml`.
+
+### Builds
+
+```bash
+make buildx        # Full local build: frontend + API generation + Go binary
+make buildx-linux  # Linux release build
+make web           # Frontend build only; also runs gen-api
+make build         # Compile the Go main binary; requires web/dist to already exist
+```
+
+`make build` runs `gen-api`, but it does not build `web/dist`. On a clean checkout, prefer `make buildx`.
+
+### Tests And Checks
+
+Choose the narrowest relevant check for the change:
+
+```bash
+go test ./router/...
+go test ./service/...
+go test ./model/...
+go test ./test/...
+make test
+```
+
+Frontend changes:
+
+```bash
+cd web
+pnpm run type-check
+pnpm run build
+```
+
+API contract changes:
+
+```bash
+make gen-api
+make check-api
+make test
+```
+
+Formatting:
+
+```bash
+make fmt
+```
+
+## Generated File Rules
+
+This project does not commit the main generated outputs to git. This keeps reviews focused on source changes instead of generated diffs.
+
+Never edit these paths by hand:
+
+- `gen/go/`
+- `web/src/gen/`
+- `gen/openapi/schemas/`
+- `router/docs/openapi.yaml`
+- `model/gen/`
+- `web/dist/`
+
+Edit the corresponding source files instead:
+
+| Goal | Edit | Generate With |
+| --- | --- | --- |
+| Go / TypeScript API DTOs | `api/proto/timelog/v1/*.proto` | `make gen-api` |
+| REST paths, operations, response envelope docs | `api/openapi/rest.yaml` | `make gen-api` |
+| OpenAPI merge logic | `cmd/merge-openapi/` | `make gen-api` |
+| Redoc static page | `router/docs/redoc.html` | No generation needed |
+| GORM model code | Database structure and `model/gentool/gormgen.go` | `make gen-model` |
+| Frontend production assets | `web/src/` | `make web` or `make buildx` |
+
+`router/docs/openapi.yaml` is generated by merging `api/openapi/rest.yaml` with `gen/openapi/schemas/`. Non-`prod` builds embed it, so run `make gen-api` if it is missing.
+
+## Where To Change Code
+
+### API And Backend
+
+- Add or change API DTOs: edit `api/proto/timelog/v1/`.
+- Add or change REST paths: edit `api/openapi/rest.yaml`.
+- Route registration and HTTP handlers: edit `router/`.
+- Request / response envelope: Go side in `router/apiresponse.go`, frontend type in `web/src/types/api.ts`.
+- Business logic: edit `service/`.
+- Data access and models: edit `model/`.
+- Mapping between API DTOs and database models: edit `internal/api/mapper/`.
+
+Keep the existing layering: `router -> service -> model`. Do not put database access directly into handlers, and do not bypass the model layer from services.
+
+### Frontend
+
+- API calls are centralized in `web/src/api/index.ts`.
+- Generated DTOs are imported from `web/src/gen/`, but that directory must not be edited by hand.
+- Route titles come from `meta.title` in `web/src/router/index.ts`.
+- Styling should follow the existing Tailwind / Element Plus style.
+- The frontend still keeps `tagAPI` as a compatibility alias of `categoryAPI`; new code should not introduce tag semantics.
+
+Read `web/CLAUDE.md` before frontend changes, but treat the actual code and this developer guide as authoritative. Some historical descriptions in that file may no longer be fully accurate.
+
+### Database Migrations
+
+Create a migration:
+
+```bash
+migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/ add_xxx
+```
+
+Run development migrations:
+
+```bash
+make migrate env=dev
+```
+
+Run production migrations:
+
+```bash
+make migrate env=prod
+```
+
+`make migrate` without arguments uses the default `env=prod`. Be explicit with `env=dev` during development.
+
+## Before Committing
+
+Check according to the change type:
+
+- Backend business logic only: run the relevant package tests first, then `make test` if the impact is wider.
+- API contract, REST spec, or mapper changes: run `make gen-api && make check-api && make test`; also run `cd web && pnpm run type-check` if the frontend uses the change.
+- Frontend changes: run `cd web && pnpm run type-check`; run `cd web && pnpm run build` when needed.
+- Database schema / migration changes: run `make migrate env=dev`, plus relevant model/service tests when needed.
+- Release build or embed-related changes: run `make buildx`.
+
+If generated outputs appear in `git status`, first check whether they should be ignored. In general, commit source files rather than generated output.
+
+## Troubleshooting
+
+### Startup Fails Because `config.yml` Is Missing
+
+Copy the example:
+
+```bash
+cp config-example.yml config.yml
+```
+
+Tests need:
+
+```bash
+cp config-example.yml config-test.yml
+```
+
+### `make gen-api` Cannot Find Buf
+
+Install frontend dependencies first:
+
+```bash
+cd web
+pnpm install
+```
+
+### `make migrate` Cannot Find `migrate`
+
+Run:
+
+```bash
+make install-deps
+```
+
+Then confirm the Go install directory's `bin` is in `PATH`.
+
+### Non-`prod` Build Cannot Find `router/docs/openapi.yaml`
+
+Run:
+
+```bash
+make gen-api
+```
+
+### Go Build Cannot Find `web/dist`
+
+Run the full build:
+
+```bash
+make buildx
+```
+
+`make build` only compiles Go; it does not create the frontend dist.
+
+### Passkey Does Not Work Locally
+
+Passkeys require an HTTPS secure context. Generate certificates first:
+
+```bash
+make gen-certs
+```
+
+Then update `config.yml` according to README and accept the local self-signed certificate in the browser.
+
+The default passkey config uses `timelog.local`, so also make sure it resolves to your machine and open the app through an origin that matches the RP origins, such as `https://timelog.local:8080`.
