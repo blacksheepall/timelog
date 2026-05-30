@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package timelog.v1;
+
+option go_package = "github.com/blacksheepaul/timelog/gen/go/timelog/v1;timelogv1";
+
+import "google/protobuf/struct.proto";
+
+message PasskeyCredential {
+  uint32 id = 1;
+  string device_name = 2;
+  string created_at = 3;
+}
+
+message PasskeyRegisterBeginRequest {
+  string temp_password = 1;
+  optional string device_name = 2;
+}
+
+message PasskeyBeginPayload {
+  string session_id = 1;
+  google.protobuf.Struct data = 2;
+}
+
+message PasskeyFinishRequest {
+  string session_id = 1;
+  google.protobuf.Struct response = 2;
+  optional string device_name = 3;
+}
+
+message PasskeyLoginResponse {
+  string token = 1;
+  string token_type = 2;
+  int64 expires_in = 3;
+}

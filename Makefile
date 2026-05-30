@@ -29,7 +29,7 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model test 
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model gen-api check-api test
 
 all: build
 
@@ -114,6 +114,12 @@ gen-model:
 	@rm -f model/gen/schema_migrations.gen.go model/gen/sqlite_sequence.gen.go 2>/dev/null || true
 	@sed -i '' 's/gorm\.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at"`/gorm.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at" swaggertype:"string"`/g' model/gen/*.go 2>/dev/null || true
 	@echo "Models generated. Check compilation with: go build ./model/..."
+
+gen-api:
+	./web/node_modules/.bin/buf generate
+
+check-api:
+	./web/node_modules/.bin/buf lint
 
 test:
 	go test ./...

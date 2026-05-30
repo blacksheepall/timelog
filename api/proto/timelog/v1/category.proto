@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package timelog.v1;
+
+option go_package = "github.com/blacksheepaul/timelog/gen/go/timelog/v1;timelogv1";
+
+message Category {
+  int32 id = 1;
+  string name = 2;
+  string color = 3;
+  string description = 4;
+  optional int32 parent_id = 5;
+  int32 level = 6;
+  int32 sort_order = 7;
+  string path = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+message CategoryTreeNode {
+  Category category = 1;
+  repeated CategoryTreeNode children = 2;
+}
+
+message CreateCategoryRequest {
+  string name = 1;
+  string color = 2;
+  string description = 3;
+  optional int32 parent_id = 4;
+  optional int32 level = 5;
+  optional int32 sort_order = 6;
+}
+
+message UpdateCategoryRequest {
+  optional string name = 1;
+  optional string color = 2;
+  optional string description = 3;
+  optional int32 parent_id = 4;
+  optional int32 level = 5;
+  optional int32 sort_order = 6;
+}
+
+message ListCategoriesQuery {
+  optional int32 level = 1;
+  optional int32 parent_id = 2;
+}
+
+message MoveCategoryRequest {
+  optional int32 parent_id = 1;
+}

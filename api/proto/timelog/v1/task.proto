@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package timelog.v1;
+
+option go_package = "github.com/blacksheepaul/timelog/gen/go/timelog/v1;timelogv1";
+
+import "timelog/v1/category.proto";
+
+message Task {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 category_id = 4;
+  optional Category category = 5;
+  string due_date = 6;
+  int32 estimated_minutes = 7;
+  bool is_completed = 8;
+  optional string completed_at = 9;
+  bool is_suspended = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}
+
+message CreateTaskRequest {
+  string title = 1;
+  string description = 2;
+  int32 category_id = 3;
+  string due_date = 4;
+  int32 estimated_minutes = 5;
+}
+
+message UpdateTaskRequest {
+  optional string title = 1;
+  optional string description = 2;
+  optional int32 category_id = 3;
+  optional string due_date = 4;
+  optional int32 estimated_minutes = 5;
+  optional bool is_completed = 6;
+}
+
+message TaskStats {
+  int32 total_tasks = 1;
+  int32 completed_tasks = 2;
+  double completion_rate = 3;
+}
+
+message ListTasksQuery {
+  optional string date = 1;
+  bool include_suspended = 2;
+  bool include_completed = 3;
+}

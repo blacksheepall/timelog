@@ -34,6 +34,7 @@
 ## Codegen / Build Quirks
 - Non-`prod` builds compile `router/swagger.go`, which imports `github.com/blacksheepaul/timelog/docs`. If Swagger files are missing, run `swag init` before `go mod tidy` or non-prod builds.
 - `make gen-model` requires `TIMELOG_GEN_DB_PATH` to be set; `model/gentool/gormgen.go` panics otherwise.
+- API DTOs are generated from `api/proto/timelog/v1` with `make gen-api`; do not hand-edit `gen/go/` or `web/src/gen/`. The REST envelope remains hand-written in `router/apiresponse.go` and `web/src/types/api.ts`. The Buf CLI is provided by `web` dev dependencies, so run `cd web && pnpm install` first in a fresh checkout.
 - CI release build runs `make install-deps gen-model buildx-linux`; do not assume `make build-linux` alone matches release artifacts.
 
 ## Testing Notes

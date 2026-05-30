@@ -39,6 +39,21 @@ make swagger
 
 **Note:** For production builds, Swagger is automatically excluded via the `prod` build tag, so you don't need to generate Swagger documentation for production deployments.
 
+## API Contract Generation
+
+API payload DTOs live under `api/proto/timelog/v1`.
+
+Run:
+
+```bash
+make gen-api
+make check-api
+```
+
+`make gen-api` regenerates Go DTOs under `gen/go/` and TypeScript DTOs under `web/src/gen/`.
+The REST envelope `{ data, message, status }` is intentionally hand-written in Go and TypeScript and is not part of the proto contract.
+The Buf CLI is installed through the frontend dev dependencies, so run `cd web && pnpm install` before using these targets in a fresh checkout.
+
 ## Passkey Setup
 
 Passkey authentication requires HTTPS. Follow the certificate setup below, then generate a one-time temp password to bind a device in the UI.
