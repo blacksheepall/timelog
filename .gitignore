@@ -33,10 +33,15 @@ certs/
 # database file
 *.db
 
+# API codegen (re-generate with `make gen-api`; sources: api/proto/, api/openapi/rest.yaml)
+gen/go/
+gen/openapi/schemas/
+web/src/gen/
+router/docs/openapi.yaml
+
 docs/docs.go
 docs/superpowers/**
 docs/swagger*
-docs/superpowers/**
 app.log
 mcp.log
 main
