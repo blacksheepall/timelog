@@ -229,7 +229,7 @@
       start_time: formatLocalToUTC(form.start_time),
       end_time: form.end_time ? formatLocalToUTC(form.end_time) : undefined,
       category_id: Number(form.category_id),
-      task_id: form.task_id ? Number(form.task_id) : null,
+      task_id: form.task_id ? Number(form.task_id) : undefined,
       remark: form.remark,
     }
 

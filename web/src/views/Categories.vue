@@ -281,7 +281,7 @@
         name: form.name.trim(),
         color: form.color,
         description: form.description.trim(),
-        parent_id: form.parent_id,
+        parent_id: form.parent_id ?? undefined,
       }
 
       if (editingCategory.value) {
