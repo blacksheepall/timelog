@@ -6,6 +6,7 @@
         "name": "Coding",
         "color": "#3366ff",
         "description": "Deep work",
+        "level": 1,
         "sort_order": 10,
         "path": "/",
         "created_at": "2026-05-30T12:00:00Z",

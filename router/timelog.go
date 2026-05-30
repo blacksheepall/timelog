@@ -1,12 +1,15 @@
 package router
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
@@ -308,9 +311,13 @@ func createCategoryHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	category := mapper.CategoryFromCreateRequest(&req)
+	category, err := mapper.CategoryFromCreateRequest(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
 	if err := service.CreateCategory(category); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryToProto(category), "Category created successfully"))
@@ -368,10 +375,13 @@ func updateCategoryHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	mapper.ApplyCategoryUpdate(category, &req)
+	if err := mapper.ApplyCategoryUpdate(category, &req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
 	category.ID = &id
 	if err := service.UpdateCategory(category); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryToProto(category), "Category updated successfully"))
@@ -402,9 +412,31 @@ func moveCategoryHandler(c *gin.Context) {
 		return
 	}
 
+	if err := mapper.ValidateMoveCategoryRequest(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
 	if err := service.MoveCategory(id, req.ParentId); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Category moved successfully"))
+}
+
+func categoryErrorStatus(err error) int {
+	if errors.Is(err, errs.ErrInvalidParentID) {
+		return http.StatusBadRequest
+	}
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "must not be provided"),
+		strings.Contains(msg, "request is required"),
+		strings.Contains(msg, "exceeds max level"),
+		strings.Contains(msg, "cannot move category"),
+		strings.Contains(msg, "parent category not found"):
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }

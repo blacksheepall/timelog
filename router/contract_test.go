@@ -45,7 +45,7 @@ func TestGoldenCategoryTreeEnvelope(t *testing.T) {
 				Name:        "Coding",
 				Color:       "#3366ff",
 				Description: "Deep work",
-				Level:       0,
+				Level:       1,
 				SortOrder:   10,
 				Path:        "/",
 				CreatedAt:   "2026-05-30T12:00:00Z",

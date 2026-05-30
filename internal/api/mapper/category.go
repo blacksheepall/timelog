@@ -1,9 +1,12 @@
 package mapper
 
 import (
+	"fmt"
+
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 )
 
 func CategoryToProto(c *gen.Category) *timelogv1.Category {
@@ -54,9 +57,18 @@ func CategoryTreeToProto(nodes []*model.CategoryNode) []*timelogv1.CategoryTreeN
 	return out
 }
 
-func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) *gen.Category {
+func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) (*gen.Category, error) {
 	if req == nil {
-		return nil
+		return nil, fmt.Errorf("request is required")
+	}
+	if req.Level != nil {
+		return nil, fmt.Errorf("level is computed by the server and must not be provided")
+	}
+	if req.SortOrder != nil {
+		return nil, fmt.Errorf("sort_order is computed by the server and must not be provided")
+	}
+	if req.ParentId != nil && *req.ParentId <= 0 {
+		return nil, errs.ErrInvalidParentID
 	}
 	color := req.Color
 	description := req.Description
@@ -65,14 +77,31 @@ func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) *gen.Catego
 		Color:       &color,
 		Description: &description,
 		ParentID:    req.ParentId,
-		Level:       req.Level,
-		SortOrder:   req.SortOrder,
-	}
+	}, nil
 }
 
-func ApplyCategoryUpdate(category *gen.Category, req *timelogv1.UpdateCategoryRequest) {
+func ValidateMoveCategoryRequest(req *timelogv1.MoveCategoryRequest) error {
+	if req == nil {
+		return fmt.Errorf("request is required")
+	}
+	if req.ParentId != nil && *req.ParentId <= 0 {
+		return errs.ErrInvalidParentID
+	}
+	return nil
+}
+
+func ApplyCategoryUpdate(category *gen.Category, req *timelogv1.UpdateCategoryRequest) error {
 	if category == nil || req == nil {
-		return
+		return nil
+	}
+	if req.ParentId != nil {
+		return errs.ErrInvalidParentID
+	}
+	if req.Level != nil {
+		return fmt.Errorf("level is computed by the server and must not be provided")
+	}
+	if req.SortOrder != nil {
+		return fmt.Errorf("sort_order is computed by the server and must not be provided")
 	}
 	if req.Name != nil {
 		category.Name = req.GetName()
@@ -85,15 +114,5 @@ func ApplyCategoryUpdate(category *gen.Category, req *timelogv1.UpdateCategoryRe
 		description := req.GetDescription()
 		category.Description = &description
 	}
-	if req.ParentId != nil {
-		category.ParentID = req.ParentId
-	}
-	if req.Level != nil {
-		level := req.GetLevel()
-		category.Level = &level
-	}
-	if req.SortOrder != nil {
-		sortOrder := req.GetSortOrder()
-		category.SortOrder = &sortOrder
-	}
+	return nil
 }

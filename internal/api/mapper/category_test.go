@@ -1,11 +1,42 @@
 package mapper
 
 import (
+	"errors"
 	"testing"
 	"time"
 
+	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 )
+
+func TestCategoryFromCreateRequestRejectsInvalidParentID(t *testing.T) {
+	parentZero := int32(0)
+	req := &timelogv1.CreateCategoryRequest{
+		Name:        "Root",
+		Color:       "#3366ff",
+		Description: "Root category",
+		ParentId:    &parentZero,
+	}
+	_, err := CategoryFromCreateRequest(req)
+	if !errors.Is(err, errs.ErrInvalidParentID) {
+		t.Fatalf("expected ErrInvalidParentID, got %v", err)
+	}
+}
+
+func TestCategoryFromCreateRequestRejectsClientLevel(t *testing.T) {
+	level := int32(1)
+	req := &timelogv1.CreateCategoryRequest{
+		Name:        "Root",
+		Color:       "#3366ff",
+		Description: "Root category",
+		Level:       &level,
+	}
+	_, err := CategoryFromCreateRequest(req)
+	if err == nil {
+		t.Fatal("expected error for client-provided level")
+	}
+}
 
 func TestCategoryToProtoKeepsSnakeCaseFields(t *testing.T) {
 	id := int32(7)
