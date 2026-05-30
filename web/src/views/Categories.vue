@@ -184,7 +184,7 @@
   import { PlusIcon } from '@heroicons/vue/24/outline'
   import { categoryAPI } from '@/api'
   import CategoryTreeNode from '@/components/CategoryTreeNode.vue'
-  import type { Category, CategoryNode } from '@/types'
+  import type { Category, CategoryNode, CreateCategoryRequest } from '@/types'
 
   // 注入全局通知功能
   const showNotification = inject('showNotification') as (
@@ -273,6 +273,18 @@
     loadEditingData()
   }
 
+  const buildCreateRequest = (): CreateCategoryRequest => {
+    const data: CreateCategoryRequest = {
+      name: form.name.trim(),
+      color: form.color,
+      description: form.description.trim(),
+    }
+    if (form.parent_id !== null) {
+      data.parent_id = form.parent_id
+    }
+    return data
+  }
+
   const handleSubmit = async () => {
     submitting.value = true
 
@@ -285,12 +297,7 @@
         })
         showNotification('success', 'Category updated successfully')
       } else {
-        await categoryAPI.create({
-          name: form.name.trim(),
-          color: form.color,
-          description: form.description.trim(),
-          parent_id: form.parent_id ?? undefined,
-        })
+        await categoryAPI.create(buildCreateRequest())
         showNotification('success', 'Category created successfully')
       }
 

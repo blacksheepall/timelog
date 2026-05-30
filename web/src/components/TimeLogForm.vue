@@ -155,7 +155,8 @@
   }>()
 
   const emit = defineEmits<{
-    submit: [data: CreateTimeLogRequest | UpdateTimeLogRequest]
+    create: [data: CreateTimeLogRequest]
+    update: [data: UpdateTimeLogRequest]
     cancel: []
   }>()
 
@@ -225,7 +226,7 @@
       return // Category is required
     }
 
-    const data = {
+    const payload = {
       start_time: formatLocalToUTC(form.start_time),
       end_time: form.end_time ? formatLocalToUTC(form.end_time) : undefined,
       category_id: Number(form.category_id),
@@ -233,7 +234,11 @@
       remark: form.remark,
     }
 
-    emit('submit', data)
+    if (isEditing.value) {
+      emit('update', payload)
+    } else {
+      emit('create', payload)
+    }
   }
 
   const handleCancel = () => {

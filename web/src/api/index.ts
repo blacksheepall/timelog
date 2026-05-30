@@ -11,6 +11,7 @@ import type {
   Category,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  MoveCategoryRequest,
 } from '@/gen/api/timelog/v1/category'
 import type {
   Task,
@@ -102,7 +103,7 @@ export const categoryAPI = {
   getAll: (): Promise<ApiResponse<Category[]>> => api.get('/categories').then(res => res.data),
 
   getTree: (): Promise<ApiResponse<CategoryNode[]>> =>
-    api.get('/categories/tree').then(res => res.data as ApiResponse<CategoryNode[]>),
+    api.get('/categories/tree').then(res => res.data),
 
   getByLevel: (level: number): Promise<ApiResponse<Category[]>> =>
     api.get(`/categories?level=${level}`).then(res => res.data),
@@ -122,8 +123,10 @@ export const categoryAPI = {
   delete: (id: number): Promise<ApiResponse<null>> =>
     api.delete(`/categories/${id}`).then(res => res.data),
 
-  move: (id: number, parentId: number | null): Promise<ApiResponse<null>> =>
-    api.post(`/categories/${id}/move`, { parent_id: parentId }).then(res => res.data),
+  move: (id: number, parentId: number | null): Promise<ApiResponse<null>> => {
+    const body: MoveCategoryRequest = parentId === null ? {} : { parent_id: parentId }
+    return api.post(`/categories/${id}/move`, body).then(res => res.data)
+  },
 }
 
 // Backward compatibility - tagAPI is deprecated, use categoryAPI instead

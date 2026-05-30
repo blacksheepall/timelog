@@ -397,19 +397,25 @@
     submitting.value = true
 
     try {
-      const data: CreateTaskRequest | UpdateTaskRequest = {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category_id: Number(form.category_id),
-        due_date: new Date(form.due_date + 'T12:00:00Z').toISOString(),
-        estimated_minutes: form.estimated_minutes,
-      }
-
       if (editingTask.value) {
-        await taskAPI.update(editingTask.value.id, data as UpdateTaskRequest)
+        const data: UpdateTaskRequest = {
+          title: form.title.trim(),
+          description: form.description.trim(),
+          category_id: Number(form.category_id),
+          due_date: new Date(form.due_date + 'T12:00:00Z').toISOString(),
+          estimated_minutes: form.estimated_minutes,
+        }
+        await taskAPI.update(editingTask.value.id, data)
         showNotification('success', 'Task updated successfully')
       } else {
-        await taskAPI.create(data as CreateTaskRequest)
+        const data: CreateTaskRequest = {
+          title: form.title.trim(),
+          description: form.description.trim(),
+          category_id: Number(form.category_id),
+          due_date: new Date(form.due_date + 'T12:00:00Z').toISOString(),
+          estimated_minutes: form.estimated_minutes,
+        }
+        await taskAPI.create(data)
         showNotification('success', 'Task created successfully')
       }
 
