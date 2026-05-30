@@ -78,6 +78,11 @@ Keep this list synchronized with `mcp/server.go`:
 
 MCP tools call the same `service` layer as the HTTP API. Transport-specific JSON shaping stays in MCP handlers; business rules live in `service/`.
 
+## API Contract Alignment
+
+HTTP API payload fields are defined in `api/proto/timelog/v1`.
+MCP responses use the same field names where practical, but MCP time strings remain Singapore local time (`YYYY-MM-DD HH:MM:SS`) for operator readability.
+
 ## Maintenance Rules
 
 - When adding or modifying tools, update this document and `mcp/README.md`.
