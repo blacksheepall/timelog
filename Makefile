@@ -29,7 +29,7 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model test 
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model gen-api check-api test
 
 all: build
 
@@ -92,15 +92,15 @@ gen-certs:
 		-out certs/cert.pem \
 		-days 365 \
 		-nodes \
-		-subj "/CN=localhost" \
-		-addext "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:192.168.8.22" \
+		-subj "/CN=timelog.local" \
+		-addext "subjectAltName=DNS:timelog.local,DNS:localhost,IP:127.0.0.1" \
 		2>/dev/null || \
 	openssl req -x509 -newkey rsa:4096 \
 		-keyout certs/key.pem \
 		-out certs/cert.pem \
 		-days 365 \
 		-nodes \
-		-subj "/CN=localhost"
+		-subj "/CN=timelog.local"
 	@echo "Certificates generated in ./certs/"
 	@echo "  - certs/cert.pem"
 	@echo "  - certs/key.pem"
@@ -114,6 +114,12 @@ gen-model:
 	@rm -f model/gen/schema_migrations.gen.go model/gen/sqlite_sequence.gen.go 2>/dev/null || true
 	@sed -i '' 's/gorm\.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at"`/gorm.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at" swaggertype:"string"`/g' model/gen/*.go 2>/dev/null || true
 	@echo "Models generated. Check compilation with: go build ./model/..."
+
+gen-api:
+	./web/node_modules/.bin/buf generate
+
+check-api:
+	./web/node_modules/.bin/buf lint
 
 test:
 	go test ./...

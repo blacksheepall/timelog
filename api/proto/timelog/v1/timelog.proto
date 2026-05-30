@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package timelog.v1;
+
+option go_package = "github.com/blacksheepaul/timelog/gen/go/timelog/v1;timelogv1";
+
+import "timelog/v1/category.proto";
+import "timelog/v1/task.proto";
+
+message Timelog {
+  int32 id = 1;
+  string start_time = 2;
+  optional string end_time = 3;
+  int32 category_id = 4;
+  optional Category category = 5;
+  optional int32 task_id = 6;
+  optional Task task = 7;
+  optional string remark = 8;
+  string created_at = 9;
+  string updated_at = 10;
+  optional string deleted_at = 11;
+}
+
+message CreateTimelogRequest {
+  string start_time = 1;
+  optional string end_time = 2;
+  int32 category_id = 3;
+  optional int32 task_id = 4;
+  string remark = 5;
+}
+
+message UpdateTimelogRequest {
+  optional string start_time = 1;
+  optional string end_time = 2;
+  optional int32 category_id = 3;
+  optional int32 task_id = 4;
+  optional string remark = 5;
+}
+
+message ListTimelogsQuery {
+  optional int32 limit = 1;
+  optional string order = 2;
+}

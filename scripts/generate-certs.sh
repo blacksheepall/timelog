@@ -3,7 +3,7 @@
 # Generate self-signed certificate for HTTPS
 # Usage: ./scripts/generate-certs.sh [hostname] [days_valid]
 
-HOSTNAME=${1:-localhost}
+HOSTNAME=${1:-timelog.local}
 DAYS=${2:-365}
 CERT_DIR="./certs"
 
@@ -16,7 +16,8 @@ echo "Certificate will be valid for $DAYS days"
 # Generate private key and certificate
 openssl req -x509 -newkey rsa:2048 -keyout "$CERT_DIR/key.pem" -out "$CERT_DIR/cert.pem" \
   -days "$DAYS" -nodes \
-  -subj "/C=CN/ST=State/L=City/O=Organization/CN=$HOSTNAME"
+  -subj "/C=CN/ST=State/L=City/O=Organization/CN=$HOSTNAME" \
+  -addext "subjectAltName=DNS:$HOSTNAME,DNS:localhost,IP:127.0.0.1"
 
 if [ $? -eq 0 ]; then
   echo "✓ Certificate generated successfully"

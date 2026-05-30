@@ -3,8 +3,9 @@ package router
 import (
 	"net/http"
 	"strconv"
-	"time"
 
+	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
+	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
@@ -33,46 +34,16 @@ func setupConstraintRoutes(group *gin.RouterGroup, deps Dependencies) {
 // @Failure 500 {object} map[string]string
 // @Router /api/constraints [post]
 func createConstraintHandler(c *gin.Context) {
-	// 定义一个临时结构体来处理日期字符串
-	var request struct {
-		Description     string `json:"description" binding:"required"`
-		EndReason       string `json:"end_reason"`
-		PunishmentQuote string `json:"punishment_quote" binding:"required"`
-		StartDate       string `json:"start_date" binding:"required"`
-		EndDate         string `json:"end_date"`
-	}
-
+	var request timelogv1.CreateConstraintRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	// 解析日期
-	startDate, err := time.Parse("2006-01-02", request.StartDate)
+	constraint, err := mapper.ConstraintFromCreateRequest(&request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, "Invalid start_date format, expected YYYY-MM-DD"))
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
-	}
-
-	var endDate *time.Time
-	if request.EndDate != "" {
-		parsedEndDate, err := time.Parse("2006-01-02", request.EndDate)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, "Invalid end_date format, expected YYYY-MM-DD"))
-			return
-		}
-		endDate = &parsedEndDate
-	}
-
-	// 创建约束
-	trueValue := true
-	constraint := &gen.Constraint{
-		Description:     request.Description,
-		EndReason:       &request.EndReason,
-		PunishmentQuote: request.PunishmentQuote,
-		StartDate:       startDate,
-		EndDate:         endDate,
-		IsActive:        &trueValue,
 	}
 
 	if err := service.CreateConstraint(constraint); err != nil {
@@ -82,9 +53,9 @@ func createConstraintHandler(c *gin.Context) {
 
 	// 重新查询以获取完整信息
 	if createdConstraint, err := service.GetConstraintByID(*constraint.ID); err == nil {
-		c.JSON(http.StatusOK, SuccessResponse(createdConstraint, "Constraint created successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(createdConstraint), "Constraint created successfully"))
 	} else {
-		c.JSON(http.StatusOK, SuccessResponse(constraint, "Constraint created successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(constraint), "Constraint created successfully"))
 	}
 }
 
@@ -114,7 +85,7 @@ func listConstraintsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(constraints, "Constraints retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintsToProto(constraints), "Constraints retrieved successfully"))
 }
 
 // GetConstraintHandler godoc
@@ -143,7 +114,7 @@ func getConstraintHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(constraint, "Constraint retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(constraint), "Constraint retrieved successfully"))
 }
 
 // UpdateConstraintHandler godoc
@@ -175,51 +146,15 @@ func updateConstraintHandler(c *gin.Context) {
 		return
 	}
 
-	// 定义临时结构体处理日期字符串
-	var request struct {
-		Description     string `json:"description"`
-		EndReason       string `json:"end_reason"`
-		PunishmentQuote string `json:"punishment_quote"`
-		StartDate       string `json:"start_date"`
-		EndDate         string `json:"end_date"`
-	}
-
+	var request timelogv1.UpdateConstraintRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	// 解析日期
-	if request.StartDate != "" {
-		startDate, err := time.Parse("2006-01-02", request.StartDate)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, "Invalid start_date format, expected YYYY-MM-DD"))
-			return
-		}
-		existingConstraint.StartDate = startDate
-	}
-
-	if request.EndDate != "" {
-		endDate, err := time.Parse("2006-01-02", request.EndDate)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, "Invalid end_date format, expected YYYY-MM-DD"))
-			return
-		}
-		existingConstraint.EndDate = &endDate
-	} else if request.EndDate == "" {
-		// 如果发送了空字符串，清空结束日期
-		existingConstraint.EndDate = nil
-	}
-
-	// 更新其他字段
-	if request.Description != "" {
-		existingConstraint.Description = request.Description
-	}
-	if request.PunishmentQuote != "" {
-		existingConstraint.PunishmentQuote = request.PunishmentQuote
-	}
-	if request.EndReason != "" {
-		existingConstraint.EndReason = &request.EndReason
+	if err := mapper.ApplyConstraintUpdate(existingConstraint, &request); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
 	}
 
 	if err := service.UpdateConstraint(existingConstraint); err != nil {
@@ -229,9 +164,9 @@ func updateConstraintHandler(c *gin.Context) {
 
 	// 重新查询以获取完整信息
 	if updatedConstraint, err := service.GetConstraintByID(id); err == nil {
-		c.JSON(http.StatusOK, SuccessResponse(updatedConstraint, "Constraint updated successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(updatedConstraint), "Constraint updated successfully"))
 	} else {
-		c.JSON(http.StatusOK, SuccessResponse(existingConstraint, "Constraint updated successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(existingConstraint), "Constraint updated successfully"))
 	}
 }
 
@@ -291,9 +226,7 @@ func completeConstraintHandler(c *gin.Context) {
 	}
 	id := int32(id64)
 
-	var requestData struct {
-		EndReason string `json:"end_reason"`
-	}
+	var requestData timelogv1.CompleteConstraintRequest
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return

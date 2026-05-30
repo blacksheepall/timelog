@@ -1,23 +1,34 @@
 import axios from 'axios'
 import { getAuthToken } from '@/utils/auth'
+import type { ApiResponse } from '@/types/api'
+import type { CategoryNode } from '@/types'
 import type {
-  TimeLog,
+  Timelog,
+  CreateTimelogRequest,
+  UpdateTimelogRequest,
+} from '@/gen/api/timelog/v1/timelog'
+import type {
   Category,
-  CategoryNode,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+  MoveCategoryRequest,
+} from '@/gen/api/timelog/v1/category'
+import type {
   Task,
-  CreateTimeLogRequest,
-  UpdateTimeLogRequest,
   CreateTaskRequest,
   UpdateTaskRequest,
   TaskStats,
-  ApiResponse,
+} from '@/gen/api/timelog/v1/task'
+import type {
   Constraint,
   CreateConstraintRequest,
   UpdateConstraintRequest,
-  PasskeyBeginResponse,
+} from '@/gen/api/timelog/v1/constraint'
+import type {
+  PasskeyBeginPayload,
   PasskeyCredential,
   PasskeyLoginResponse,
-} from '@/types'
+} from '@/gen/api/timelog/v1/auth'
 
 const api = axios.create({
   baseURL: '/api',
@@ -68,20 +79,20 @@ api.interceptors.response.use(
 )
 
 export const timelogAPI = {
-  getAll: (): Promise<ApiResponse<TimeLog[]>> => api.get('/timelogs').then(res => res.data),
+  getAll: (): Promise<ApiResponse<Timelog[]>> => api.get('/timelogs').then(res => res.data),
 
-  getRecent: (limit: number = 5): Promise<ApiResponse<TimeLog[]>> =>
+  getRecent: (limit: number = 5): Promise<ApiResponse<Timelog[]>> =>
     api
       .get(`/timelogs?limit=${limit}&order=${encodeURIComponent('created_at DESC')}`)
       .then(res => res.data),
 
-  getById: (id: number): Promise<ApiResponse<TimeLog>> =>
+  getById: (id: number): Promise<ApiResponse<Timelog>> =>
     api.get(`/timelogs/${id}`).then(res => res.data),
 
-  create: (data: CreateTimeLogRequest): Promise<ApiResponse<TimeLog>> =>
+  create: (data: CreateTimelogRequest): Promise<ApiResponse<Timelog>> =>
     api.post('/timelogs', data).then(res => res.data),
 
-  update: (id: number, data: UpdateTimeLogRequest): Promise<ApiResponse<TimeLog>> =>
+  update: (id: number, data: UpdateTimelogRequest): Promise<ApiResponse<Timelog>> =>
     api.put(`/timelogs/${id}`, data).then(res => res.data),
 
   delete: (id: number): Promise<ApiResponse<null>> =>
@@ -103,17 +114,19 @@ export const categoryAPI = {
   getById: (id: number): Promise<ApiResponse<Category>> =>
     api.get(`/categories/${id}`).then(res => res.data),
 
-  create: (data: Partial<Category>): Promise<ApiResponse<Category>> =>
+  create: (data: CreateCategoryRequest): Promise<ApiResponse<Category>> =>
     api.post('/categories', data).then(res => res.data),
 
-  update: (id: number, data: Partial<Category>): Promise<ApiResponse<Category>> =>
+  update: (id: number, data: UpdateCategoryRequest): Promise<ApiResponse<Category>> =>
     api.put(`/categories/${id}`, data).then(res => res.data),
 
   delete: (id: number): Promise<ApiResponse<null>> =>
     api.delete(`/categories/${id}`).then(res => res.data),
 
-  move: (id: number, parentId: number | null): Promise<ApiResponse<null>> =>
-    api.post(`/categories/${id}/move`, { parent_id: parentId }).then(res => res.data),
+  move: (id: number, parentId: number | null): Promise<ApiResponse<null>> => {
+    const body: MoveCategoryRequest = parentId === null ? {} : { parent_id: parentId }
+    return api.post(`/categories/${id}/move`, body).then(res => res.data)
+  },
 }
 
 // Backward compatibility - tagAPI is deprecated, use categoryAPI instead
@@ -191,7 +204,7 @@ export const passkeyAPI = {
   registerBegin: (
     tempPassword: string,
     deviceName?: string
-  ): Promise<ApiResponse<PasskeyBeginResponse<any>>> =>
+  ): Promise<ApiResponse<PasskeyBeginPayload>> =>
     api
       .post('/passkey/register/begin', {
         temp_password: tempPassword,
@@ -212,7 +225,7 @@ export const passkeyAPI = {
       })
       .then(res => res.data),
 
-  loginBegin: (): Promise<ApiResponse<PasskeyBeginResponse<any>>> =>
+  loginBegin: (): Promise<ApiResponse<PasskeyBeginPayload>> =>
     api.post('/passkey/login/begin').then(res => res.data),
 
   loginFinish: (sessionId: string, response: any): Promise<ApiResponse<PasskeyLoginResponse>> =>

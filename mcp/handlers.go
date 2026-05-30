@@ -222,7 +222,7 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 		entry := map[string]interface{}{
 			"id":    cat.ID,
 			"name":  cat.Name,
-			"level": int32(0),
+			"level": int32(1),
 		}
 		if cat.Level != nil {
 			entry["level"] = *cat.Level

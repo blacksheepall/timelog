@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"gorm.io/gorm"
 )
 
-const MaxCategoryLevel = 2 // 最大层级：0, 1, 2
+const MaxCategoryLevel = 3 // 最大层级：1=根, 2=子, 3=孙（0 为虚拟树根，无 DB 行）
 
 // ValidateLevel 验证分类层级是否合法
 func ValidateLevel(level int32) error {
-	if level < 0 || level > MaxCategoryLevel {
-		return fmt.Errorf("category level must be between 0 and %d", MaxCategoryLevel)
+	if level < 1 || level > MaxCategoryLevel {
+		return fmt.Errorf("category level must be between 1 and %d", MaxCategoryLevel)
 	}
 	return nil
 }
@@ -29,8 +30,12 @@ func GetFullPath(category *gen.Category) string {
 
 // CreateCategory 创建分类（自动计算level和path）
 func CreateCategory(db *gorm.DB, category *gen.Category) error {
+	if category.ParentID != nil && *category.ParentID <= 0 {
+		return errs.ErrInvalidParentID
+	}
+
 	// 如果有父分类，计算level和path
-	if category.ParentID != nil && *category.ParentID > 0 {
+	if category.ParentID != nil {
 		parent, err := GetCategoryByID(db, *category.ParentID)
 		if err != nil {
 			return fmt.Errorf("parent category not found: %w", err)
@@ -43,9 +48,9 @@ func CreateCategory(db *gorm.DB, category *gen.Category) error {
 		parentPath := GetFullPath(parent)
 		category.Path = &parentPath
 	} else {
-		levelZero := int32(0)
+		rootLevel := int32(1)
 		rootPath := "/"
-		category.Level = &levelZero
+		category.Level = &rootLevel
 		category.Path = &rootPath
 		category.ParentID = nil
 	}
@@ -156,16 +161,20 @@ func isDescendantOf(db *gorm.DB, targetID, ancestorID int32) (bool, error) {
 
 // MoveCategory 移动分类到新的父分类下
 func MoveCategory(db *gorm.DB, categoryID int32, newParentID *int32) error {
+	if newParentID != nil && *newParentID <= 0 {
+		return errs.ErrInvalidParentID
+	}
+
 	return db.Transaction(func(tx *gorm.DB) error {
 		category, err := GetCategoryByID(tx, categoryID)
 		if err != nil {
 			return err
 		}
 
-		newLevel := int32(0)
+		newLevel := int32(1)
 		newPath := "/"
 
-		if newParentID != nil && *newParentID > 0 {
+		if newParentID != nil {
 			if *newParentID == categoryID {
 				return fmt.Errorf("cannot move category to itself")
 			}

@@ -184,7 +184,7 @@
   import { PlusIcon } from '@heroicons/vue/24/outline'
   import { categoryAPI } from '@/api'
   import CategoryTreeNode from '@/components/CategoryTreeNode.vue'
-  import type { Category, CategoryNode } from '@/types'
+  import type { Category, CategoryNode, CreateCategoryRequest } from '@/types'
 
   // 注入全局通知功能
   const showNotification = inject('showNotification') as (
@@ -217,7 +217,7 @@
 
   // 可作为父分类的选项（创建新分类时用）
   const availableParents = computed(() => {
-    return allCategories.value.filter(c => c.level < 2)
+    return allCategories.value.filter(c => c.level < 3)
   })
 
   // 可作为移动目标的选项（排除自己及其子分类）
@@ -226,7 +226,7 @@
     return allCategories.value.filter(
       c =>
         c.id !== movingCategory.value!.id &&
-        c.level < 2 &&
+        c.level < 3 &&
         !c.path.includes(`/${movingCategory.value!.name}`)
     )
   })
@@ -273,22 +273,31 @@
     loadEditingData()
   }
 
+  const buildCreateRequest = (): CreateCategoryRequest => {
+    const data: CreateCategoryRequest = {
+      name: form.name.trim(),
+      color: form.color,
+      description: form.description.trim(),
+    }
+    if (form.parent_id !== null) {
+      data.parent_id = form.parent_id
+    }
+    return data
+  }
+
   const handleSubmit = async () => {
     submitting.value = true
 
     try {
-      const data = {
-        name: form.name.trim(),
-        color: form.color,
-        description: form.description.trim(),
-        parent_id: form.parent_id,
-      }
-
       if (editingCategory.value) {
-        await categoryAPI.update(editingCategory.value.id, data)
+        await categoryAPI.update(editingCategory.value.id, {
+          name: form.name.trim(),
+          color: form.color,
+          description: form.description.trim(),
+        })
         showNotification('success', 'Category updated successfully')
       } else {
-        await categoryAPI.create(data)
+        await categoryAPI.create(buildCreateRequest())
         showNotification('success', 'Category created successfully')
       }
 

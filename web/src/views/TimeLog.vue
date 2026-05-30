@@ -50,7 +50,8 @@
       :available-tasks="tasks"
       :available-constraints="constraints"
       :last-end-time="getLastEndTime()"
-      @submit="handleSubmit"
+      @create="handleCreate"
+      @update="handleUpdate"
       @cancel="handleCancel"
     />
 
@@ -178,25 +179,36 @@
     }
   }
 
-  const handleSubmit = async (data: CreateTimeLogRequest | UpdateTimeLogRequest) => {
+  const saveTimeLog = async () => {
+    await timeLogStore.refreshTimeLogs()
+    showForm.value = false
+    editingLog.value = undefined
+  }
+
+  const handleCreate = async (data: CreateTimeLogRequest) => {
     submitting.value = true
-
     try {
-      if (editingLog.value) {
-        if (!editingLog.value.id) {
-          showNotification('error', 'Invalid time log ID')
-          return
-        }
-        await timelogAPI.update(editingLog.value.id, data as UpdateTimeLogRequest)
-        showNotification('success', 'Time log updated successfully')
-      } else {
-        await timelogAPI.create(data as CreateTimeLogRequest)
-        showNotification('success', 'Time log created successfully')
-      }
+      await timelogAPI.create(data)
+      showNotification('success', 'Time log created successfully')
+      await saveTimeLog()
+    } catch (err) {
+      console.error('Error saving time log:', err)
+      showNotification('error', 'Failed to save time log')
+    } finally {
+      submitting.value = false
+    }
+  }
 
-      await timeLogStore.refreshTimeLogs()
-      showForm.value = false
-      editingLog.value = undefined
+  const handleUpdate = async (data: UpdateTimeLogRequest) => {
+    submitting.value = true
+    try {
+      if (!editingLog.value?.id) {
+        showNotification('error', 'Invalid time log ID')
+        return
+      }
+      await timelogAPI.update(editingLog.value.id, data)
+      showNotification('success', 'Time log updated successfully')
+      await saveTimeLog()
     } catch (err) {
       console.error('Error saving time log:', err)
       showNotification('error', 'Failed to save time log')

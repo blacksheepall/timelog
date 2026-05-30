@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
@@ -21,13 +22,6 @@ type passkeyFinishRequest struct {
 type passkeyRegisterBeginRequest struct {
 	TempPassword string `json:"temp_password" binding:"required"`
 	DeviceName   string `json:"device_name"`
-}
-
-// passkeyCredentialDTO is a sanitized credential response that excludes cryptographic material
-type passkeyCredentialDTO struct {
-	ID         uint   `json:"id"`
-	DeviceName string `json:"device_name"`
-	CreatedAt  string `json:"created_at"`
 }
 
 func setupPasskeyRoutes(public *gin.RouterGroup, protected *gin.RouterGroup, cfg *config.Config, deps Dependencies) {
@@ -148,7 +142,7 @@ func passkeyRegisterFinishHandler() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, SuccessResponse(record, "passkey registered"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.PasskeyCredentialToProto(record), "passkey registered"))
 	}
 }
 
@@ -238,7 +232,7 @@ func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, SuccessResponse(gin.H{"token": token, "token_type": "Bearer", "expires_in": cfg.Passkey.TokenTTL}, "login success"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.LoginResponse(token, "Bearer", int64(cfg.Passkey.TokenTTL)), "login success"))
 	}
 }
 
@@ -249,16 +243,7 @@ func passkeyListCredentialsHandler(c *gin.Context) {
 		return
 	}
 
-	dtos := make([]passkeyCredentialDTO, len(credentials))
-	for i, cred := range credentials {
-		dtos[i] = passkeyCredentialDTO{
-			ID:         cred.ID,
-			DeviceName: cred.DeviceName,
-			CreatedAt:  cred.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		}
-	}
-
-	c.JSON(http.StatusOK, SuccessResponse(dtos, "passkey credentials"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.PasskeyCredentialsToProto(credentials), "passkey credentials"))
 }
 
 func passkeyDeleteCredentialHandler(c *gin.Context) {

@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package timelog.v1;
+
+option go_package = "github.com/blacksheepaul/timelog/gen/go/timelog/v1;timelogv1";
+
+message Constraint {
+  int32 id = 1;
+  string description = 2;
+  optional string end_reason = 3;
+  string punishment_quote = 4;
+  string start_date = 5;
+  optional string end_date = 6;
+  bool is_active = 7;
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+message CreateConstraintRequest {
+  string description = 1;
+  string punishment_quote = 2;
+  string start_date = 3;
+  optional string end_date = 4;
+}
+
+message UpdateConstraintRequest {
+  optional string description = 1;
+  optional string punishment_quote = 2;
+  optional string start_date = 3;
+  optional string end_date = 4;
+}
+
+message ListConstraintsQuery {
+  optional bool active = 1;
+}
+
+message CompleteConstraintRequest {
+  string end_reason = 1;
+}

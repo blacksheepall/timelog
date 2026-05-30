@@ -1,42 +1,18 @@
 package router
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
+	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
+	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
-
-// ApiResponse 统一API响应结构
-type ApiResponse struct {
-	Data    interface{} `json:"data"`
-	Message string      `json:"message,omitempty"`
-	Status  int         `json:"status"`
-}
-
-// SuccessResponse 成功响应
-func SuccessResponse(data interface{}, message ...string) ApiResponse {
-	msg := "success"
-	if len(message) > 0 {
-		msg = message[0]
-	}
-	return ApiResponse{
-		Data:    data,
-		Message: msg,
-		Status:  http.StatusOK,
-	}
-}
-
-// ErrorResponse 错误响应
-func ErrorResponse(status int, message string) ApiResponse {
-	return ApiResponse{
-		Data:    nil,
-		Message: message,
-		Status:  status,
-	}
-}
 
 // RegisterTimeLogRoutes 注册 TimeLog 相关路由
 func RegisterTimeLogRoutes(group *gin.RouterGroup, deps Dependencies) {
@@ -68,12 +44,17 @@ func RegisterTimeLogRoutes(group *gin.RouterGroup, deps Dependencies) {
 // @Failure 500 {object} map[string]string
 // @Router /api/timelogs [post]
 func createTimeLogHandler(c *gin.Context) {
-	var tl gen.Timelog
-	if err := c.ShouldBindJSON(&tl); err != nil {
+	var req timelogv1.CreateTimelogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	if err := service.CreateTimeLog(&tl); err != nil {
+	tl, err := mapper.TimelogFromCreateRequest(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := service.CreateTimeLog(tl); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
@@ -85,7 +66,7 @@ func createTimeLogHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(createdLog, "Time log created successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TimelogToProto(createdLog), "Time log created successfully"))
 }
 
 // ListTimeLogsHandler godoc
@@ -126,7 +107,7 @@ func listTimeLogsHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(tls, "Time logs retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TimelogsToProto(tls), "Time logs retrieved successfully"))
 }
 
 // GetTimeLogHandler godoc
@@ -150,7 +131,7 @@ func getTimeLogHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(tl, "Time log retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TimelogToProto(tl), "Time log retrieved successfully"))
 }
 
 // UpdateTimeLogHandler godoc
@@ -171,25 +152,34 @@ func updateTimeLogHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	var tl gen.Timelog
-	if err := c.ShouldBindJSON(&tl); err != nil {
+	existing, err := service.GetTimeLogByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, err.Error()))
+		return
+	}
+	var req timelogv1.UpdateTimelogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	tl.ID = &id
-	if err := service.UpdateTimeLog(&tl); err != nil {
+	if err := mapper.ApplyTimelogUpdate(existing, &req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+	existing.ID = &id
+	if err := service.UpdateTimeLog(existing); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
 	// 重新查询以获取完整信息
-	updatedLog, err := service.GetTimeLogByID(*tl.ID)
+	updatedLog, err := service.GetTimeLogByID(*existing.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(updatedLog, "Time log updated successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TimelogToProto(updatedLog), "Time log updated successfully"))
 }
 
 // DeleteTimeLogHandler godoc
@@ -284,7 +274,7 @@ func listCategoriesHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(categories, "Categories retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoriesToProto(categories), "Categories retrieved successfully"))
 }
 
 // getCategoryTreeHandler godoc
@@ -301,7 +291,7 @@ func getCategoryTreeHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(tree, "Category tree retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryTreeToProto(tree), "Category tree retrieved successfully"))
 }
 
 // createCategoryHandler godoc
@@ -316,16 +306,21 @@ func getCategoryTreeHandler(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/categories [post]
 func createCategoryHandler(c *gin.Context) {
-	var category gen.Category
-	if err := c.ShouldBindJSON(&category); err != nil {
+	var req timelogv1.CreateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	if err := service.CreateCategory(&category); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+	category, err := mapper.CategoryFromCreateRequest(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(category, "Category created successfully"))
+	if err := service.CreateCategory(category); err != nil {
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryToProto(category), "Category created successfully"))
 }
 
 // getCategoryHandler godoc
@@ -349,7 +344,7 @@ func getCategoryHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(category, "Category retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryToProto(category), "Category retrieved successfully"))
 }
 
 // updateCategoryHandler godoc
@@ -370,17 +365,26 @@ func updateCategoryHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
-	var category gen.Category
-	if err := c.ShouldBindJSON(&category); err != nil {
+	category, err := service.GetCategoryByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, err.Error()))
+		return
+	}
+	var req timelogv1.UpdateCategoryRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := mapper.ApplyCategoryUpdate(category, &req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 	category.ID = &id
-	if err := service.UpdateCategory(&category); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+	if err := service.UpdateCategory(category); err != nil {
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, SuccessResponse(category, "Category updated successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.CategoryToProto(category), "Category updated successfully"))
 }
 
 // moveCategoryHandler godoc
@@ -402,17 +406,37 @@ func moveCategoryHandler(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		ParentID *int32 `json:"parent_id"`
-	}
+	var req timelogv1.MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	if err := service.MoveCategory(id, req.ParentID); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+	if err := mapper.ValidateMoveCategoryRequest(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err := service.MoveCategory(id, req.ParentId); err != nil {
+		c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Category moved successfully"))
+}
+
+func categoryErrorStatus(err error) int {
+	if errors.Is(err, errs.ErrInvalidParentID) {
+		return http.StatusBadRequest
+	}
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "must not be provided"),
+		strings.Contains(msg, "request is required"),
+		strings.Contains(msg, "exceeds max level"),
+		strings.Contains(msg, "cannot move category"),
+		strings.Contains(msg, "parent category not found"):
+		return http.StatusBadRequest
+	default:
+		return http.StatusInternalServerError
+	}
 }

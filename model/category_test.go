@@ -22,9 +22,9 @@ func TestBuildCategoryTreePointers(t *testing.T) {
 	grandchildColor := "#0000FF"
 	grandchildDesc := "Grandchild category"
 	grandchildPath := "/Root/Child"
-	levelZero := int32(0)
 	levelOne := int32(1)
 	levelTwo := int32(2)
+	levelThree := int32(3)
 
 	categories := []gen.Category{
 		{
@@ -33,7 +33,7 @@ func TestBuildCategoryTreePointers(t *testing.T) {
 			Color:       &rootColor,
 			Description: &rootDesc,
 			ParentID:    nil,
-			Level:       &levelZero,
+			Level:       &levelOne,
 			Path:        &rootPath,
 		},
 		{
@@ -42,7 +42,7 @@ func TestBuildCategoryTreePointers(t *testing.T) {
 			Color:       &childColor,
 			Description: &childDesc,
 			ParentID:    &rootID,
-			Level:       &levelOne,
+			Level:       &levelTwo,
 			Path:        &childPath,
 		},
 		{
@@ -51,7 +51,7 @@ func TestBuildCategoryTreePointers(t *testing.T) {
 			Color:       &grandchildColor,
 			Description: &grandchildDesc,
 			ParentID:    &childID,
-			Level:       &levelTwo,
+			Level:       &levelThree,
 			Path:        &grandchildPath,
 		},
 	}
@@ -98,33 +98,33 @@ func TestBuildCategoryTreeMultipleRoots(t *testing.T) {
 	root2ID := int32(2)
 	child1ID := int32(3)
 	child2ID := int32(4)
-	levelZero := int32(0)
 	levelOne := int32(1)
+	levelTwo := int32(2)
 
 	categories := []gen.Category{
 		{
 			ID:       &root1ID,
 			Name:     "Root1",
 			ParentID: nil,
-			Level:    &levelZero,
+			Level:    &levelOne,
 		},
 		{
 			ID:       &root2ID,
 			Name:     "Root2",
 			ParentID: nil,
-			Level:    &levelZero,
+			Level:    &levelOne,
 		},
 		{
 			ID:       &child1ID,
 			Name:     "Child1",
 			ParentID: &root1ID,
-			Level:    &levelOne,
+			Level:    &levelTwo,
 		},
 		{
 			ID:       &child2ID,
 			Name:     "Child2",
 			ParentID: &root2ID,
-			Level:    &levelOne,
+			Level:    &levelTwo,
 		},
 	}
 
@@ -155,14 +155,14 @@ func TestBuildCategoryTreeEmptyInput(t *testing.T) {
 // TestBuildCategoryTreeSingleRoot tests with only one root category
 func TestBuildCategoryTreeSingleRoot(t *testing.T) {
 	rootID := int32(1)
-	levelZero := int32(0)
+	levelOne := int32(1)
 
 	categories := []gen.Category{
 		{
 			ID:       &rootID,
 			Name:     "OnlyRoot",
 			ParentID: nil,
-			Level:    &levelZero,
+			Level:    &levelOne,
 		},
 	}
 
