@@ -217,7 +217,7 @@
 
   // 可作为父分类的选项（创建新分类时用）
   const availableParents = computed(() => {
-    return allCategories.value.filter(c => c.level < 2)
+    return allCategories.value.filter(c => c.level < 3)
   })
 
   // 可作为移动目标的选项（排除自己及其子分类）
@@ -226,7 +226,7 @@
     return allCategories.value.filter(
       c =>
         c.id !== movingCategory.value!.id &&
-        c.level < 2 &&
+        c.level < 3 &&
         !c.path.includes(`/${movingCategory.value!.name}`)
     )
   })
@@ -281,7 +281,7 @@
         name: form.name.trim(),
         color: form.color,
         description: form.description.trim(),
-        parent_id: form.parent_id ?? undefined,
+        parent_id: form.parent_id,
       }
 
       if (editingCategory.value) {

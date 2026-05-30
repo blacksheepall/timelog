@@ -28,7 +28,7 @@
             {{ node.category.description }}
           </p>
           <p class="text-xs text-gray-500">
-            Level {{ node.category.level + 1 }}
+            Level {{ node.category.level }}
             <span v-if="node.children && node.children.length > 0"
               >· {{ node.children.length }} sub-categories</span
             >
@@ -38,7 +38,7 @@
 
       <div class="flex items-center space-x-2">
         <button
-          v-if="node.category.level < 2"
+          v-if="node.category.level < 3"
           @click="$emit('move', node.category)"
           class="text-gray-600 hover:text-gray-900 text-sm font-medium"
           title="Move category"
