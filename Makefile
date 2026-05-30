@@ -29,14 +29,14 @@ else
 	MIGRATE_DB_FILE := dev.db
 endif
 
-.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps swagger gen-model gen-api check-api test
+.PHONY: all build build-linux buildx buildx-linux docker run clean web mcp passkey-temp migrate fmt install-deps gen-model gen-api check-api test
 
 all: build
 
-build:
+build: gen-api
 	go build -trimpath -o $(BIN_NAME)
 
-build-linux:
+build-linux: gen-api
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -tags prod -o $(BIN_NAME_LINUX)
 
 buildx: web build
@@ -55,7 +55,9 @@ clean:
 
 # Web frontend targets
 web:
-	cd web && pnpm install && pnpm run build
+	cd web && pnpm install
+	$(MAKE) gen-api
+	cd web && pnpm run build
 
 # MCP Server target
 mcp:
@@ -80,8 +82,9 @@ fmt:
 	cd web && npx prettier --write src/ || true
 
 install-deps:
-	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@latest
 	go install gorm.io/gen/tools/gentool@latest
+	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 # Generate self-signed certificates for local HTTPS testing
 gen-certs:
@@ -105,21 +108,20 @@ gen-certs:
 	@echo "  - certs/cert.pem"
 	@echo "  - certs/key.pem"
 
-# Swagger docs target
-swagger:
-	swag init
+# Swagger docs target removed; API docs are generated via make gen-api (OpenAPI + Redoc).
 
 gen-model:
 	@go run model/gentool/gormgen.go
 	@rm -f model/gen/schema_migrations.gen.go model/gen/sqlite_sequence.gen.go 2>/dev/null || true
-	@sed -i '' 's/gorm\.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at"`/gorm.DeletedAt `gorm:"column:deleted_at;type:DATETIME" json:"deleted_at" swaggertype:"string"`/g' model/gen/*.go 2>/dev/null || true
 	@echo "Models generated. Check compilation with: go build ./model/..."
 
 gen-api:
+	@test -x ./web/node_modules/.bin/buf || (cd web && pnpm install)
 	./web/node_modules/.bin/buf generate
+	go run ./cmd/merge-openapi
 
 check-api:
 	./web/node_modules/.bin/buf lint
 
-test:
+test: gen-api
 	go test ./...

@@ -12,32 +12,19 @@ Core functions:
 
 # How to build and run
 
-## Swagger Setup (Development/Testing Only)
+## API Documentation (Development/Testing Only)
 
-For development and testing environments, you need to generate Swagger documentation using the `swag` tool before running `go mod tidy` or building the project:
+Non-`prod` builds serve Redoc at `/docs/redoc.html` (legacy redirect: `/swagger`).
 
-### Install swag
-
-```bash
-go install github.com/swaggo/swag/cmd/swag@latest
-```
-
-### Generate Swagger documentation
+Regenerate the OpenAPI spec after proto or route changes:
 
 ```bash
-swag init
+make gen-api
 ```
 
-This will generate the necessary files in the `docs` directory that are required by the router package.
+DTO schemas come from `api/proto/timelog/v1`; REST paths live in `api/openapi/rest.yaml`. The merged spec is written to `router/docs/openapi.yaml`.
 
-If `swag init` fails because `web/dist` is missing, build the frontend once first:
-
-```bash
-make web
-make swagger
-```
-
-**Note:** For production builds, Swagger is automatically excluded via the `prod` build tag, so you don't need to generate Swagger documentation for production deployments.
+**Note:** Production builds exclude the docs routes via the `prod` build tag.
 
 ## API Contract Generation
 
@@ -50,7 +37,7 @@ make gen-api
 make check-api
 ```
 
-`make gen-api` regenerates Go DTOs under `gen/go/` and TypeScript DTOs under `web/src/gen/`.
+`make gen-api` regenerates Go DTOs under `gen/go/`, TypeScript DTOs under `web/src/gen/`, and the merged OpenAPI spec at `router/docs/openapi.yaml`.
 The REST envelope `{ data, message, status }` is intentionally hand-written in Go and TypeScript and is not part of the proto contract.
 The Buf CLI is installed through the frontend dev dependencies, so run `cd web && pnpm install` before using these targets in a fresh checkout.
 

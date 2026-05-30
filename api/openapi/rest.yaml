@@ -1,0 +1,854 @@
+openapi: 3.0.3
+info:
+  title: TimeLog API
+  version: 1.0.0
+  description: |
+    REST API for the TimeLog application. Payload DTO schemas are generated from
+    `api/proto/timelog/v1`. The `{ data, message, status }` envelope is defined here.
+servers:
+  - url: /api
+    description: API base path (relative to app origin)
+tags:
+  - name: timelog
+  - name: category
+  - name: task
+  - name: constraint
+  - name: auth
+  - name: passkey
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PasskeyBeginSession:
+      type: object
+      properties:
+        session_id:
+          type: string
+        data:
+          type: object
+          description: WebAuthn credential creation or assertion options
+  responses:
+    ApiError:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                nullable: true
+              message:
+                type: string
+              status:
+                type: integer
+    TimelogEnvelope:
+      description: Timelog payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Timelog'
+              message:
+                type: string
+              status:
+                type: integer
+    TimelogListEnvelope:
+      description: Timelog list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Timelog'
+              message:
+                type: string
+              status:
+                type: integer
+    CategoryEnvelope:
+      description: Category payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Category'
+              message:
+                type: string
+              status:
+                type: integer
+    CategoryListEnvelope:
+      description: Category list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+              message:
+                type: string
+              status:
+                type: integer
+    CategoryTreeEnvelope:
+      description: Category tree payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryTreeNode'
+              message:
+                type: string
+              status:
+                type: integer
+    TaskEnvelope:
+      description: Task payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Task'
+              message:
+                type: string
+              status:
+                type: integer
+    TaskListEnvelope:
+      description: Task list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+              message:
+                type: string
+              status:
+                type: integer
+    TaskStatsEnvelope:
+      description: Task stats payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/TaskStats'
+              message:
+                type: string
+              status:
+                type: integer
+    ConstraintEnvelope:
+      description: Constraint payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Constraint'
+              message:
+                type: string
+              status:
+                type: integer
+    ConstraintListEnvelope:
+      description: Constraint list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Constraint'
+              message:
+                type: string
+              status:
+                type: integer
+    NullDataEnvelope:
+      description: Command succeeded with null data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                nullable: true
+              message:
+                type: string
+              status:
+                type: integer
+    PasskeyLoginEnvelope:
+      description: Passkey login payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/PasskeyLoginResponse'
+              message:
+                type: string
+              status:
+                type: integer
+    PasskeyCredentialEnvelope:
+      description: Passkey credential payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/PasskeyCredential'
+              message:
+                type: string
+              status:
+                type: integer
+    PasskeyCredentialListEnvelope:
+      description: Passkey credential list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PasskeyCredential'
+              message:
+                type: string
+              status:
+                type: integer
+    PasskeyBeginEnvelope:
+      description: Passkey WebAuthn begin payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/PasskeyBeginSession'
+              message:
+                type: string
+              status:
+                type: integer
+paths:
+  /timelogs:
+    get:
+      tags: [timelog]
+      summary: List time logs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: order
+          in: query
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TimelogListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      tags: [timelog]
+      summary: Create time log
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTimelogRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TimelogEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /timelogs/{id}:
+    get:
+      tags: [timelog]
+      summary: Get time log
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/TimelogEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    put:
+      tags: [timelog]
+      summary: Update time log
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTimelogRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TimelogEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    delete:
+      tags: [timelog]
+      summary: Delete time log
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /categories:
+    get:
+      tags: [category]
+      summary: List categories
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: integer
+        - name: parent_id
+          in: query
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      tags: [category]
+      summary: Create category
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /categories/tree:
+    get:
+      tags: [category]
+      summary: Get category tree
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryTreeEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /categories/{id}:
+    get:
+      tags: [category]
+      summary: Get category
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    put:
+      tags: [category]
+      summary: Update category
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/CategoryEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /categories/{id}/move:
+    post:
+      tags: [category]
+      summary: Move category
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveCategoryRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks:
+    get:
+      tags: [task]
+      summary: List tasks
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: include_suspended
+          in: query
+          schema:
+            type: boolean
+        - name: include_completed
+          in: query
+          schema:
+            type: boolean
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      tags: [task]
+      summary: Create task
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/{id}:
+    get:
+      tags: [task]
+      summary: Get task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    put:
+      tags: [task]
+      summary: Update task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    delete:
+      tags: [task]
+      summary: Delete task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/{id}/complete:
+    post:
+      tags: [task]
+      summary: Mark task completed
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/{id}/incomplete:
+    post:
+      tags: [task]
+      summary: Mark task incomplete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/{id}/suspend:
+    post:
+      tags: [task]
+      summary: Suspend task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/{id}/unsuspend:
+    post:
+      tags: [task]
+      summary: Unsuspend task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /tasks/stats/{date}:
+    get:
+      tags: [task]
+      summary: Get task stats for date
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskStatsEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /constraints:
+    get:
+      tags: [constraint]
+      summary: List constraints
+      parameters:
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ConstraintListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      tags: [constraint]
+      summary: Create constraint
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConstraintRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ConstraintEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /constraints/{id}:
+    get:
+      tags: [constraint]
+      summary: Get constraint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/ConstraintEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    put:
+      tags: [constraint]
+      summary: Update constraint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConstraintRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ConstraintEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    delete:
+      tags: [constraint]
+      summary: Delete constraint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /constraints/{id}/complete:
+    post:
+      tags: [constraint]
+      summary: Complete constraint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteConstraintRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /constraints/{id}/reactivate:
+    post:
+      tags: [constraint]
+      summary: Reactivate constraint
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /auth/dev-login:
+    post:
+      tags: [auth]
+      summary: Dev login (dev mode only)
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyLoginEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/register/begin:
+    post:
+      tags: [passkey]
+      summary: Begin passkey registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRegisterBeginRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyBeginEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/register/finish:
+    post:
+      tags: [passkey]
+      summary: Finish passkey registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyFinishRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyCredentialEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/login/begin:
+    post:
+      tags: [passkey]
+      summary: Begin passkey login
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyBeginEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/login/finish:
+    post:
+      tags: [passkey]
+      summary: Finish passkey login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyFinishRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyLoginEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/credentials:
+    get:
+      tags: [passkey]
+      summary: List passkey credentials
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/PasskeyCredentialListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /passkey/credentials/{id}:
+    delete:
+      tags: [passkey]
+      summary: Delete passkey credential
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'

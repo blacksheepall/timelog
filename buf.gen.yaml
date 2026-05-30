@@ -13,3 +13,9 @@ plugins:
       - snakeToCamel=false
       - useOptionals=none
       - esModuleInterop=true
+  - local: protoc-gen-jsonschema
+    out: gen/openapi/schemas
+    opt:
+      - file_extension=gen.schema.json
+      - disallow_additional_properties=false
+    strategy: all

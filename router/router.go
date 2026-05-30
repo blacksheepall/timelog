@@ -54,8 +54,8 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 		setupPasskeyRoutes(api, protected, cfg, deps)
 	}
 
-	// 注册 Swagger 文档路由（仅非 prod 构建）
-	setupSwagger(r)
+	// 注册 API 文档路由（仅非 prod 构建）
+	setupDocs(r)
 
 	// 静态文件服务 - 嵌入的Vue前端
 	distFS, err := fs.Sub(staticFiles, "web/dist")

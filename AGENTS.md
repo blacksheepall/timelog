@@ -32,10 +32,10 @@
 - Frontend API access is centralized in `web/src/api/index.ts`.
 
 ## Codegen / Build Quirks
-- Non-`prod` builds compile `router/swagger.go`, which imports `github.com/blacksheepaul/timelog/docs`. If Swagger files are missing, run `swag init` before `go mod tidy` or non-prod builds.
+- Non-`prod` builds compile `router/docs.go`, which embeds generated `router/docs/openapi.yaml`. `make build`, `make test`, and `make web` run `gen-api` automatically.
 - `make gen-model` requires `TIMELOG_GEN_DB_PATH` to be set; `model/gentool/gormgen.go` panics otherwise.
-- API DTOs are generated from `api/proto/timelog/v1` with `make gen-api`; do not hand-edit `gen/go/` or `web/src/gen/`. The REST envelope remains hand-written in `router/apiresponse.go` and `web/src/types/api.ts`. The Buf CLI is provided by `web` dev dependencies, so run `cd web && pnpm install` first in a fresh checkout.
-- CI release build runs `make install-deps gen-model buildx-linux`; do not assume `make build-linux` alone matches release artifacts.
+- API DTOs are generated from `api/proto/timelog/v1` with `make gen-api`; do not hand-edit `gen/go/` or `web/src/gen/`. REST paths live in `api/openapi/rest.yaml`; `cmd/merge-openapi` merges proto JSON schemas into `router/docs/openapi.yaml`. The REST envelope remains hand-written in `router/apiresponse.go` and `web/src/types/api.ts`. The Buf CLI is provided by `web` dev dependencies, so run `cd web && pnpm install` first in a fresh checkout. `protoc-gen-jsonschema` is installed via `make install-deps`.
+- CI release build runs `make install-deps gen-model buildx-linux`; `buildx-linux` runs `gen-api` via `web`/`build-linux`. Do not assume plain `go build` without codegen matches release artifacts.
 
 ## Testing Notes
 - `test/setup_test.go` reloads the DB from migrations when `test.flush` is true in `config-test.yml`.

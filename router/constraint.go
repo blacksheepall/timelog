@@ -21,18 +21,6 @@ func setupConstraintRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.POST("/constraints/:id/complete", completeConstraintHandler)
 	group.POST("/constraints/:id/reactivate", reactivateConstraintHandler)
 }
-
-// CreateConstraintHandler godoc
-// @Summary 创建约束
-// @Description 新增一项约束
-// @Tags constraint
-// @Accept json
-// @Produce json
-// @Param data body gen.Constraint true "约束数据"
-// @Success 200 {object} gen.Constraint
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints [post]
 func createConstraintHandler(c *gin.Context) {
 	var request timelogv1.CreateConstraintRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -58,16 +46,6 @@ func createConstraintHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(constraint), "Constraint created successfully"))
 	}
 }
-
-// ListConstraintsHandler godoc
-// @Summary 获取约束列表
-// @Description 获取所有约束，支持按活跃状态过滤
-// @Tags constraint
-// @Produce json
-// @Param active query bool false "是否只显示活跃约束"
-// @Success 200 {array} gen.Constraint
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints [get]
 func listConstraintsHandler(c *gin.Context) {
 	activeStr := c.Query("active")
 
@@ -87,18 +65,6 @@ func listConstraintsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintsToProto(constraints), "Constraints retrieved successfully"))
 }
-
-// GetConstraintHandler godoc
-// @Summary 获取单个约束
-// @Description 根据ID获取约束详情
-// @Tags constraint
-// @Produce json
-// @Param id path int true "约束ID"
-// @Success 200 {object} gen.Constraint
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints/{id} [get]
 func getConstraintHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -116,20 +82,6 @@ func getConstraintHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(constraint), "Constraint retrieved successfully"))
 }
-
-// UpdateConstraintHandler godoc
-// @Summary 更新约束
-// @Description 更新约束信息
-// @Tags constraint
-// @Accept json
-// @Produce json
-// @Param id path int true "约束ID"
-// @Param data body gen.Constraint true "约束数据"
-// @Success 200 {object} gen.Constraint
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints/{id} [put]
 func updateConstraintHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -169,18 +121,6 @@ func updateConstraintHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(existingConstraint), "Constraint updated successfully"))
 	}
 }
-
-// DeleteConstraintHandler godoc
-// @Summary 删除约束
-// @Description 删除指定约束
-// @Tags constraint
-// @Produce json
-// @Param id path int true "约束ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints/{id} [delete]
 func deleteConstraintHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -203,20 +143,6 @@ func deleteConstraintHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Constraint deleted successfully"))
 }
-
-// CompleteConstraintHandler godoc
-// @Summary 标记约束为完成
-// @Description 将约束标记为完成状态，记录结束理由
-// @Tags constraint
-// @Accept json
-// @Produce json
-// @Param id path int true "约束ID"
-// @Param data body map[string]string true "结束理由"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints/{id}/complete [post]
 func completeConstraintHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -239,18 +165,6 @@ func completeConstraintHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Constraint marked as completed"))
 }
-
-// ReactivateConstraintHandler godoc
-// @Summary 重新激活约束
-// @Description 将约束重新激活
-// @Tags constraint
-// @Produce json
-// @Param id path int true "约束ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/constraints/{id}/reactivate [post]
 func reactivateConstraintHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)

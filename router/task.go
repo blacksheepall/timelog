@@ -25,18 +25,6 @@ func setupTaskRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.POST("/tasks/:id/unsuspend", unsuspendTaskHandler)
 	group.GET("/tasks/stats/:date", getTaskStatsHandler)
 }
-
-// CreateTaskHandler godoc
-// @Summary 创建任务
-// @Description 新增一项任务
-// @Tags task
-// @Accept json
-// @Produce json
-// @Param data body gen.Task true "任务数据"
-// @Success 200 {object} gen.Task
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks [post]
 func createTaskHandler(c *gin.Context) {
 	var req timelogv1.CreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -62,18 +50,6 @@ func createTaskHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(task), "Task created successfully"))
 	}
 }
-
-// ListTasksHandler godoc
-// @Summary 获取任务列表
-// @Description 获取所有任务，支持按日期过滤、是否包含暂停的任务和是否包含已完成的任务
-// @Tags task
-// @Produce json
-// @Param date query string false "日期过滤 (YYYY-MM-DD格式)"
-// @Param include_suspended query boolean false "是否包含暂停的任务 (默认false)"
-// @Param include_completed query boolean false "是否包含已完成的任务 (默认false)"
-// @Success 200 {array} gen.Task
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks [get]
 func listTasksHandler(c *gin.Context) {
 	dateStr := c.Query("date")
 	includeSuspended := c.Query("include_suspended") == "true"
@@ -101,18 +77,6 @@ func listTasksHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(mapper.TasksToProto(tasks), "Tasks retrieved successfully"))
 }
-
-// GetTaskHandler godoc
-// @Summary 获取单个任务
-// @Description 根据ID获取任务详情
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} gen.Task
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id} [get]
 func getTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -130,20 +94,6 @@ func getTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(task), "Task retrieved successfully"))
 }
-
-// UpdateTaskHandler godoc
-// @Summary 更新任务
-// @Description 更新任务信息
-// @Tags task
-// @Accept json
-// @Produce json
-// @Param id path int true "任务ID"
-// @Param data body gen.Task true "任务数据"
-// @Success 200 {object} gen.Task
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id} [put]
 func updateTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -183,18 +133,6 @@ func updateTaskHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(existingTask), "Task updated successfully"))
 	}
 }
-
-// DeleteTaskHandler godoc
-// @Summary 删除任务
-// @Description 删除指定任务
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id} [delete]
 func deleteTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -217,18 +155,6 @@ func deleteTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Task deleted successfully"))
 }
-
-// CompleteTaskHandler godoc
-// @Summary 标记任务为完成
-// @Description 将任务标记为完成状态
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id}/complete [post]
 func completeTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -245,18 +171,6 @@ func completeTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Task marked as completed"))
 }
-
-// IncompleteTaskHandler godoc
-// @Summary 标记任务为未完成
-// @Description 将任务标记为未完成状态
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id}/incomplete [post]
 func incompleteTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -273,18 +187,6 @@ func incompleteTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Task marked as incomplete"))
 }
-
-// SuspendTaskHandler godoc
-// @Summary 暂停任务
-// @Description 将任务标记为暂停状态
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id}/suspend [post]
 func suspendTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -307,18 +209,6 @@ func suspendTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Task suspended successfully"))
 }
-
-// UnsuspendTaskHandler godoc
-// @Summary 取消暂停任务
-// @Description 将任务取消暂停状态
-// @Tags task
-// @Produce json
-// @Param id path int true "任务ID"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/{id}/unsuspend [post]
 func unsuspendTaskHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseInt(idStr, 10, 32)
@@ -341,17 +231,6 @@ func unsuspendTaskHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, SuccessResponse(nil, "Task unsuspended successfully"))
 }
-
-// GetTaskStatsHandler godoc
-// @Summary 获取任务统计
-// @Description 获取指定日期的任务完成统计
-// @Tags task
-// @Produce json
-// @Param date path string true "日期 (YYYY-MM-DD格式)"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /api/tasks/stats/{date} [get]
 func getTaskStatsHandler(c *gin.Context) {
 	dateStr := c.Param("date")
 	date, err := time.Parse("2006-01-02", dateStr)
