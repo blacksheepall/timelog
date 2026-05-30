@@ -1,0 +1,9 @@
+{
+  "data": {
+    "token": "abc",
+    "token_type": "Bearer",
+    "expires_in": 3600
+  },
+  "message": "login success",
+  "status": 200
+}

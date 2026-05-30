@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
+	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
@@ -36,22 +38,28 @@ func setupTaskRoutes(group *gin.RouterGroup, deps Dependencies) {
 // @Failure 500 {object} map[string]string
 // @Router /api/tasks [post]
 func createTaskHandler(c *gin.Context) {
-	var task gen.Task
-	if err := c.ShouldBindJSON(&task); err != nil {
+	var req timelogv1.CreateTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	if err := service.CreateTask(&task); err != nil {
+	task, err := mapper.TaskFromCreateRequest(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	if err := service.CreateTask(task); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
 	// 重新查询以获取完整的Tag信息
 	if createdTask, err := service.GetTaskByID(*task.ID); err == nil {
-		c.JSON(http.StatusOK, SuccessResponse(createdTask, "Task created successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(createdTask), "Task created successfully"))
 	} else {
-		c.JSON(http.StatusOK, SuccessResponse(task, "Task created successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(task), "Task created successfully"))
 	}
 }
 
@@ -91,7 +99,7 @@ func listTasksHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(tasks, "Tasks retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TasksToProto(tasks), "Tasks retrieved successfully"))
 }
 
 // GetTaskHandler godoc
@@ -120,7 +128,7 @@ func getTaskHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(task, "Task retrieved successfully"))
+	c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(task), "Task retrieved successfully"))
 }
 
 // UpdateTaskHandler godoc
@@ -152,26 +160,27 @@ func updateTaskHandler(c *gin.Context) {
 		return
 	}
 
-	var updateData gen.Task
-	if err := c.ShouldBindJSON(&updateData); err != nil {
+	var req timelogv1.UpdateTaskRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	// 保持ID不变
-	updateData.ID = existingTask.ID
-	updateData.CreatedAt = existingTask.CreatedAt
+	if err := mapper.ApplyTaskUpdate(existingTask, &req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+		return
+	}
 
-	if err := service.UpdateTask(&updateData); err != nil {
+	if err := service.UpdateTask(existingTask); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
 	// 重新查询以获取完整信息
 	if updatedTask, err := service.GetTaskByID(id); err == nil {
-		c.JSON(http.StatusOK, SuccessResponse(updatedTask, "Task updated successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(updatedTask), "Task updated successfully"))
 	} else {
-		c.JSON(http.StatusOK, SuccessResponse(updateData, "Task updated successfully"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(existingTask), "Task updated successfully"))
 	}
 }
 
@@ -357,5 +366,11 @@ func getTaskStatsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, SuccessResponse(stats, "Task stats retrieved successfully"))
+	payload, err := mapper.TaskStatsToProto(stats)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, SuccessResponse(payload, "Task stats retrieved successfully"))
 }

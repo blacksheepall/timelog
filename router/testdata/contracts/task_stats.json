@@ -1,0 +1,9 @@
+{
+  "data": {
+    "total_tasks": 4,
+    "completed_tasks": 3,
+    "completion_rate": 75
+  },
+  "message": "Task stats retrieved successfully",
+  "status": 200
+}

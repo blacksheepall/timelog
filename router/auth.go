@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func devLoginHandler(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, SuccessResponse(
-			gin.H{"token": token, "token_type": "Bearer", "expires_in": devTokenTTL},
+			mapper.LoginResponse(token, "Bearer", devTokenTTL),
 			"dev login success",
 		))
 	}
