@@ -60,7 +60,7 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 				"id":         tl.ID,
 				"start_time": service.FormatSGDateTime(tl.StartTime),
 				"duration":   service.FormatDuration(time.Since(tl.StartTime)),
-				"remark":     tl.Remark,
+				"remarks":    tl.Remark,
 			}
 			result = append(result, entry)
 		}
@@ -104,7 +104,7 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 			"start_time": service.FormatSGDateTime(tl.StartTime),
 			"end_time":   nil,
 			"duration":   durationStr,
-			"remark":     tl.Remark,
+			"remarks":    tl.Remark,
 		}
 
 		if tl.EndTime != nil {
@@ -222,7 +222,7 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 		entry := map[string]interface{}{
 			"id":    cat.ID,
 			"name":  cat.Name,
-			"level": int32(0),
+			"level": int32(1),
 		}
 		if cat.Level != nil {
 			entry["level"] = *cat.Level

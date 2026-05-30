@@ -7,12 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
-const MaxCategoryLevel = 2 // 最大层级：0, 1, 2
+const MaxCategoryLevel = 3 // 最大层级：1=根, 2=子, 3=孙（0 为虚拟树根，无 DB 行）
 
 // ValidateLevel 验证分类层级是否合法
 func ValidateLevel(level int32) error {
-	if level < 0 || level > MaxCategoryLevel {
-		return fmt.Errorf("category level must be between 0 and %d", MaxCategoryLevel)
+	if level < 1 || level > MaxCategoryLevel {
+		return fmt.Errorf("category level must be between 1 and %d", MaxCategoryLevel)
 	}
 	return nil
 }
@@ -43,9 +43,9 @@ func CreateCategory(db *gorm.DB, category *gen.Category) error {
 		parentPath := GetFullPath(parent)
 		category.Path = &parentPath
 	} else {
-		levelZero := int32(0)
+		rootLevel := int32(1)
 		rootPath := "/"
-		category.Level = &levelZero
+		category.Level = &rootLevel
 		category.Path = &rootPath
 		category.ParentID = nil
 	}
@@ -162,7 +162,7 @@ func MoveCategory(db *gorm.DB, categoryID int32, newParentID *int32) error {
 			return err
 		}
 
-		newLevel := int32(0)
+		newLevel := int32(1)
 		newPath := "/"
 
 		if newParentID != nil && *newParentID > 0 {
