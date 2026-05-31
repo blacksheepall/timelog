@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
@@ -31,7 +32,9 @@ func setupTestModel() *model.Dao {
 	if err != nil {
 		panic(err)
 	}
-	InitService(FakeLogger{}, cfg, dao)
+	repos := adapter.NewRepositories(dao)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, dao, FakeLogger{}, cfg, nil)
+	SetDefaultService(svc)
 	return dao
 }
 

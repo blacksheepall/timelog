@@ -34,7 +34,7 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	api := r.Group("/api")
 	protected := api.Group("")
 	if cfg.Passkey.Enabled {
-		protected.Use(middleware.Auth(deps.DAO))
+		protected.Use(middleware.Auth(deps.Service))
 	}
 
 	// 注册 TimeLog 路由
@@ -47,7 +47,7 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	setupConstraintRoutes(protected, deps)
 
 	// 注册通用鉴权路由
-	setupAuthRoutes(api, cfg)
+	setupAuthRoutes(api, cfg, deps)
 
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
-	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -25,16 +24,16 @@ type passkeyRegisterBeginRequest struct {
 }
 
 func setupPasskeyRoutes(public *gin.RouterGroup, protected *gin.RouterGroup, cfg *config.Config, deps Dependencies) {
-	public.POST("/passkey/register/begin", passkeyRegisterBeginHandler(cfg))
-	public.POST("/passkey/register/finish", passkeyRegisterFinishHandler())
-	public.POST("/passkey/login/begin", passkeyLoginBeginHandler(cfg))
-	public.POST("/passkey/login/finish", passkeyLoginFinishHandler(cfg))
+	public.POST("/passkey/register/begin", passkeyRegisterBeginHandler(cfg, deps))
+	public.POST("/passkey/register/finish", passkeyRegisterFinishHandler(deps))
+	public.POST("/passkey/login/begin", passkeyLoginBeginHandler(cfg, deps))
+	public.POST("/passkey/login/finish", passkeyLoginFinishHandler(cfg, deps))
 
-	protected.GET("/passkey/credentials", passkeyListCredentialsHandler)
-	protected.DELETE("/passkey/credentials/:id", passkeyDeleteCredentialHandler)
+	protected.GET("/passkey/credentials", passkeyListCredentialsHandler(deps))
+	protected.DELETE("/passkey/credentials/:id", passkeyDeleteCredentialHandler(deps))
 }
 
-func passkeyRegisterBeginHandler(cfg *config.Config) gin.HandlerFunc {
+func passkeyRegisterBeginHandler(cfg *config.Config, deps Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request passkeyRegisterBeginRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -47,26 +46,26 @@ func passkeyRegisterBeginHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		record, err := service.ValidateTempPassword(strings.TrimSpace(request.TempPassword))
+		record, err := deps.Service.ValidateTempPassword(strings.TrimSpace(request.TempPassword))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse(http.StatusUnauthorized, "invalid or expired temp password"))
 			return
 		}
-		if err := service.CleanupExpiredTempPasswords(); err != nil {
+		if err := deps.Service.CleanupExpiredTempPasswords(); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 		if record != nil {
-			_ = service.DeleteTempPassword(record.ID)
+			_ = deps.Service.DeleteTempPassword(record.ID)
 		}
 
-		user, err := service.LoadPasskeyUser()
+		user, err := deps.Service.LoadPasskeyUser()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
-		webAuthn := service.GetWebAuthn()
+		webAuthn := deps.Service.GetWebAuthn()
 		if webAuthn == nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, "webauthn not initialized"))
 			return
@@ -83,13 +82,13 @@ func passkeyRegisterBeginHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		sessionID, err := service.GenerateSessionToken()
+		sessionID, err := deps.Service.GenerateSessionToken()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
-		if err := service.StorePasskeySession(sessionID, session, int64(cfg.Passkey.TempPassword.TTL)); err != nil {
+		if err := deps.Service.StorePasskeySession(sessionID, session, int64(cfg.Passkey.TempPassword.TTL)); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
@@ -98,7 +97,7 @@ func passkeyRegisterBeginHandler(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func passkeyRegisterFinishHandler() gin.HandlerFunc {
+func passkeyRegisterFinishHandler(deps Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request passkeyFinishRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -106,13 +105,13 @@ func passkeyRegisterFinishHandler() gin.HandlerFunc {
 			return
 		}
 
-		webAuthn := service.GetWebAuthn()
+		webAuthn := deps.Service.GetWebAuthn()
 		if webAuthn == nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, "webauthn not initialized"))
 			return
 		}
 
-		session, err := service.LoadPasskeySession(request.SessionID)
+		session, err := deps.Service.LoadPasskeySession(request.SessionID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
@@ -124,7 +123,7 @@ func passkeyRegisterFinishHandler() gin.HandlerFunc {
 			return
 		}
 
-		user, err := service.LoadPasskeyUser()
+		user, err := deps.Service.LoadPasskeyUser()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
@@ -136,7 +135,7 @@ func passkeyRegisterFinishHandler() gin.HandlerFunc {
 			return
 		}
 
-		record, err := service.CreatePasskeyCredential(credential, strings.TrimSpace(request.DeviceName))
+		record, err := deps.Service.CreatePasskeyCredential(credential, strings.TrimSpace(request.DeviceName))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
@@ -146,9 +145,9 @@ func passkeyRegisterFinishHandler() gin.HandlerFunc {
 	}
 }
 
-func passkeyLoginBeginHandler(cfg *config.Config) gin.HandlerFunc {
+func passkeyLoginBeginHandler(cfg *config.Config, deps Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		webAuthn := service.GetWebAuthn()
+		webAuthn := deps.Service.GetWebAuthn()
 		if webAuthn == nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, "webauthn not initialized"))
 			return
@@ -162,7 +161,7 @@ func passkeyLoginBeginHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		sessionID, err := service.GenerateSessionToken()
+		sessionID, err := deps.Service.GenerateSessionToken()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
@@ -173,7 +172,7 @@ func passkeyLoginBeginHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		if err := service.StorePasskeySession(sessionID, session, int64(cfg.Passkey.TempPassword.TTL)); err != nil {
+		if err := deps.Service.StorePasskeySession(sessionID, session, int64(cfg.Passkey.TempPassword.TTL)); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
@@ -182,7 +181,7 @@ func passkeyLoginBeginHandler(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
+func passkeyLoginFinishHandler(cfg *config.Config, deps Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request passkeyFinishRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -190,13 +189,13 @@ func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		webAuthn := service.GetWebAuthn()
+		webAuthn := deps.Service.GetWebAuthn()
 		if webAuthn == nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, "webauthn not initialized"))
 			return
 		}
 
-		session, err := service.LoadPasskeySession(request.SessionID)
+		session, err := deps.Service.LoadPasskeySession(request.SessionID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
@@ -208,15 +207,15 @@ func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		_, credential, err := webAuthn.ValidatePasskeyLogin(service.LoadPasskeyUserByHandle, *session, parsed)
+		_, credential, err := webAuthn.ValidatePasskeyLogin(deps.Service.LoadPasskeyUserByHandle, *session, parsed)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse(http.StatusUnauthorized, err.Error()))
 			return
 		}
 
-		_ = service.UpdatePasskeyCredentialAuth(credential)
+		_ = deps.Service.UpdatePasskeyCredentialAuth(credential)
 
-		token, err := service.GenerateSessionToken()
+		token, err := deps.Service.GenerateSessionToken()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
@@ -227,7 +226,7 @@ func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		if err := service.StoreSessionToken(token, int64(cfg.Passkey.TokenTTL)); err != nil {
+		if err := deps.Service.StoreSessionToken(token, int64(cfg.Passkey.TokenTTL)); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
@@ -236,27 +235,31 @@ func passkeyLoginFinishHandler(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func passkeyListCredentialsHandler(c *gin.Context) {
-	credentials, err := service.ListPasskeyCredentials()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
-		return
-	}
+func passkeyListCredentialsHandler(deps Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		credentials, err := deps.Service.ListPasskeyCredentials()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+			return
+		}
 
-	c.JSON(http.StatusOK, SuccessResponse(mapper.PasskeyCredentialsToProto(credentials), "passkey credentials"))
+		c.JSON(http.StatusOK, SuccessResponse(mapper.PasskeyCredentialsToProto(credentials), "passkey credentials"))
+	}
 }
 
-func passkeyDeleteCredentialHandler(c *gin.Context) {
-	var id uint
-	if err := parseUintParam(c, "id", &id); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
-		return
-	}
+func passkeyDeleteCredentialHandler(deps Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var id uint
+		if err := parseUintParam(c, "id", &id); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+			return
+		}
 
-	if err := service.DeletePasskeyCredential(id); err != nil {
-		c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
-		return
-	}
+		if err := deps.Service.DeletePasskeyCredential(id); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
+			return
+		}
 
-	c.JSON(http.StatusOK, SuccessResponse(nil, "passkey credential deleted"))
+		c.JSON(http.StatusOK, SuccessResponse(nil, "passkey credential deleted"))
+	}
 }

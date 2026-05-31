@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 )
 
-func TestInitServiceWiresInjectedDAO(t *testing.T) {
+func TestNewServiceWiresInjectedDAO(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Database.Host = ":memory:"
 	cfg.Log.ORMLogLevel = 1
@@ -17,12 +18,14 @@ func TestInitServiceWiresInjectedDAO(t *testing.T) {
 		t.Fatalf("NewDao: %v", err)
 	}
 
-	svc := InitService(FakeLogger{}, cfg, dao)
+	repos := adapter.NewRepositories(dao)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, dao, FakeLogger{}, cfg, nil)
 	if svc == nil {
 		t.Fatal("expected non-nil service")
 	}
 
-	if getDao() != dao {
-		t.Fatal("getDao should return the injected DAO instance")
+	SetDefaultService(svc)
+	if getDefaultService() != svc {
+		t.Fatal("getDefaultService should return the injected service instance")
 	}
 }
