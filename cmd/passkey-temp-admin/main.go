@@ -9,7 +9,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	log "github.com/blacksheepaul/timelog/core/logger"
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/app"
 	"github.com/blacksheepaul/timelog/service"
 )
 
@@ -56,13 +56,12 @@ func main() {
 	cfg := config.GetConfig("config.yml")
 	logger := log.SetZapLogger(*cfg)
 
-	dao, err := model.NewDao(cfg, logger)
+	application, err := app.New(cfg, logger, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to initialize database: %v\n", err)
+		fmt.Fprintf(os.Stderr, "failed to initialize application: %v\n", err)
 		os.Exit(1)
 	}
-	model.RegisterDao(dao, logger)
-	service.InitService(logger, cfg, dao)
+	service.SetDefaultService(application.Service)
 
 	if err := runCreate(os.Args[1:], cfg, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

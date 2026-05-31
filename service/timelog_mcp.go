@@ -24,8 +24,8 @@ type UpdateTimeLogMCPInput struct {
 	Remark     string
 }
 
-func CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error) {
-	if _, err := GetCategoryByID(input.CategoryID); err != nil {
+func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error) {
+	if _, err := s.GetCategoryByID(input.CategoryID); err != nil {
 		return nil, fmt.Errorf("category not found: %w", err)
 	}
 
@@ -59,20 +59,20 @@ func CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error
 		tl.Remark = &input.Remark
 	}
 
-	if err := CreateTimeLog(tl); err != nil {
+	if err := s.CreateTimeLog(tl); err != nil {
 		return nil, fmt.Errorf("failed to create time log: %w", err)
 	}
-	return GetTimeLogByID(*tl.ID)
+	return s.GetTimeLogByID(*tl.ID)
 }
 
-func UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error) {
-	tl, err := GetTimeLogByID(input.ID)
+func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error) {
+	tl, err := s.GetTimeLogByID(input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("time log not found: %w", err)
 	}
 
 	if input.CategoryID > 0 {
-		if _, err := GetCategoryByID(input.CategoryID); err != nil {
+		if _, err := s.GetCategoryByID(input.CategoryID); err != nil {
 			return nil, fmt.Errorf("category not found: %w", err)
 		}
 		tl.CategoryID = input.CategoryID
@@ -102,12 +102,24 @@ func UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error
 		tl.Remark = &input.Remark
 	}
 
-	if err := UpdateTimeLog(tl); err != nil {
+	if err := s.UpdateTimeLog(tl); err != nil {
 		return nil, fmt.Errorf("failed to update time log: %w", err)
 	}
-	return GetTimeLogByID(input.ID)
+	return s.GetTimeLogByID(input.ID)
 }
 
+func (s *Service) ListActiveTimeLogs() ([]gen.Timelog, error) {
+	return s.ListTimeLogsWithOptions(0, "start_time DESC", "end_time IS NULL")
+}
+
+// --- Package-level wrappers (transitional) ---
+
+func CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error) {
+	return defaultService.CreateTimeLogFromMCPInput(input)
+}
+func UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error) {
+	return defaultService.UpdateTimeLogFromMCPInput(input)
+}
 func ListActiveTimeLogs() ([]gen.Timelog, error) {
-	return ListTimeLogsWithOptions(0, "start_time DESC", "end_time IS NULL")
+	return defaultService.ListActiveTimeLogs()
 }

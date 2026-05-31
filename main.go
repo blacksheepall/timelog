@@ -11,7 +11,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	log "github.com/blacksheepaul/timelog/core/logger"
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/app"
 	"github.com/blacksheepaul/timelog/router"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
@@ -24,12 +24,12 @@ func main() {
 	cfg := config.GetConfig("config.yml")
 	logger := log.SetZapLogger(*cfg)
 
-	dao, err := model.NewDao(cfg, logger)
+	application, err := app.New(cfg, logger, nil)
 	if err != nil {
-		panic("Failed to initialize database: " + err.Error())
+		panic("Failed to initialize application: " + err.Error())
 	}
-	model.RegisterDao(dao, logger)
-	svc := service.InitService(logger, cfg, dao)
+	service.SetDefaultService(application.Service)
+
 	if cfg.Passkey.Enabled {
 		if err := service.InitWebAuthnWithConfig(cfg); err != nil {
 			panic("Failed to initialize WebAuthn: " + err.Error())
@@ -37,8 +37,7 @@ func main() {
 	}
 
 	r := router.Register(gin.New(), cfg, logger, staticFiles, router.Dependencies{
-		Service: svc,
-		DAO:     dao,
+		Service: application.Service,
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

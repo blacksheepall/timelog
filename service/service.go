@@ -3,46 +3,67 @@ package service
 import (
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
+	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 // Service owns runtime dependencies for the business layer.
 type Service struct {
-	dao      *model.Dao
-	log      logger.Logger
-	webAuthn *webauthn.WebAuthn
+	timelogRepo      ports.TimelogRepository
+	categoryRepo     ports.CategoryRepository
+	taskRepo         ports.TaskRepository
+	constraintRepo   ports.ConstraintRepository
+	passkeyRepo      ports.PasskeyCredentialRepository
+	tempPasswordRepo ports.TempPasswordRepository
+	cache            ports.CacheStore
+	dbProvider       model.DBProvider
+	log              logger.Logger
+	webAuthn         *webauthn.WebAuthn
+	cfg              *config.Config
+}
+
+// NewService creates a Service with injected repository ports.
+func NewService(
+	timelogRepo ports.TimelogRepository,
+	categoryRepo ports.CategoryRepository,
+	taskRepo ports.TaskRepository,
+	constraintRepo ports.ConstraintRepository,
+	passkeyRepo ports.PasskeyCredentialRepository,
+	tempPasswordRepo ports.TempPasswordRepository,
+	cache ports.CacheStore,
+	dbProvider model.DBProvider,
+	log logger.Logger,
+	cfg *config.Config,
+	webAuthn *webauthn.WebAuthn,
+) *Service {
+	return &Service{
+		timelogRepo:      timelogRepo,
+		categoryRepo:     categoryRepo,
+		taskRepo:         taskRepo,
+		constraintRepo:   constraintRepo,
+		passkeyRepo:      passkeyRepo,
+		tempPasswordRepo: tempPasswordRepo,
+		cache:            cache,
+		dbProvider:       dbProvider,
+		log:              log,
+		cfg:              cfg,
+		webAuthn:         webAuthn,
+	}
 }
 
 var defaultService *Service
-var daoProvider func() *model.Dao = model.GetDao
-var webAuthnProvider func() *webauthn.WebAuthn
 
-func New(dao *model.Dao, loggerInstance logger.Logger) *Service {
-	return &Service{dao: dao, log: loggerInstance}
-}
-
-// InitService wires the process-wide service instance used by package-level helpers.
-func InitService(loggerInstance logger.Logger, _ *config.Config, dao *model.Dao) *Service {
-	defaultService = New(dao, loggerInstance)
-	daoProvider = func() *model.Dao { return dao }
+func getDefaultService() *Service {
 	return defaultService
 }
 
-func getDao() *model.Dao {
-	if defaultService != nil {
-		return defaultService.dao
-	}
-	return daoProvider()
+// SetDefaultService wires the process-wide defaultService used by package-level helpers.
+func SetDefaultService(svc *Service) {
+	defaultService = svc
 }
 
-func setDaoProviderForTest(provider func() *model.Dao) {
-	if provider == nil {
-		daoProvider = model.GetDao
-		return
-	}
-	daoProvider = provider
-}
+var webAuthnProvider func() *webauthn.WebAuthn
 
 func getWebAuthn() *webauthn.WebAuthn {
 	if defaultService != nil && defaultService.webAuthn != nil {
@@ -63,6 +84,16 @@ func setWebAuthn(instance *webauthn.WebAuthn) {
 		defaultService.webAuthn = instance
 	}
 	webAuthnProvider = func() *webauthn.WebAuthn { return instance }
+}
+
+// GetCache implements ports.SessionTokenStore so Service can be passed to auth middleware.
+func (s *Service) GetCache(key string) (any, bool) {
+	return s.cache.GetCache(key)
+}
+
+// WriteCache exposes cache write for passkey/session management.
+func (s *Service) WriteCache(key string, value any, seconds int64) {
+	s.cache.WriteCache(key, value, seconds)
 }
 
 type Response struct {

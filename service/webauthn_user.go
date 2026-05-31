@@ -28,8 +28,8 @@ func (u *PasskeyUser) WebAuthnCredentials() []webauthn.Credential {
 	return u.credentials
 }
 
-func LoadPasskeyUser() (*PasskeyUser, error) {
-	records, err := ListPasskeyCredentials()
+func (s *Service) LoadPasskeyUser() (*PasskeyUser, error) {
+	records, err := s.ListPasskeyCredentials()
 	if err != nil {
 		return nil, err
 	}
@@ -47,10 +47,20 @@ func LoadPasskeyUser() (*PasskeyUser, error) {
 	}, nil
 }
 
-func LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn.User, error) {
+func (s *Service) LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn.User, error) {
 	if string(userHandle) != "timelog-single-user" {
 		return nil, errs.ErrPasskeyUserNotFound
 	}
 
-	return LoadPasskeyUser()
+	return s.LoadPasskeyUser()
+}
+
+// --- Package-level wrappers (transitional) ---
+
+func LoadPasskeyUser() (*PasskeyUser, error) {
+	return defaultService.LoadPasskeyUser()
+}
+
+func LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn.User, error) {
+	return defaultService.LoadPasskeyUserByHandle(nil, userHandle)
 }

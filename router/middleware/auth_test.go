@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ func (l FakeLogger) Errorw(msg string, keysAndValues ...interface{}) {}
 func (l FakeLogger) Fatal(fields ...interface{})                     {}
 func (l FakeLogger) Fatalw(msg string, keysAndValues ...interface{}) {}
 
-func setupTestDAO() *model.Dao {
+func setupTestDAO() *service.Service {
 	cfg := &config.Config{}
 	cfg.Database.Host = ":memory:"
 	cfg.Log.ORMLogLevel = 1
@@ -32,15 +33,17 @@ func setupTestDAO() *model.Dao {
 	if err != nil {
 		panic(err)
 	}
-	service.InitService(FakeLogger{}, cfg, dao)
-	return dao
+	repos := adapter.NewRepositories(dao)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, dao, FakeLogger{}, cfg, nil)
+	service.SetDefaultService(svc)
+	return svc
 }
 
 func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
-	dao := setupTestDAO()
+	svc := setupTestDAO()
 
 	sessionID := "test-session-abc123"
-	dao.WriteCache("passkey_session:"+sessionID, map[string]string{"challenge": "test-challenge"}, 300)
+	svc.WriteCache("passkey_session:"+sessionID, map[string]string{"challenge": "test-challenge"}, 300)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -48,7 +51,7 @@ func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
 	c.Request = httptest.NewRequest("GET", "/test", nil)
 	c.Request.Header.Set("Authorization", "Bearer "+sessionID)
 
-	Auth(dao)(c)
+	Auth(svc)(c)
 
 	if w.Code != 401 {
 		t.Errorf("Expected 401 Unauthorized, got %d", w.Code)
@@ -56,7 +59,7 @@ func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
 }
 
 func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
-	dao := setupTestDAO()
+	svc := setupTestDAO()
 
 	token := "valid-auth-token-xyz789"
 	err := service.StoreSessionToken(token, 300)
@@ -70,7 +73,7 @@ func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
 	c.Request = httptest.NewRequest("GET", "/test", nil)
 	c.Request.Header.Set("Authorization", "Bearer "+token)
 
-	Auth(dao)(c)
+	Auth(svc)(c)
 
 	if c.IsAborted() {
 		t.Errorf("Expected request to pass, but middleware aborted it with status %d", w.Code)
@@ -78,10 +81,10 @@ func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
-	dao := setupTestDAO()
+	svc := setupTestDAO()
 
 	token := "unprefixed-token-123"
-	dao.WriteCache(token, true, 300)
+	svc.WriteCache(token, true, 300)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -89,7 +92,7 @@ func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
 	c.Request = httptest.NewRequest("GET", "/test", nil)
 	c.Request.Header.Set("Authorization", "Bearer "+token)
 
-	Auth(dao)(c)
+	Auth(svc)(c)
 
 	if w.Code != 401 {
 		t.Errorf("Expected 401 Unauthorized for unprefixed key, got %d", w.Code)

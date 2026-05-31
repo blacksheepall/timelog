@@ -9,6 +9,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
+	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 
@@ -22,7 +23,9 @@ func TestMain(m *testing.M) {
 	cfg := loadTestConfig()
 	gin.SetMode(gin.DebugMode)
 	testDAO = mustNewTestDAO(cfg, FakeLogger{})
-	service.InitService(FakeLogger{}, cfg, testDAO)
+	repos := adapter.NewRepositories(testDAO)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, testDAO, FakeLogger{}, cfg, nil)
+	service.SetDefaultService(svc)
 
 	if cfg.Test.Flush {
 		flushDb(testDAO)

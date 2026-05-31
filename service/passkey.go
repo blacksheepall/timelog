@@ -8,10 +8,9 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/blacksheepaul/timelog/pkg/temppassword"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
-
-	"github.com/blacksheepaul/timelog/pkg/temppassword"
 )
 
 func InitWebAuthnWithConfig(cfg *config.Config) error {
@@ -42,24 +41,22 @@ func InitWebAuthnWithConfig(cfg *config.Config) error {
 	return nil
 }
 
-func GetWebAuthn() *webauthn.WebAuthn {
+func (s *Service) GetWebAuthn() *webauthn.WebAuthn {
 	return getWebAuthn()
 }
 
-func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
+func (s *Service) StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
 	if session == nil {
 		return errs.ErrPasskeySessionNil
 	}
-	dao := getDao()
 	// Namespace the key to prevent confusion with auth tokens
-	dao.WriteCache("passkey_session:"+sessionID, session, ttlSeconds)
+	s.cache.WriteCache("passkey_session:"+sessionID, session, ttlSeconds)
 	return nil
 }
 
-func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
-	dao := getDao()
+func (s *Service) LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
 	// Use namespaced key to retrieve passkey session
-	raw, ok := dao.GetCache("passkey_session:" + sessionID)
+	raw, ok := s.cache.GetCache("passkey_session:" + sessionID)
 	if !ok {
 		return nil, errs.ErrPasskeySessionNotFound
 	}
@@ -72,35 +69,31 @@ func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
 	return session, nil
 }
 
-func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
-	dao := getDao()
+func (s *Service) CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
 	record := model.WebAuthnCredentialFromCredential(credential)
 	if record == nil {
 		return nil, errs.ErrPasskeyCredentialNil
 	}
 	record.DeviceName = deviceName
-	if err := model.CreateWebAuthnCredential(dao.Db(), record); err != nil {
+	if err := s.passkeyRepo.CreateWebAuthnCredential(record); err != nil {
 		return nil, err
 	}
 	return record, nil
 }
 
-func ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
-	dao := getDao()
-	return model.ListWebAuthnCredentials(dao.Db())
+func (s *Service) ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
+	return s.passkeyRepo.ListWebAuthnCredentials()
 }
 
-func DeletePasskeyCredential(id uint) error {
-	dao := getDao()
-	return model.DeleteWebAuthnCredential(dao.Db(), id)
+func (s *Service) DeletePasskeyCredential(id uint) error {
+	return s.passkeyRepo.DeleteWebAuthnCredential(id)
 }
 
-func LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
-	dao := getDao()
-	return model.GetWebAuthnCredentialByCredentialID(dao.Db(), rawID)
+func (s *Service) LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
+	return s.passkeyRepo.GetWebAuthnCredentialByCredentialID(rawID)
 }
 
-func GenerateSessionToken() (string, error) {
+func (s *Service) GenerateSessionToken() (string, error) {
 	tokenBytes := make([]byte, 32)
 	if _, err := rand.Read(tokenBytes); err != nil {
 		return "", err
@@ -108,53 +101,79 @@ func GenerateSessionToken() (string, error) {
 	return hex.EncodeToString(tokenBytes), nil
 }
 
-func StoreSessionToken(token string, ttlSeconds int64) error {
-	dao := getDao()
+func (s *Service) StoreSessionToken(token string, ttlSeconds int64) error {
 	// Namespace the key to distinguish from passkey sessions
-	dao.WriteCache("auth_token:"+token, true, ttlSeconds)
+	s.cache.WriteCache("auth_token:"+token, true, ttlSeconds)
 	return nil
 }
 
-func GenerateTempPassword() (string, string, error) {
+func (s *Service) GenerateTempPassword() (string, string, error) {
 	return temppassword.GeneratePassword()
 }
 
-func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
-	password, hash, err := GenerateTempPassword()
+func (s *Service) CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
+	password, hash, err := s.GenerateTempPassword()
 	if err != nil {
 		return nil, "", err
 	}
 
-	dao := getDao()
 	record := &model.TempPassword{
 		PasswordHash: hash,
 		ExpiresAt:    time.Now().Add(time.Duration(ttlSeconds) * time.Second),
 	}
-	if err := model.CreateTempPassword(dao.Db(), record); err != nil {
+	if err := s.tempPasswordRepo.CreateTempPassword(record); err != nil {
 		return nil, "", err
 	}
 
 	return record, password, nil
 }
 
-func ListTempPasswords() ([]model.TempPassword, error) {
-	dao := getDao()
-	return model.ListTempPasswords(dao.Db())
+func (s *Service) ListTempPasswords() ([]model.TempPassword, error) {
+	return s.tempPasswordRepo.ListTempPasswords()
 }
 
-func DeleteTempPassword(id uint) error {
-	dao := getDao()
-	return model.DeleteTempPassword(dao.Db(), id)
+func (s *Service) DeleteTempPassword(id uint) error {
+	return s.tempPasswordRepo.DeleteTempPassword(id)
 }
 
-func CleanupExpiredTempPasswords() error {
-	dao := getDao()
-	return model.DeleteExpiredTempPasswords(dao.Db(), time.Now())
+func (s *Service) CleanupExpiredTempPasswords() error {
+	return s.tempPasswordRepo.DeleteExpiredTempPasswords(time.Now())
 }
 
-func ValidateTempPassword(password string) (*model.TempPassword, error) {
+func (s *Service) ValidateTempPassword(password string) (*model.TempPassword, error) {
 	hash := temppassword.HashPassword(password)
+	return s.tempPasswordRepo.GetTempPasswordByHash(hash, time.Now())
+}
 
-	dao := getDao()
-	return model.GetTempPasswordByHash(dao.Db(), hash, time.Now())
+// --- Package-level wrappers (transitional) ---
+
+func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
+	return defaultService.StorePasskeySession(sessionID, session, ttlSeconds)
+}
+func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
+	return defaultService.LoadPasskeySession(sessionID)
+}
+func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
+	return defaultService.CreatePasskeyCredential(credential, deviceName)
+}
+func ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
+	return defaultService.ListPasskeyCredentials()
+}
+func DeletePasskeyCredential(id uint) error { return defaultService.DeletePasskeyCredential(id) }
+func LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
+	return defaultService.LoadPasskeyCredentialByID(rawID)
+}
+func GenerateSessionToken() (string, error) { return defaultService.GenerateSessionToken() }
+func StoreSessionToken(token string, ttlSeconds int64) error {
+	return defaultService.StoreSessionToken(token, ttlSeconds)
+}
+func GenerateTempPassword() (string, string, error) { return defaultService.GenerateTempPassword() }
+func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
+	return defaultService.CreateTempPassword(ttlSeconds)
+}
+func ListTempPasswords() ([]model.TempPassword, error) { return defaultService.ListTempPasswords() }
+func DeleteTempPassword(id uint) error                 { return defaultService.DeleteTempPassword(id) }
+func CleanupExpiredTempPasswords() error               { return defaultService.CleanupExpiredTempPasswords() }
+func ValidateTempPassword(password string) (*model.TempPassword, error) {
+	return defaultService.ValidateTempPassword(password)
 }

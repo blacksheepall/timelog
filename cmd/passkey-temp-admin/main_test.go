@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 )
@@ -89,7 +90,9 @@ func setupCommandTestEnv(t *testing.T) *model.Dao {
 	if err != nil {
 		t.Fatalf("NewDao: %v", err)
 	}
-	service.InitService(fakeLogger{}, testCfg, dao)
+	repos := adapter.NewRepositories(dao)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, dao, fakeLogger{}, testCfg, nil)
+	service.SetDefaultService(svc)
 
 	if err := dao.Db().AutoMigrate(&model.TempPassword{}); err != nil {
 		t.Fatalf("auto migrate temp_passwords: %v", err)

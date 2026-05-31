@@ -3,12 +3,12 @@ package middleware
 import (
 	"strings"
 
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/gin-gonic/gin"
 )
 
-func Auth(dao *model.Dao) gin.HandlerFunc {
+func Auth(store ports.SessionTokenStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session, err := GetSessionFromHeader(c)
 		if err != nil {
@@ -16,7 +16,7 @@ func Auth(dao *model.Dao) gin.HandlerFunc {
 			return
 		}
 
-		if !isValidUserToken(dao, session) {
+		if !isValidUserToken(store, session) {
 			c.AbortWithStatusJSON(401, gin.H{
 				"msg": "Invalid or expired token",
 			})
@@ -27,19 +27,15 @@ func Auth(dao *model.Dao) gin.HandlerFunc {
 	}
 }
 
-func isValidUserToken(dao *model.Dao, token string) bool {
-	if dao == nil {
+func isValidUserToken(store ports.SessionTokenStore, token string) bool {
+	if store == nil {
 		return false
 	}
 	// Only accept keys with auth_token: prefix to prevent passkey session misuse
-	if _, ok := dao.GetCache("auth_token:" + token); ok {
+	if _, ok := store.GetCache("auth_token:" + token); ok {
 		return true
 	}
 	return false
-}
-
-type cacheReader interface {
-	GetCache(key string) (any, bool)
 }
 
 func GetSessionFromHeader(c *gin.Context) (string, error) {

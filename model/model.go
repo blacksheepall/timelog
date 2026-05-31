@@ -3,7 +3,6 @@ package model
 import (
 	"database/sql"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -14,12 +13,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"gorm.io/gorm"
 	gl "gorm.io/gorm/logger"
-)
-
-var (
-	dao  *Dao
-	once sync.Once
-	log  logger.Logger
 )
 
 type DBProvider interface {
@@ -85,33 +78,6 @@ func NewDao(cfg *config.Config, _ logger.Logger) (*Dao, error) {
 	}, nil
 }
 
-// RegisterDao installs a DAO constructed via NewDao for legacy call sites that
-// still use GetDao during the migration.
-func RegisterDao(d *Dao, loggerInstance logger.Logger) {
-	once.Do(func() {
-		dao = d
-		log = loggerInstance
-	})
-}
-
-func InitDao(cfg *config.Config, loggerInstance logger.Logger) {
-	once.Do(func() {
-		d, err := NewDao(cfg, loggerInstance)
-		if err != nil {
-			panic(err)
-		}
-		dao = d
-		log = loggerInstance
-	})
-}
-
-func GetDao() *Dao {
-	if dao == nil {
-		panic("dao is nil, please call InitDao first")
-	}
-	return dao
-}
-
 type Model struct {
 	*gorm.Model
 }
@@ -125,14 +91,14 @@ func (d *Dao) GetCache(key string) (any, bool) {
 	return d.cache.Get(key)
 }
 
-func (d *Dao) AdminGetAllCache() {
+func (d *Dao) AdminGetAllCache(l logger.Logger) {
 	items := d.cache.Items()
 
-	log.Debugw("list cache items",
+	l.Debugw("list cache items",
 		"count", len(items),
 	)
 
 	for k, v := range items {
-		log.Debug(fmt.Sprintf("cache item [ %s --- %v ]", k, v))
+		l.Debug(fmt.Sprintf("cache item [ %s --- %v ]", k, v))
 	}
 }
