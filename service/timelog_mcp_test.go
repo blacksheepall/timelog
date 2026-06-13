@@ -6,6 +6,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
 func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
@@ -27,7 +28,7 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 	if created.UserID == nil || *created.UserID != 1 {
 		t.Fatalf("expected default user_id 1, got %+v", created.UserID)
 	}
-	loc := model.GetSingaporeLocation()
+	loc := timeutil.GetSingaporeLocation()
 	wantStart := time.Date(2026, 5, 29, 10, 0, 0, 0, loc).UTC()
 	if !created.StartTime.Equal(wantStart) {
 		t.Fatalf("start_time mismatch: got %v want %v", created.StartTime, wantStart)

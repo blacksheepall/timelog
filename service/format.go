@@ -1,39 +1,35 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
 func sgt() *time.Location {
-	return model.GetSingaporeLocation()
+	return timeutil.GetSingaporeLocation()
 }
 
 func FormatSGDateTime(t time.Time) string {
-	return t.In(sgt()).Format("2006-01-02 15:04:05")
+	return timeutil.FormatSGDateTime(t)
 }
 
 func FormatSGDate(t time.Time) string {
-	return t.In(sgt()).Format("2006-01-02")
+	return timeutil.FormatSGDate(t)
 }
 
 func FormatSGDateTimePtr(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return FormatSGDateTime(*t)
+	return timeutil.FormatSGDateTimePtr(t)
 }
 
 func FormatDuration(d time.Duration) string {
-	return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
+	return timeutil.FormatDuration(d)
 }
 
 func ParseSGDateTime(value string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04:05", value, sgt())
+	return timeutil.ParseSGDateTime(value)
 }
 
 func TodaySGDateString() string {
-	return time.Now().In(sgt()).Format("2006-01-02")
+	return timeutil.TodaySGDateString()
 }

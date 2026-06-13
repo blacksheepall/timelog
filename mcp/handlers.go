@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -29,7 +29,7 @@ func formatMCPResponse(summaryText string, data map[string]interface{}) (*mcp.Ca
 type DateInfoParams struct{}
 
 func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoParams) (*mcp.CallToolResult, interface{}, error) {
-	loc := model.GetSingaporeLocation()
+	loc := timeutil.GetSingaporeLocation()
 	now := time.Now().In(loc)
 	weekday := now.Weekday()
 	daysSinceMonday := (int(weekday) + 6) % 7

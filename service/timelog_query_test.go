@@ -11,6 +11,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
 func TestListTimeLogsByLocalDateRange(t *testing.T) {
@@ -19,7 +20,7 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 	seedTestCategory(t, dao)
 	db := dao.Db()
 
-	loc := model.GetSingaporeLocation()
+	loc := timeutil.GetSingaporeLocation()
 	start := time.Date(2026, 7, 15, 10, 0, 0, 0, loc).UTC()
 	end := time.Date(2026, 7, 15, 12, 0, 0, 0, loc).UTC()
 

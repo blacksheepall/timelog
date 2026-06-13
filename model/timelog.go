@@ -5,6 +5,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 	"gorm.io/gorm"
 )
 
@@ -68,33 +69,17 @@ func DeleteTimeLog(db *gorm.DB, id int32) error {
 	return db.Delete(&gen.Timelog{}, id).Error
 }
 
-// 定义新加坡时区
-var singaporeLocation *time.Location
-
-func init() {
-	var err error
-	singaporeLocation, err = time.LoadLocation("Asia/Singapore")
-	if err != nil {
-		// Fallback to UTC+8 if timezone data is not available
-		singaporeLocation = time.FixedZone("SGT", 8*60*60)
-	}
-}
-
-// GetSingaporeLocation 返回新加坡时区，供其他包使用
-func GetSingaporeLocation() *time.Location {
-	return singaporeLocation
-}
-
 // ListTimeLogsByLocalDateRange 根据本地日期范围查询时间日志
 // startDateStr 和 endDateStr 格式为 "YYYY-MM-DD"，会被解析为新加坡时区
 // 数据库存储的是 UTC 时间，该函数会自动转换
 func ListTimeLogsByLocalDateRange(db *gorm.DB, startDateStr, endDateStr string) ([]gen.Timelog, error) {
-	startDate, err := time.ParseInLocation("2006-01-02", startDateStr, singaporeLocation)
+	loc := timeutil.GetSingaporeLocation()
+	startDate, err := time.ParseInLocation("2006-01-02", startDateStr, loc)
 	if err != nil {
 		return nil, err
 	}
 
-	endDate, err := time.ParseInLocation("2006-01-02", endDateStr, singaporeLocation)
+	endDate, err := time.ParseInLocation("2006-01-02", endDateStr, loc)
 	if err != nil {
 		return nil, err
 	}
