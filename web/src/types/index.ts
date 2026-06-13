@@ -1,5 +1,8 @@
 export type { ApiResponse } from './api'
-import type { Category, CategoryTreeNode as GeneratedCategoryTreeNode } from '@/gen/api/timelog/v1/category'
+import type {
+  Category,
+  CategoryTreeNode as GeneratedCategoryTreeNode,
+} from '@/gen/api/timelog/v1/category'
 
 export type {
   Category,

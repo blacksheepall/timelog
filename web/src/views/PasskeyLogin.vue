@@ -32,7 +32,9 @@
             <p class="text-xs uppercase tracking-[0.2em] text-text-secondary">Passkey Login</p>
             <h3 class="mt-4 text-2xl font-semibold">开始验证</h3>
           </div>
-          <div class="hidden md:flex h-14 w-14 items-center justify-center rounded-2xl bg-bg-surface/10">
+          <div
+            class="hidden md:flex h-14 w-14 items-center justify-center rounded-2xl bg-bg-surface/10"
+          >
             <LockClosedIcon class="h-7 w-7" />
           </div>
         </div>

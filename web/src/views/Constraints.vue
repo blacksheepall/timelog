@@ -158,7 +158,9 @@
               <div class="flex items-center space-x-3 mb-2">
                 <h3
                   class="text-lg font-medium"
-                  :class="constraint.is_active ? 'text-text-primary' : 'text-text-secondary line-through'"
+                  :class="
+                    constraint.is_active ? 'text-text-primary' : 'text-text-secondary line-through'
+                  "
                 >
                   {{ constraint.description }}
                 </h3>

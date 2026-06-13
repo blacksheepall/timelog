@@ -57,9 +57,7 @@
         <h3 class="text-lg font-medium text-text-primary">Category Duration Stats</h3>
       </div>
       <div v-if="loading" class="p-6 text-center">
-        <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
-        ></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
         <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
       <div v-else-if="categoryStats.length === 0" class="p-6 text-center text-text-secondary">
@@ -97,9 +95,7 @@
         <h3 class="text-lg font-medium text-text-primary">Recent Time Logs</h3>
       </div>
       <div v-if="loading" class="p-6 text-center">
-        <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
-        ></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
         <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
       <div v-else-if="recentLogs.length === 0" class="p-6 text-center text-text-secondary">
@@ -118,7 +114,9 @@
               </span>
               <span v-else class="text-text-tertiary">—</span>
               <div>
-                <p class="text-sm font-medium text-text-primary">{{ log.remark || 'No remarks' }}</p>
+                <p class="text-sm font-medium text-text-primary">
+                  {{ log.remark || 'No remarks' }}
+                </p>
                 <p class="text-xs text-text-secondary">
                   {{ formatDateTime(log.start_time) }} -
                   {{ log.end_time ? formatDateTime(log.end_time) : 'Ongoing' }}

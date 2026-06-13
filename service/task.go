@@ -128,4 +128,3 @@ func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, time
 		return nil
 	})
 }
-

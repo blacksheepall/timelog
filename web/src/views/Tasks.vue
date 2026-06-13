@@ -19,7 +19,9 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="title" class="block text-sm font-medium text-text-muted mb-2"> Title * </label>
+          <label for="title" class="block text-sm font-medium text-text-muted mb-2">
+            Title *
+          </label>
           <input
             id="title"
             v-model="form.title"
@@ -158,9 +160,7 @@
       </div>
 
       <div v-if="loading" class="p-6 text-center">
-        <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
-        ></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
         <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
 

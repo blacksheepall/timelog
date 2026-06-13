@@ -8,16 +8,16 @@ import (
 
 type noopLogger struct{}
 
-func (noopLogger) Debug(...interface{})                     {}
-func (noopLogger) Debugw(string, ...interface{})            {}
-func (noopLogger) Info(...interface{})                      {}
-func (noopLogger) Infow(string, ...interface{})             {}
-func (noopLogger) Warn(...interface{})                      {}
-func (noopLogger) Warnw(string, ...interface{})             {}
-func (noopLogger) Error(...interface{})                     {}
-func (noopLogger) Errorw(string, ...interface{})          {}
-func (noopLogger) Fatal(...interface{})                     {}
-func (noopLogger) Fatalw(string, ...interface{})          {}
+func (noopLogger) Debug(...interface{})          {}
+func (noopLogger) Debugw(string, ...interface{}) {}
+func (noopLogger) Info(...interface{})           {}
+func (noopLogger) Infow(string, ...interface{})  {}
+func (noopLogger) Warn(...interface{})           {}
+func (noopLogger) Warnw(string, ...interface{})  {}
+func (noopLogger) Error(...interface{})          {}
+func (noopLogger) Errorw(string, ...interface{}) {}
+func (noopLogger) Fatal(...interface{})          {}
+func (noopLogger) Fatalw(string, ...interface{}) {}
 
 func TestNewDaoOpensInMemoryDatabase(t *testing.T) {
 	cfg := &config.Config{}

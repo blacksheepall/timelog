@@ -38,7 +38,9 @@
             {{ option.label }}
           </button>
         </div>
-        <span class="text-sm text-text-secondary ml-auto"> {{ filteredTimeLogs.length }} entries </span>
+        <span class="text-sm text-text-secondary ml-auto">
+          {{ filteredTimeLogs.length }} entries
+        </span>
       </div>
     </div>
 

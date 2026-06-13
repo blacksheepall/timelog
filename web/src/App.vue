@@ -103,7 +103,10 @@
           <nav class="space-y-1">
             <button
               class="block w-full px-3 py-2 text-left text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
-              @click="themeCycle; mobileMenuOpen = false"
+              @click="
+                themeCycle();
+                mobileMenuOpen = false
+              "
             >
               <span class="flex items-center gap-2">
                 <component :is="themeIcon" class="h-5 w-5" />
@@ -203,10 +206,7 @@
       }"
     >
       <div class="flex items-center">
-        <CheckCircleIcon
-          v-if="notification.type === 'success'"
-          class="h-5 w-5 text-success mr-2"
-        />
+        <CheckCircleIcon v-if="notification.type === 'success'" class="h-5 w-5 text-success mr-2" />
         <XCircleIcon v-if="notification.type === 'error'" class="h-5 w-5 text-danger mr-2" />
         <p
           class="text-sm font-medium"
@@ -224,7 +224,15 @@
 
 <script setup lang="ts">
   import { ref, reactive, provide, onMounted, onUnmounted, computed } from 'vue'
-  import { CheckCircleIcon, XCircleIcon, Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
+  import {
+    CheckCircleIcon,
+    XCircleIcon,
+    Bars3Icon,
+    XMarkIcon,
+    MoonIcon,
+    SunIcon,
+    ComputerDesktopIcon,
+  } from '@heroicons/vue/24/outline'
   import { useSettings } from '@/composables/useSettings'
   import { setNotificationHandler } from '@/api'
   import { clearAuthToken } from '@/utils/auth'
@@ -358,7 +366,7 @@
     applyTheme(theme.value)
 
     // Watch for system theme changes when auto
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if (theme.value === 'auto') {
         applyTheme('auto')
       }
