@@ -1,10 +1,11 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model/gen"
 )
 
@@ -110,33 +111,22 @@ func (s *Service) GetTaskStats(date time.Time) (map[string]interface{}, error) {
 // CompleteTaskWithTimelog 完成任务并创建时间记录
 // 这是一个组合操作，将任务标记为完成，并可选地创建关联的时间记录
 func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, timelogData *gen.Timelog) error {
-	dao := s.dbProvider.(*model.Dao)
-
-	// 开始事务
-	tx := dao.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-			panic(r)
-		}
-	}()
-
-	// 标记任务为完成
-	if err := s.taskRepo.MarkTaskAsCompleted(taskID); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// 如果需要创建时间记录
-	if createTimelog && timelogData != nil {
-		timelogData.TaskID = &taskID
-		if err := s.timelogRepo.CreateTimeLog(timelogData); err != nil {
-			tx.Rollback()
+	return s.unitOfWork.Run(context.Background(), func(repos ports.UnitOfWorkRepositories) error {
+		// 标记任务为完成
+		if err := repos.TaskRepo.MarkTaskAsCompleted(taskID); err != nil {
 			return err
 		}
-	}
 
-	return tx.Commit()
+		// 如果需要创建时间记录
+		if createTimelog && timelogData != nil {
+			timelogData.TaskID = &taskID
+			if err := repos.TimelogRepo.CreateTimeLog(timelogData); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 // --- Package-level wrappers (transitional) ---

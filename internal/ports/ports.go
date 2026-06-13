@@ -1,6 +1,7 @@
 package ports
 
 import (
+	"context"
 	"time"
 
 	"github.com/blacksheepaul/timelog/model"
@@ -89,4 +90,22 @@ type TempPasswordRepository interface {
 	DeleteTempPassword(id uint) error
 	DeleteExpiredTempPasswords(now time.Time) error
 	GetTempPasswordByHash(hash string, now time.Time) (*model.TempPassword, error)
+}
+
+// UnitOfWorkRepositories exposes repository adapters bound to a single
+// transaction. It is passed to the callback executed inside UnitOfWork.Run.
+type UnitOfWorkRepositories struct {
+	TimelogRepo      TimelogRepository
+	CategoryRepo     CategoryRepository
+	TaskRepo         TaskRepository
+	ConstraintRepo   ConstraintRepository
+	PasskeyRepo      PasskeyCredentialRepository
+	TempPasswordRepo TempPasswordRepository
+}
+
+// UnitOfWork abstracts the persistence transaction boundary. Implementations
+// should execute the provided callback inside a transaction and roll back on
+// any non-nil error returned by the callback.
+type UnitOfWork interface {
+	Run(ctx context.Context, fn func(repos UnitOfWorkRepositories) error) error
 }

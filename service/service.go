@@ -4,7 +4,6 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/ports"
-	"github.com/blacksheepaul/timelog/model"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -17,7 +16,7 @@ type Service struct {
 	passkeyRepo      ports.PasskeyCredentialRepository
 	tempPasswordRepo ports.TempPasswordRepository
 	cache            ports.CacheStore
-	dbProvider       model.DBProvider
+	unitOfWork       ports.UnitOfWork
 	log              logger.Logger
 	webAuthn         *webauthn.WebAuthn
 	cfg              *config.Config
@@ -32,7 +31,7 @@ func NewService(
 	passkeyRepo ports.PasskeyCredentialRepository,
 	tempPasswordRepo ports.TempPasswordRepository,
 	cache ports.CacheStore,
-	dbProvider model.DBProvider,
+	unitOfWork ports.UnitOfWork,
 	log logger.Logger,
 	cfg *config.Config,
 	webAuthn *webauthn.WebAuthn,
@@ -45,7 +44,7 @@ func NewService(
 		passkeyRepo:      passkeyRepo,
 		tempPasswordRepo: tempPasswordRepo,
 		cache:            cache,
-		dbProvider:       dbProvider,
+		unitOfWork:       unitOfWork,
 		log:              log,
 		cfg:              cfg,
 		webAuthn:         webAuthn,

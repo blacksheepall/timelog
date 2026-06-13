@@ -17,6 +17,7 @@ type Repositories struct {
 	*constraintRepo
 	*passkeyCredentialRepo
 	*tempPasswordRepo
+	*sqliteUnitOfWork
 }
 
 var (
@@ -28,6 +29,7 @@ var (
 	_ ports.TempPasswordRepository      = (*Repositories)(nil)
 	_ ports.CacheStore                  = (*Repositories)(nil)
 	_ ports.SessionTokenStore           = (*Repositories)(nil)
+	_ ports.UnitOfWork                  = (*Repositories)(nil)
 )
 
 // NewRepositories creates all repository adapters backed by dao.
@@ -40,5 +42,6 @@ func NewRepositories(dao *model.Dao) *Repositories {
 		constraintRepo:        newConstraintRepo(dao),
 		passkeyCredentialRepo: newPasskeyCredentialRepo(dao),
 		tempPasswordRepo:      newTempPasswordRepo(dao),
+		sqliteUnitOfWork:      newUnitOfWork(dao),
 	}
 }

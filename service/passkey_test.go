@@ -33,7 +33,7 @@ func setupTestModel() *model.Dao {
 		panic(err)
 	}
 	repos := adapter.NewRepositories(dao)
-	svc := NewService(repos, repos, repos, repos, repos, repos, repos, dao, FakeLogger{}, cfg, nil)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 	SetDefaultService(svc)
 	return dao
 }

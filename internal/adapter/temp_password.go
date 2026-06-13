@@ -9,31 +9,31 @@ import (
 
 // tempPasswordRepo implements ports.TempPasswordRepository using the model layer.
 type tempPasswordRepo struct {
-	dao *model.Dao
+	db model.DBProvider
 }
 
 var _ ports.TempPasswordRepository = (*tempPasswordRepo)(nil)
 
-func newTempPasswordRepo(dao *model.Dao) *tempPasswordRepo {
-	return &tempPasswordRepo{dao: dao}
+func newTempPasswordRepo(db model.DBProvider) *tempPasswordRepo {
+	return &tempPasswordRepo{db: db}
 }
 
 func (r *tempPasswordRepo) CreateTempPassword(tempPassword *model.TempPassword) error {
-	return model.CreateTempPassword(r.dao.Db(), tempPassword)
+	return model.CreateTempPassword(r.db.Db(), tempPassword)
 }
 
 func (r *tempPasswordRepo) ListTempPasswords() ([]model.TempPassword, error) {
-	return model.ListTempPasswords(r.dao.Db())
+	return model.ListTempPasswords(r.db.Db())
 }
 
 func (r *tempPasswordRepo) DeleteTempPassword(id uint) error {
-	return model.DeleteTempPassword(r.dao.Db(), id)
+	return model.DeleteTempPassword(r.db.Db(), id)
 }
 
 func (r *tempPasswordRepo) DeleteExpiredTempPasswords(now time.Time) error {
-	return model.DeleteExpiredTempPasswords(r.dao.Db(), now)
+	return model.DeleteExpiredTempPasswords(r.db.Db(), now)
 }
 
 func (r *tempPasswordRepo) GetTempPasswordByHash(hash string, now time.Time) (*model.TempPassword, error) {
-	return model.GetTempPasswordByHash(r.dao.Db(), hash, now)
+	return model.GetTempPasswordByHash(r.db.Db(), hash, now)
 }

@@ -8,39 +8,39 @@ import (
 
 // timelogRepo implements ports.TimelogRepository using the model layer.
 type timelogRepo struct {
-	dao *model.Dao
+	db model.DBProvider
 }
 
 var _ ports.TimelogRepository = (*timelogRepo)(nil)
 
-func newTimelogRepo(dao *model.Dao) *timelogRepo {
-	return &timelogRepo{dao: dao}
+func newTimelogRepo(db model.DBProvider) *timelogRepo {
+	return &timelogRepo{db: db}
 }
 
 func (r *timelogRepo) CreateTimeLog(tl *gen.Timelog) error {
-	return model.CreateTimeLog(r.dao.Db(), tl)
+	return model.CreateTimeLog(r.db.Db(), tl)
 }
 
 func (r *timelogRepo) GetTimeLogByID(id int32) (*gen.Timelog, error) {
-	return model.GetTimeLogByID(r.dao.Db(), id)
+	return model.GetTimeLogByID(r.db.Db(), id)
 }
 
 func (r *timelogRepo) ListTimeLogs(conds ...interface{}) ([]gen.Timelog, error) {
-	return model.ListTimeLogs(r.dao.Db(), conds...)
+	return model.ListTimeLogs(r.db.Db(), conds...)
 }
 
 func (r *timelogRepo) ListTimeLogsWithOptions(limit int, orderBy string, conds ...interface{}) ([]gen.Timelog, error) {
-	return model.ListTimeLogsWithOptions(r.dao.Db(), limit, orderBy, conds...)
+	return model.ListTimeLogsWithOptions(r.db.Db(), limit, orderBy, conds...)
 }
 
 func (r *timelogRepo) ListTimeLogsByLocalDateRange(startDateStr, endDateStr string) ([]gen.Timelog, error) {
-	return model.ListTimeLogsByLocalDateRange(r.dao.Db(), startDateStr, endDateStr)
+	return model.ListTimeLogsByLocalDateRange(r.db.Db(), startDateStr, endDateStr)
 }
 
 func (r *timelogRepo) UpdateTimeLog(tl *gen.Timelog) error {
-	return model.UpdateTimeLog(r.dao.Db(), tl)
+	return model.UpdateTimeLog(r.db.Db(), tl)
 }
 
 func (r *timelogRepo) DeleteTimeLog(id int32) error {
-	return model.DeleteTimeLog(r.dao.Db(), id)
+	return model.DeleteTimeLog(r.db.Db(), id)
 }
