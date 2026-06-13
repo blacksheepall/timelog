@@ -25,6 +25,12 @@ import type {
   UpdateConstraintRequest,
 } from '@/gen/api/timelog/v1/constraint'
 import type {
+  Metric,
+  MetricRecord,
+  CreateMetricRequest,
+  UpdateMetricRequest,
+} from '@/gen/api/timelog/v1/metric'
+import type {
   PasskeyBeginPayload,
   PasskeyCredential,
   PasskeyLoginResponse,
@@ -198,6 +204,28 @@ export const constraintAPI = {
 
   reactivate: (id: number): Promise<ApiResponse<null>> =>
     api.post(`/constraints/${id}/reactivate`).then(res => res.data),
+
+  evaluate: (id: number): Promise<ApiResponse<any>> =>
+    api.get(`/constraints/${id}/evaluation`).then(res => res.data),
+}
+
+export const metricAPI = {
+  getAll: (): Promise<ApiResponse<Metric[]>> => api.get('/metrics').then(res => res.data),
+
+  getById: (id: number): Promise<ApiResponse<Metric>> =>
+    api.get(`/metrics/${id}`).then(res => res.data),
+
+  getRecords: (id: number): Promise<ApiResponse<MetricRecord[]>> =>
+    api.get(`/metrics/${id}/records`).then(res => res.data),
+
+  create: (data: CreateMetricRequest): Promise<ApiResponse<Metric>> =>
+    api.post('/metrics', data).then(res => res.data),
+
+  update: (id: number, data: UpdateMetricRequest): Promise<ApiResponse<Metric>> =>
+    api.put(`/metrics/${id}`, data).then(res => res.data),
+
+  delete: (id: number): Promise<ApiResponse<null>> =>
+    api.delete(`/metrics/${id}`).then(res => res.data),
 }
 
 export const passkeyAPI = {

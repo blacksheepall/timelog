@@ -34,7 +34,7 @@ func setupTestDAO() *service.Service {
 		panic(err)
 	}
 	repos := adapter.NewRepositories(dao)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 	return svc
 }
 

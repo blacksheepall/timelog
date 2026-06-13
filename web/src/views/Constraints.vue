@@ -74,8 +74,64 @@
           </div>
         </div>
 
+        <div class="border-t border-default pt-6">
+          <h3 class="text-sm font-medium text-text-primary mb-4">关联指标（可选）</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="metric_id" class="block text-sm font-medium text-text-muted mb-2">
+                指标
+              </label>
+              <select
+                id="metric_id"
+                v-model="form.metric_id"
+                class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand bg-bg-surface"
+              >
+                <option :value="null">不关联指标</option>
+                <option v-for="m in metrics" :key="m.id" :value="m.id">
+                  {{ m.name }} ({{ m.unit }})
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label for="metric_operator" class="block text-sm font-medium text-text-muted mb-2">
+                比较方式
+              </label>
+              <select
+                id="metric_operator"
+                v-model="form.metric_operator"
+                class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand bg-bg-surface"
+              >
+                <option value="eq">等于</option>
+                <option value="ne">不等于</option>
+                <option value="gt">大于</option>
+                <option value="gte">大于等于</option>
+                <option value="lt">小于</option>
+                <option value="lte">小于等于</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="metric_target_value"
+                class="block text-sm font-medium text-text-muted mb-2"
+              >
+                目标值
+              </label>
+              <input
+                id="metric_target_value"
+                v-model.number="form.metric_target_value"
+                type="number"
+                step="any"
+                class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                placeholder="例如：23.5"
+              />
+            </div>
+          </div>
+        </div>
+
         <div
-          v-if="isEditing && !constraint.is_active"
+          v-if="isEditing && !editingTask.is_active"
           class="bg-yellow-50 border border-yellow-200 rounded-md p-4"
         >
           <div class="flex">
@@ -196,9 +252,30 @@
                 </span>
                 <span v-if="constraint.end_reason"> 结束理由: {{ constraint.end_reason }} </span>
               </div>
+
+              <div
+                v-if="constraint.metric_id"
+                class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md bg-brand-bg border border-brand-border text-sm"
+              >
+                <ChartBarIcon class="h-4 w-4 text-brand mr-2" />
+                <span class="text-text-secondary">
+                  指标：{{ metricMap[constraint.metric_id]?.name || '未知' }}
+                  {{ operatorMap[constraint.metric_operator] || constraint.metric_operator }}
+                  {{ constraint.metric_target_value }}
+                  {{ metricMap[constraint.metric_id]?.unit || '' }}
+                </span>
+              </div>
             </div>
 
             <div class="flex items-center space-x-2 ml-4">
+              <button
+                v-if="constraint.metric_id"
+                @click="evaluateConstraint(constraint)"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-brand bg-brand-bg border border-brand-border rounded-md hover:bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <ChartBarIcon class="h-4 w-4 mr-1" />
+                评估
+              </button>
               <button
                 v-if="constraint.is_active"
                 @click="completeConstraint(constraint)"
@@ -246,26 +323,48 @@
     ArrowPathIcon,
     ExclamationTriangleIcon,
     DocumentTextIcon,
+    ChartBarIcon,
   } from '@heroicons/vue/24/outline'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { constraintAPI } from '@/api'
+  import { constraintAPI, metricAPI } from '@/api'
 
   const loading = ref(false)
   const error = ref(null)
   const showForm = ref(false)
   const editingTask = ref(null)
   const constraints = ref([])
+  const metrics = ref([])
 
   // Use settings from composable
   const { timeLogShowOnlyActive: showOnlyActive } = useSettings()
 
   const isEditing = computed(() => !!editingTask.value)
 
+  const metricMap = computed(() => {
+    const map = {}
+    for (const m of metrics.value) {
+      map[m.id] = m
+    }
+    return map
+  })
+
+  const operatorMap = {
+    eq: '等于',
+    ne: '不等于',
+    gt: '大于',
+    gte: '大于等于',
+    lt: '小于',
+    lte: '小于等于',
+  }
+
   const form = reactive({
     description: '',
     punishment_quote: '',
     start_date: '',
     end_date: '',
+    metric_id: null,
+    metric_operator: 'gte',
+    metric_target_value: 0,
   })
 
   const resetForm = () => {
@@ -273,6 +372,9 @@
     form.punishment_quote = ''
     form.start_date = new Date().toISOString().split('T')[0] // Today's date
     form.end_date = ''
+    form.metric_id = null
+    form.metric_operator = 'gte'
+    form.metric_target_value = 0
   }
 
   const loadEditingData = () => {
@@ -281,6 +383,9 @@
       form.punishment_quote = editingTask.value.punishment_quote
       form.start_date = editingTask.value.start_date.split('T')[0]
       form.end_date = editingTask.value.end_date ? editingTask.value.end_date.split('T')[0] : ''
+      form.metric_id = editingTask.value.metric_id || null
+      form.metric_operator = editingTask.value.metric_operator || 'gte'
+      form.metric_target_value = editingTask.value.metric_target_value || 0
     } else {
       resetForm()
     }
@@ -301,6 +406,15 @@
     }
   }
 
+  const loadMetrics = async () => {
+    try {
+      const response = await metricAPI.getAll()
+      metrics.value = response.data || []
+    } catch (err) {
+      console.error('加载指标失败', err)
+    }
+  }
+
   const handleSubmit = async () => {
     loading.value = true
     error.value = null
@@ -311,6 +425,9 @@
         punishment_quote: form.punishment_quote,
         start_date: form.start_date,
         end_date: form.end_date || null,
+        metric_id: form.metric_id || undefined,
+        metric_operator: form.metric_id ? form.metric_operator : undefined,
+        metric_target_value: form.metric_id ? form.metric_target_value : undefined,
       }
 
       if (isEditing.value) {
@@ -406,6 +523,30 @@
     }
   }
 
+  const evaluateConstraint = async constraint => {
+    try {
+      const response = await constraintAPI.evaluate(constraint.id)
+      const result = response.data
+      const metric = metricMap.value[constraint.metric_id]
+      const status = result.passed ? '通过 ✅' : '未通过 ❌'
+      ElMessageBox.alert(
+        `<div class="space-y-2">
+          <p><strong>状态：</strong>${status}</p>
+          <p><strong>当前值：</strong>${result.actual} ${metric?.unit || ''}</p>
+          <p><strong>目标值：</strong>${result.target} ${metric?.unit || ''}</p>
+          <p><strong>规则：</strong>${operatorMap[result.operator] || result.operator}</p>
+        </div>`,
+        '约束评估结果',
+        {
+          confirmButtonText: '确定',
+          dangerouslyUseHTMLString: true,
+        }
+      )
+    } catch (err) {
+      ElMessage.error(err.response?.data?.message || '评估失败')
+    }
+  }
+
   const formatDate = dateString => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('zh-CN')
@@ -413,5 +554,6 @@
 
   onMounted(() => {
     loadConstraints()
+    loadMetrics()
   })
 </script>
