@@ -1,28 +1,28 @@
 <template>
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-gray-900">Statistics</h1>
+    <h1 class="text-2xl font-bold text-text-primary">Statistics</h1>
 
     <!-- 时间过滤器 -->
-    <div class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Time Range</h2>
+    <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
+      <h2 class="text-lg font-medium text-text-primary mb-4">Time Range</h2>
 
       <!-- 快捷选项 -->
       <div class="flex flex-wrap gap-2 mb-4">
         <button
           @click="setToday"
-          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           Today
         </button>
         <button
           @click="setThisWeek"
-          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           This Week
         </button>
         <button
           @click="setLast30Days"
-          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           Last 30 Days
         </button>
@@ -30,31 +30,31 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="start_date" class="block text-sm font-medium text-text-muted mb-2">
             Start Date
           </label>
           <input
             id="start_date"
             v-model="dateRange.start"
             type="date"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           />
         </div>
         <div>
-          <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="end_date" class="block text-sm font-medium text-text-muted mb-2">
             End Date
           </label>
           <input
             id="end_date"
             v-model="dateRange.end"
             type="date"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           />
         </div>
         <div class="flex items-end">
           <button
             @click="applyFilter"
-            class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand"
           >
             Apply Filter
           </button>
@@ -63,85 +63,85 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="bg-white shadow rounded-lg p-6 text-center">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="mt-2 text-gray-600">Loading statistics...</p>
+    <div v-if="loading" class="bg-bg-surface shadow-md-md rounded-lg p-6 text-center">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
+      <p class="mt-2 text-text-secondary">Loading statistics...</p>
     </div>
 
     <!-- 统计概览 -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <ClockIcon class="h-8 w-8 text-blue-600" />
+            <ClockIcon class="h-8 w-8 text-brand" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Logs</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ statistics.totalLogs }}</p>
+            <p class="text-sm font-medium text-text-secondary">Total Logs</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ statistics.totalLogs }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <ClockIcon class="h-8 w-8 text-green-600" />
+            <ClockIcon class="h-8 w-8 text-success" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Time</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ statistics.totalTime }}</p>
+            <p class="text-sm font-medium text-text-secondary">Total Time</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ statistics.totalTime }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
             <ClockIcon class="h-8 w-8 text-yellow-600" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Average Session</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ statistics.averageSession }}</p>
+            <p class="text-sm font-medium text-text-secondary">Average Session</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ statistics.averageSession }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <PlayIcon class="h-8 w-8 text-red-600" />
+            <PlayIcon class="h-8 w-8 text-danger" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Active Sessions</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ statistics.activeSessions }}</p>
+            <p class="text-sm font-medium text-text-secondary">Active Sessions</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ statistics.activeSessions }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 按标签统计 -->
-    <div v-if="!loading" class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900">Time by Tags</h2>
+    <div v-if="!loading" class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
+        <h2 class="text-lg font-medium text-text-primary">Time by Tags</h2>
       </div>
-      <div v-if="tagStats.length === 0" class="p-6 text-center text-gray-500">
+      <div v-if="tagStats.length === 0" class="p-6 text-center text-text-secondary">
         No data available for the selected time range.
       </div>
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-default">
         <div v-for="stat in tagStats" :key="stat.category.id" class="p-6">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center space-x-3">
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-bg-surface"
                 :style="{ backgroundColor: stat.category.color }"
               >
                 {{ stat.category.name }}
               </span>
-              <span class="text-sm text-gray-500">{{ stat.count }} sessions</span>
+              <span class="text-sm text-text-secondary">{{ stat.count }} sessions</span>
             </div>
-            <span class="text-sm font-medium text-gray-900">{{ stat.totalTime }}</span>
+            <span class="text-sm font-medium text-text-primary">{{ stat.totalTime }}</span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="w-full bg-bg-elevated rounded-full h-2">
             <div
               class="h-2 rounded-full"
               :style="{
@@ -150,7 +150,7 @@
               }"
             ></div>
           </div>
-          <div class="mt-1 text-xs text-gray-500">
+          <div class="mt-1 text-xs text-text-secondary">
             {{ stat.percentage.toFixed(1) }}% of total time
           </div>
         </div>
@@ -158,26 +158,26 @@
     </div>
 
     <!-- 每日时间分布 -->
-    <div v-if="!loading" class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900">Daily Time Distribution</h2>
+    <div v-if="!loading" class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
+        <h2 class="text-lg font-medium text-text-primary">Daily Time Distribution</h2>
       </div>
-      <div v-if="dailyStats.length === 0" class="p-6 text-center text-gray-500">
+      <div v-if="dailyStats.length === 0" class="p-6 text-center text-text-secondary">
         No data available for the selected time range.
       </div>
       <div v-else class="p-6">
         <div class="space-y-4">
           <div v-for="day in dailyStats" :key="day.date" class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
-              <span class="text-sm font-medium text-gray-900 w-24">{{ day.date }}</span>
-              <div class="w-48 bg-gray-200 rounded-full h-2">
+              <span class="text-sm font-medium text-text-primary w-24">{{ day.date }}</span>
+              <div class="w-48 bg-bg-elevated rounded-full h-2">
                 <div
-                  class="h-2 bg-blue-600 rounded-full"
+                  class="h-2 bg-brand rounded-full"
                   :style="{ width: `${(day.minutes / maxDailyMinutes) * 100}%` }"
                 ></div>
               </div>
             </div>
-            <span class="text-sm text-gray-500">{{ day.timeFormatted }}</span>
+            <span class="text-sm text-text-secondary">{{ day.timeFormatted }}</span>
           </div>
         </div>
       </div>

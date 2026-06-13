@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">约束管理</h1>
+      <h1 class="text-2xl font-bold text-text-primary">约束管理</h1>
       <button
         @click="toggleForm"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand"
       >
         <PlusIcon class="h-5 w-5 mr-2" />
         新建约束
@@ -12,14 +12,14 @@
     </div>
 
     <!-- 约束创建/编辑表单 -->
-    <div v-if="showForm" class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-6">
+    <div v-if="showForm" class="bg-bg-surface shadow-md-md rounded-lg p-6">
+      <h2 class="text-lg font-medium text-text-primary mb-6">
         {{ isEditing ? '编辑约束' : '创建新约束' }}
       </h2>
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="description" class="block text-sm font-medium text-text-muted mb-2">
             约束描述 *
           </label>
           <textarea
@@ -27,13 +27,13 @@
             v-model="form.description"
             rows="3"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             placeholder="描述你的约束，比如：每天学习至少2小时..."
           ></textarea>
         </div>
 
         <div>
-          <label for="punishment_quote" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="punishment_quote" class="block text-sm font-medium text-text-muted mb-2">
             惩罚语录 *
           </label>
           <textarea
@@ -41,14 +41,14 @@
             v-model="form.punishment_quote"
             rows="2"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             placeholder="如果没有遵守约束，对自己说的话..."
           ></textarea>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="start_date" class="block text-sm font-medium text-text-muted mb-2">
               开始日期 *
             </label>
             <input
@@ -56,12 +56,12 @@
               v-model="form.start_date"
               type="date"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
 
           <div>
-            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="end_date" class="block text-sm font-medium text-text-muted mb-2">
               结束日期
             </label>
             <input
@@ -69,7 +69,7 @@
               v-model="form.end_date"
               type="date"
               :min="form.start_date"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
         </div>
@@ -95,14 +95,14 @@
           <button
             type="button"
             @click="cancelEdit"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-4 py-2 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md shadow-sm hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-brand"
           >
             取消
           </button>
           <button
             type="submit"
             :disabled="loading"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ loading ? '保存中...' : isEditing ? '更新约束' : '创建约束' }}
           </button>
@@ -111,46 +111,46 @@
     </div>
 
     <!-- 约束列表 -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-medium text-gray-900">约束列表</h2>
+          <h2 class="text-lg font-medium text-text-primary">约束列表</h2>
           <div class="flex items-center space-x-4">
             <label class="flex items-center">
               <input
                 v-model="showOnlyActive"
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                class="h-4 w-4 text-brand focus:ring-brand border-default rounded"
                 @change="loadConstraints"
               />
-              <span class="ml-2 text-sm text-gray-700">只显示活跃约束</span>
+              <span class="ml-2 text-sm text-text-muted">只显示活跃约束</span>
             </label>
           </div>
         </div>
       </div>
 
       <div v-if="loading" class="p-8 text-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p class="mt-2 text-gray-500">加载中...</p>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
+        <p class="mt-2 text-text-secondary">加载中...</p>
       </div>
 
       <div v-else-if="error" class="p-8 text-center">
-        <div class="text-red-600">
+        <div class="text-danger">
           <ExclamationTriangleIcon class="h-8 w-8 mx-auto mb-2" />
           <p>{{ error }}</p>
         </div>
       </div>
 
-      <div v-else-if="constraints.length === 0" class="p-8 text-center text-gray-500">
-        <DocumentTextIcon class="h-12 w-12 mx-auto mb-4 text-gray-300" />
+      <div v-else-if="constraints.length === 0" class="p-8 text-center text-text-secondary">
+        <DocumentTextIcon class="h-12 w-12 mx-auto mb-4 text-text-tertiary" />
         <p>暂无约束。创建你的第一个约束吧！</p>
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-default">
         <div
           v-for="constraint in constraints"
           :key="constraint.id"
-          class="p-6 hover:bg-gray-50"
+          class="p-6 hover:bg-bg-elevated"
           :class="{ 'opacity-60': !constraint.is_active }"
         >
           <div class="flex items-start justify-between">
@@ -158,7 +158,7 @@
               <div class="flex items-center space-x-3 mb-2">
                 <h3
                   class="text-lg font-medium"
-                  :class="constraint.is_active ? 'text-gray-900' : 'text-gray-500 line-through'"
+                  :class="constraint.is_active ? 'text-text-primary' : 'text-text-secondary line-through'"
                 >
                   {{ constraint.description }}
                 </h3>
@@ -170,13 +170,13 @@
                 </span>
                 <span
                   v-else
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-elevated text-text-primary"
                 >
                   已完成
                 </span>
               </div>
 
-              <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-3">
+              <div class="bg-danger-bg border border-danger-border rounded-md p-3 mb-3">
                 <div class="flex">
                   <div class="flex-shrink-0">
                     <ExclamationTriangleIcon class="h-5 w-5 text-red-400" />
@@ -187,7 +187,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center space-x-4 text-sm text-gray-500">
+              <div class="flex items-center space-x-4 text-sm text-text-secondary">
                 <span>开始日期: {{ formatDate(constraint.start_date) }}</span>
                 <span v-if="constraint.end_date">
                   结束日期: {{ formatDate(constraint.end_date) }}
@@ -208,20 +208,20 @@
               <button
                 v-else
                 @click="reactivateConstraint(constraint)"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 <ArrowPathIcon class="h-4 w-4 mr-1" />
                 重新激活
               </button>
               <button
                 @click="editConstraint(constraint)"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 <PencilIcon class="h-4 w-4" />
               </button>
               <button
                 @click="deleteConstraint(constraint)"
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-danger bg-bg-surface border border-danger-border rounded-md hover:bg-danger-bg focus:outline-none focus:ring-2 focus:ring-danger"
               >
                 <TrashIcon class="h-4 w-4" />
               </button>

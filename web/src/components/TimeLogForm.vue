@@ -1,13 +1,13 @@
 <template>
-  <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-lg font-medium text-gray-900 mb-6">
+  <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
+    <h2 class="text-lg font-medium text-text-primary mb-6">
       {{ isEditing ? 'Edit Time Log' : 'Create New Time Log' }}
     </h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label for="start_time" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="start_time" class="block text-sm font-medium text-text-muted mb-2">
             Start Time *
           </label>
           <div class="flex space-x-2">
@@ -17,12 +17,12 @@
               v-model="form.start_time"
               type="datetime-local"
               required
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="flex-1 px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             />
             <button
               type="button"
               @click="setCurrentTime('start')"
-              class="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap transition-colors"
+              class="px-3 py-2 text-xs font-medium text-brand bg-brand-bg border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand whitespace-nowrap transition-colors"
               title="Set to current time"
             >
               <div class="flex items-center space-x-1">
@@ -34,7 +34,7 @@
         </div>
 
         <div>
-          <label for="end_time" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="end_time" class="block text-sm font-medium text-text-muted mb-2">
             End Time
           </label>
           <div class="flex space-x-2">
@@ -42,12 +42,12 @@
               id="end_time"
               v-model="form.end_time"
               type="datetime-local"
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="flex-1 px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             />
             <button
               type="button"
               @click="setCurrentTime('end')"
-              class="px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap transition-colors"
+              class="px-3 py-2 text-xs font-medium text-brand bg-brand-bg border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-brand whitespace-nowrap transition-colors"
               title="Set to current time"
             >
               <div class="flex items-center space-x-1">
@@ -59,7 +59,7 @@
               v-if="form.end_time"
               type="button"
               @click="clearEndTime"
-              class="px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              class="px-3 py-2 text-xs font-medium text-text-secondary bg-bg-elevated border border-default rounded-md hover:bg-bg-base focus:outline-none focus:ring-2 focus:ring-brand transition-colors"
               title="Clear end time"
             >
               <XMarkIcon class="h-4 w-4" />
@@ -69,14 +69,14 @@
       </div>
 
       <div>
-        <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="category_id" class="block text-sm font-medium text-text-muted mb-2">
           Category *
         </label>
         <select
           id="category_id"
           v-model="form.category_id"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
         >
           <option value="" disabled>Select a category</option>
           <option
@@ -92,13 +92,13 @@
       </div>
 
       <div>
-        <label for="task_id" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="task_id" class="block text-sm font-medium text-text-muted mb-2">
           Associated Task (Optional)
         </label>
         <select
           id="task_id"
           v-model="form.task_id"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
         >
           <option value="" disabled>Select a task (optional)</option>
           <option value="">No task</option>
@@ -109,13 +109,13 @@
       </div>
 
       <div>
-        <label for="remark" class="block text-sm font-medium text-gray-700 mb-2"> Remark </label>
+        <label for="remark" class="block text-sm font-medium text-text-muted mb-2"> Remark </label>
         <textarea
           id="remark"
           v-model="form.remark"
           rows="3"
           placeholder="Add any notes or description..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
         ></textarea>
       </div>
 
@@ -124,14 +124,14 @@
           v-if="isEditing"
           type="button"
           @click="handleCancel"
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-4 py-2 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md shadow-sm hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-brand"
         >
           Cancel
         </button>
         <button
           type="submit"
           :disabled="submitting"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ submitting ? 'Saving...' : isEditing ? 'Update' : 'Create' }}
         </button>

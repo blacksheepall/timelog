@@ -1,3 +1,73 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background layers */
+    --color-bg-base: #f3f4f6;
+    --color-bg-surface: #ffffff;
+    --color-bg-elevated: #f9fafb;
+    --color-bg-overlay: #ffffff;
+
+    /* Text layers */
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
+    --color-text-muted: #374151;
+
+    /* Borders */
+    --color-border-default: #e5e7eb;
+    --color-border-subtle: #f3f4f6;
+
+    /* Brand / Accent */
+    --color-brand: #2563eb;
+    --color-brand-hover: #1d4ed8;
+    --color-success: #16a34a;
+    --color-danger: #dc2626;
+
+    /* State backgrounds */
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #bbf7d0;
+    --color-danger-bg: #fef2f2;
+    --color-danger-border: #fecaca;
+    --color-brand-bg: #eff6ff;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* Dark mode backgrounds */
+    --color-bg-base: #0f172a;
+    --color-bg-surface: #1e293b;
+    --color-bg-elevated: #334155;
+    --color-bg-overlay: #1e293b;
+
+    /* Dark mode text */
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-tertiary: #64748b;
+    --color-text-muted: #cbd5e1;
+
+    /* Dark mode borders */
+    --color-border-default: #334155;
+    --color-border-subtle: #1e293b;
+
+    /* Dark mode brand */
+    --color-brand: #3b82f6;
+    --color-brand-hover: #60a5fa;
+
+    /* Dark mode state backgrounds */
+    --color-success-bg: #052e16;
+    --color-success-border: #166534;
+    --color-danger-bg: #450a0a;
+    --color-danger-border: #991b1b;
+    --color-brand-bg: #172554;
+
+    /* Dark mode shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  }
+}

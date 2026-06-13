@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Task Management</h1>
+      <h1 class="text-2xl font-bold text-text-primary">Task Management</h1>
       <button
         @click="toggleForm"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand"
       >
         <PlusIcon class="h-5 w-5 mr-2" />
         New Task
@@ -12,48 +12,48 @@
     </div>
 
     <!-- 任务创建/编辑表单 -->
-    <div v-if="showForm" ref="taskFormRef" class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-6">
+    <div v-if="showForm" ref="taskFormRef" class="bg-bg-surface shadow-md-md rounded-lg p-6">
+      <h2 class="text-lg font-medium text-text-primary mb-6">
         {{ isEditing ? 'Edit Task' : 'Create New Task' }}
       </h2>
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-2"> Title * </label>
+          <label for="title" class="block text-sm font-medium text-text-muted mb-2"> Title * </label>
           <input
             id="title"
             v-model="form.title"
             type="text"
             required
             maxlength="200"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             placeholder="Task title"
           />
         </div>
 
         <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="description" class="block text-sm font-medium text-text-muted mb-2">
             Description
           </label>
           <textarea
             id="description"
             v-model="form.description"
             rows="3"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             placeholder="Describe what this task involves..."
           ></textarea>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="category_id" class="block text-sm font-medium text-text-muted mb-2">
               Tag *
             </label>
             <select
               id="category_id"
               v-model="form.category_id"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             >
               <option value="" disabled>Select a tag</option>
               <option
@@ -68,7 +68,7 @@
           </div>
 
           <div>
-            <label for="due_date" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="due_date" class="block text-sm font-medium text-text-muted mb-2">
               Due Date *
             </label>
             <input
@@ -76,12 +76,12 @@
               v-model="form.due_date"
               type="date"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             />
           </div>
 
           <div>
-            <label for="estimated_minutes" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="estimated_minutes" class="block text-sm font-medium text-text-muted mb-2">
               Estimated Time (minutes) *
             </label>
             <input
@@ -90,7 +90,7 @@
               type="number"
               min="1"
               required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
               placeholder="e.g. 60"
             />
           </div>
@@ -100,14 +100,14 @@
           <button
             type="button"
             @click="handleCancel"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-4 py-2 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md shadow-sm hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-brand"
           >
             Cancel
           </button>
           <button
             type="submit"
             :disabled="submitting"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ submitting ? 'Saving...' : isEditing ? 'Update' : 'Create' }}
           </button>
@@ -116,10 +116,10 @@
     </div>
 
     <!-- 任务列表 -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-medium text-gray-900">Tasks</h2>
+          <h2 class="text-lg font-medium text-text-primary">Tasks</h2>
           <div class="flex items-center space-x-4">
             <button
               @click="showSuspended = !showSuspended"
@@ -127,7 +127,7 @@
               :class="
                 showSuspended
                   ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                  : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                  : 'bg-bg-elevated text-text-secondary border border-default hover:bg-bg-elevated'
               "
             >
               ⏸️ Suspended
@@ -137,8 +137,8 @@
               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
               :class="
                 showCompleted
-                  ? 'bg-green-100 text-green-800 border border-green-200'
-                  : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                  ? 'bg-green-100 text-green-800 border border-success-border'
+                  : 'bg-bg-elevated text-text-secondary border border-default hover:bg-bg-elevated'
               "
             >
               ✅ Completed
@@ -146,7 +146,7 @@
             <select
               v-model="dateFilter"
               @change="loadTasks"
-              class="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="px-3 py-1 text-sm border border-default rounded-md focus:outline-none focus:ring-2 focus:ring-brand"
             >
               <option value="">All dates</option>
               <option value="today">Today</option>
@@ -159,24 +159,24 @@
 
       <div v-if="loading" class="p-6 text-center">
         <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
         ></div>
-        <p class="mt-2 text-gray-600">Loading...</p>
+        <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
 
-      <div v-else-if="error" class="p-6 text-center text-red-600">
+      <div v-else-if="error" class="p-6 text-center text-danger">
         {{ error }}
       </div>
 
-      <div v-else-if="filteredTasks.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="filteredTasks.length === 0" class="p-6 text-center text-text-secondary">
         No tasks found. Create your first one!
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-default">
         <div
           v-for="task in filteredTasks"
           :key="task.id"
-          class="p-6 hover:bg-gray-50"
+          class="p-6 hover:bg-bg-elevated"
           :class="{
             'opacity-60': task.is_completed,
             'bg-yellow-50': task.is_suspended,
@@ -190,17 +190,17 @@
                   class="text-lg font-medium"
                   :class="
                     task.is_completed
-                      ? 'line-through text-gray-500'
+                      ? 'line-through text-text-secondary'
                       : task.is_suspended
                         ? 'text-yellow-800'
-                        : 'text-gray-900'
+                        : 'text-text-primary'
                   "
                 >
                   {{ task.title }}
                 </h3>
                 <span
                   v-if="task.category"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-bg-surface"
                   :style="{ backgroundColor: task.category.color }"
                 >
                   {{ task.category.name }}
@@ -219,11 +219,11 @@
                 </span>
               </div>
 
-              <p v-if="task.description" class="text-gray-600 mb-3">
+              <p v-if="task.description" class="text-text-secondary mb-3">
                 {{ task.description }}
               </p>
 
-              <div class="flex items-center space-x-4 text-sm text-gray-500">
+              <div class="flex items-center space-x-4 text-sm text-text-secondary">
                 <span>Due: {{ formatDate(task.due_date) }}</span>
                 <span>Estimated: {{ task.estimated_minutes }}min</span>
                 <span v-if="task.completed_at">
@@ -243,7 +243,7 @@
               <button
                 v-if="task.is_suspended"
                 @click="unsuspendTask(task.id)"
-                class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 Unsuspend
               </button>
@@ -257,19 +257,19 @@
               <button
                 v-if="task.is_completed"
                 @click="incompleteTask(task.id)"
-                class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                class="px-3 py-1 text-xs font-medium text-text-muted bg-bg-elevated rounded-md hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-default"
               >
                 Reopen
               </button>
               <button
                 @click="handleEdit(task)"
-                class="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                class="text-brand hover:text-blue-900 text-sm font-medium"
               >
                 Edit
               </button>
               <button
                 @click="handleDelete(task.id)"
-                class="text-red-600 hover:text-red-900 text-sm font-medium"
+                class="text-danger hover:text-red-900 text-sm font-medium"
               >
                 Delete
               </button>

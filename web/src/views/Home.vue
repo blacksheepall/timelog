@@ -2,137 +2,137 @@
   <div class="space-y-6">
     <!-- 今日概览 -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <ClockIcon class="h-8 w-8 text-blue-600" />
+            <ClockIcon class="h-8 w-8 text-brand" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Today's Logs</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ todayStats.count }}</p>
+            <p class="text-sm font-medium text-text-secondary">Today's Logs</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ todayStats.count }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <PlayIcon class="h-8 w-8 text-green-600" />
+            <PlayIcon class="h-8 w-8 text-success" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Active Sessions</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ todayStats.activeSessions }}</p>
+            <p class="text-sm font-medium text-text-secondary">Active Sessions</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ todayStats.activeSessions }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <StopIcon class="h-8 w-8 text-red-600" />
+            <StopIcon class="h-8 w-8 text-danger" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Time</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ todayStats.totalTime }}</p>
+            <p class="text-sm font-medium text-text-secondary">Total Time</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ todayStats.totalTime }}</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-bg-surface shadow-md-md rounded-lg p-6">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <TagIcon class="h-8 w-8 text-purple-600" />
+            <TagIcon class="h-8 w-8 text-brand" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Categories Used</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ todayStats.categoriesUsed }}</p>
+            <p class="text-sm font-medium text-text-secondary">Categories Used</p>
+            <p class="text-2xl font-semibold text-text-primary">{{ todayStats.categoriesUsed }}</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 分类时长统计 -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Category Duration Stats</h3>
+    <div class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
+        <h3 class="text-lg font-medium text-text-primary">Category Duration Stats</h3>
       </div>
       <div v-if="loading" class="p-6 text-center">
         <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
         ></div>
-        <p class="mt-2 text-gray-600">Loading...</p>
+        <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
-      <div v-else-if="categoryStats.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="categoryStats.length === 0" class="p-6 text-center text-text-secondary">
         No category statistics available.
       </div>
-      <div v-else class="divide-y divide-gray-200">
-        <div v-for="stat in categoryStats" :key="stat.category.id" class="p-6 hover:bg-gray-50">
+      <div v-else class="divide-y divide-default">
+        <div v-for="stat in categoryStats" :key="stat.category.id" class="p-6 hover:bg-bg-elevated">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-bg-surface"
                 :style="{ backgroundColor: stat.category.color }"
               >
                 {{ stat.category.name }}
               </span>
               <div>
-                <p class="text-sm font-medium text-gray-900">{{ stat.duration }}</p>
-                <div class="mt-1 w-48 bg-gray-200 rounded-full h-2">
+                <p class="text-sm font-medium text-text-primary">{{ stat.duration }}</p>
+                <div class="mt-1 w-48 bg-bg-elevated rounded-full h-2">
                   <div
-                    class="bg-blue-600 h-2 rounded-full"
+                    class="bg-brand h-2 rounded-full"
                     :style="{ width: stat.percentage + '%' }"
                   ></div>
                 </div>
               </div>
             </div>
-            <span class="text-sm font-semibold text-gray-700"> {{ stat.percentage }}% </span>
+            <span class="text-sm font-semibold text-text-muted"> {{ stat.percentage }}% </span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 最近的时间记录 -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Recent Time Logs</h3>
+    <div class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
+        <h3 class="text-lg font-medium text-text-primary">Recent Time Logs</h3>
       </div>
       <div v-if="loading" class="p-6 text-center">
         <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
         ></div>
-        <p class="mt-2 text-gray-600">Loading...</p>
+        <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
-      <div v-else-if="recentLogs.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="recentLogs.length === 0" class="p-6 text-center text-text-secondary">
         No recent time logs found.
       </div>
-      <div v-else class="divide-y divide-gray-200">
-        <div v-for="log in recentLogs" :key="log.id" class="p-6 hover:bg-gray-50">
+      <div v-else class="divide-y divide-default">
+        <div v-for="log in recentLogs" :key="log.id" class="p-6 hover:bg-bg-elevated">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <span
                 v-if="getCategory(log.category_id)"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-bg-surface"
                 :style="{ backgroundColor: getCategory(log.category_id)!.color }"
               >
                 {{ getCategory(log.category_id)!.name }}
               </span>
-              <span v-else class="text-gray-400">—</span>
+              <span v-else class="text-text-tertiary">—</span>
               <div>
-                <p class="text-sm font-medium text-gray-900">{{ log.remark || 'No remarks' }}</p>
-                <p class="text-xs text-gray-500">
+                <p class="text-sm font-medium text-text-primary">{{ log.remark || 'No remarks' }}</p>
+                <p class="text-xs text-text-secondary">
                   {{ formatDateTime(log.start_time) }} -
                   {{ log.end_time ? formatDateTime(log.end_time) : 'Ongoing' }}
                 </p>
               </div>
             </div>
-            <span class="text-sm text-gray-500">
+            <span class="text-sm text-text-secondary">
               {{ calculateDuration(log.start_time, log.end_time) }}
             </span>
           </div>
         </div>
       </div>
-      <div class="px-6 py-3 bg-gray-50 text-center">
-        <router-link to="/timelogs" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+      <div class="px-6 py-3 bg-bg-elevated text-center">
+        <router-link to="/timelogs" class="text-sm font-medium text-brand hover:text-brand-hover">
           View all time logs →
         </router-link>
       </div>

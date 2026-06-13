@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Category Management</h1>
+      <h1 class="text-2xl font-bold text-text-primary">Category Management</h1>
       <button
         @click="toggleForm"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand"
       >
         <PlusIcon class="h-5 w-5 mr-2" />
         New Category
@@ -12,28 +12,28 @@
     </div>
 
     <!-- Category创建/编辑表单 -->
-    <div v-if="showForm" class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-6">
+    <div v-if="showForm" class="bg-bg-surface shadow-md-md rounded-lg p-6">
+      <h2 class="text-lg font-medium text-text-primary mb-6">
         {{ isEditing ? 'Edit Category' : 'Create New Category' }}
       </h2>
 
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="name" class="block text-sm font-medium text-gray-700 mb-2"> Name * </label>
+            <label for="name" class="block text-sm font-medium text-text-muted mb-2"> Name * </label>
             <input
               id="name"
               v-model="form.name"
               type="text"
               required
               maxlength="50"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
               placeholder="Category name"
             />
           </div>
 
           <div>
-            <label for="color" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="color" class="block text-sm font-medium text-text-muted mb-2">
               Color *
             </label>
             <div class="flex items-center space-x-2">
@@ -42,12 +42,12 @@
                 v-model="form.color"
                 type="color"
                 required
-                class="h-10 w-16 border border-gray-300 rounded-md"
+                class="h-10 w-16 border border-default rounded-md"
               />
               <input
                 v-model="form.color"
                 type="text"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="flex-1 px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
                 placeholder="#000000"
               />
             </div>
@@ -55,24 +55,24 @@
         </div>
 
         <div v-if="!isEditing">
-          <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="parent_id" class="block text-sm font-medium text-text-muted mb-2">
             Parent Category (Optional)
           </label>
           <select
             id="parent_id"
             v-model="form.parent_id"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           >
             <option :value="null">-- Root Category --</option>
             <option v-for="cat in availableParents" :key="cat.id" :value="cat.id">
               {{ cat.path === '/' ? '' : cat.path.replace(/\//g, ' / ') + ' / ' }}{{ cat.name }}
             </option>
           </select>
-          <p class="mt-1 text-sm text-gray-500">Maximum depth: 3 levels (Root/Child/Grandchild)</p>
+          <p class="mt-1 text-sm text-text-secondary">Maximum depth: 3 levels (Root/Child/Grandchild)</p>
         </div>
 
         <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="description" class="block text-sm font-medium text-text-muted mb-2">
             Description
           </label>
           <textarea
@@ -80,7 +80,7 @@
             v-model="form.description"
             rows="3"
             maxlength="200"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
             placeholder="Describe what this category is used for..."
           ></textarea>
         </div>
@@ -89,14 +89,14 @@
           <button
             type="button"
             @click="handleCancel"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-4 py-2 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md shadow-sm hover:bg-bg-elevated focus:outline-none focus:ring-2 focus:ring-brand"
           >
             Cancel
           </button>
           <button
             type="submit"
             :disabled="submitting"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ submitting ? 'Saving...' : isEditing ? 'Update' : 'Create' }}
           </button>
@@ -105,27 +105,27 @@
     </div>
 
     <!-- Categories树形列表 -->
-    <div class="bg-white shadow rounded-lg">
-      <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-medium text-gray-900">All Categories</h2>
+    <div class="bg-bg-surface shadow-md-md rounded-lg">
+      <div class="px-6 py-4 border-b border-default">
+        <h2 class="text-lg font-medium text-text-primary">All Categories</h2>
       </div>
 
       <div v-if="loading" class="p-6 text-center">
         <div
-          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"
         ></div>
-        <p class="mt-2 text-gray-600">Loading...</p>
+        <p class="mt-2 text-text-secondary">Loading...</p>
       </div>
 
-      <div v-else-if="error" class="p-6 text-center text-red-600">
+      <div v-else-if="error" class="p-6 text-center text-danger">
         {{ error }}
       </div>
 
-      <div v-else-if="categoryTree.length === 0" class="p-6 text-center text-gray-500">
+      <div v-else-if="categoryTree.length === 0" class="p-6 text-center text-text-secondary">
         No categories found. Create your first one!
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else class="divide-y divide-default">
         <CategoryTreeNode
           v-for="node in categoryTree"
           :key="node.category.id"
@@ -141,17 +141,17 @@
     <!-- 移动分类对话框 -->
     <div
       v-if="showMoveDialog"
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-bg-elevated0 bg-opacity-75 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Move Category</h3>
-        <p class="text-sm text-gray-600 mb-4">
+      <div class="bg-bg-surface rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-medium text-text-primary mb-4">Move Category</h3>
+        <p class="text-sm text-text-secondary mb-4">
           Select a new parent for "{{ movingCategory?.name }}"
         </p>
 
         <select
           v-model="moveTargetParentId"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+          class="w-full px-3 py-2 border border-default rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand mb-4"
         >
           <option :value="null">-- Root Level --</option>
           <option v-for="cat in availableMoveTargets" :key="cat.id" :value="cat.id">
@@ -162,14 +162,14 @@
         <div class="flex justify-end space-x-3">
           <button
             @click="closeMoveDialog"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            class="px-4 py-2 text-sm font-medium text-text-muted bg-bg-surface border border-default rounded-md hover:bg-bg-elevated"
           >
             Cancel
           </button>
           <button
             @click="confirmMove"
             :disabled="moving"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
+            class="px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md hover:bg-brand-hover disabled:opacity-50"
           >
             {{ moving ? 'Moving...' : 'Move' }}
           </button>

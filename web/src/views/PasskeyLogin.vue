@@ -2,12 +2,12 @@
   <div class="min-h-[70vh] flex items-center justify-center px-4">
     <div class="w-full max-w-5xl grid lg:grid-cols-[0.9fr_1.1fr] gap-8">
       <aside
-        class="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+        class="rounded-3xl border border-default bg-bg-surface p-8 shadow-md-[0_18px_45px_rgba(15,23,42,0.08)]"
       >
-        <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Welcome back</p>
-        <h2 class="mt-3 text-3xl font-semibold text-slate-900">用 Passkey 登录</h2>
-        <p class="mt-2 text-slate-600">无密码、更快速的身份验证。</p>
-        <div class="mt-8 space-y-4 text-sm text-slate-600">
+        <p class="text-xs uppercase tracking-[0.2em] text-text-secondary">Welcome back</p>
+        <h2 class="mt-3 text-3xl font-semibold text-text-primary">用 Passkey 登录</h2>
+        <p class="mt-2 text-text-secondary">无密码、更快速的身份验证。</p>
+        <div class="mt-8 space-y-4 text-sm text-text-secondary">
           <div class="flex items-start gap-3">
             <ShieldCheckIcon class="mt-0.5 h-5 w-5 text-emerald-500" />
             <p>系统会提示你使用设备上的生物识别或安全密钥。</p>
@@ -18,7 +18,7 @@
           </div>
         </div>
         <div
-          class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500"
+          class="mt-8 rounded-2xl border border-default bg-bg-elevated p-4 text-xs text-text-secondary"
         >
           WebAuthn 需要 HTTPS 或 localhost 环境。
         </div>
@@ -29,16 +29,16 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-slate-200">Passkey Login</p>
+            <p class="text-xs uppercase tracking-[0.2em] text-text-secondary">Passkey Login</p>
             <h3 class="mt-4 text-2xl font-semibold">开始验证</h3>
           </div>
-          <div class="hidden md:flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+          <div class="hidden md:flex h-14 w-14 items-center justify-center rounded-2xl bg-bg-surface/10">
             <LockClosedIcon class="h-7 w-7" />
           </div>
         </div>
 
         <button
-          class="mt-10 inline-flex w-full items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-black/20 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+          class="mt-10 inline-flex w-full items-center justify-center rounded-xl bg-bg-surface px-5 py-3 text-sm font-semibold text-text-primary shadow-lg shadow-black/20 transition hover:bg-bg-elevated disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="loading"
           @click="handleLogin"
         >
@@ -48,7 +48,7 @@
 
         <p
           v-if="error"
-          class="mt-6 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm"
+          class="mt-6 rounded-xl border border-white/20 bg-bg-surface/10 px-4 py-3 text-sm"
         >
           {{ error }}
         </p>

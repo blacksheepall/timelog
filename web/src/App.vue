@@ -1,63 +1,63 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-100">
+  <div id="app" class="min-h-screen bg-bg-base">
     <!-- 顶部导航栏 -->
-    <header class="bg-white shadow">
+    <header class="bg-bg-surface shadow-md-md">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-6">
           <div class="flex items-center">
-            <h1 class="text-3xl font-bold text-gray-900 mr-8">TimeLog</h1>
+            <h1 class="text-3xl font-bold text-text-primary mr-8">TimeLog</h1>
             <!-- 导航菜单 -->
             <nav class="hidden md:flex space-x-8">
               <router-link
                 to="/"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'Home',
+                  'text-brand font-semibold': $route.name === 'Home',
                 }"
               >
                 Dashboard
               </router-link>
               <router-link
                 to="/timelogs"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'TimeLog',
+                  'text-brand font-semibold': $route.name === 'TimeLog',
                 }"
               >
                 Time Logs
               </router-link>
               <router-link
                 to="/tasks"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'Tasks',
+                  'text-brand font-semibold': $route.name === 'Tasks',
                 }"
               >
                 Tasks
               </router-link>
               <router-link
                 to="/categories"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'Categories',
+                  'text-brand font-semibold': $route.name === 'Categories',
                 }"
               >
                 Categories
               </router-link>
               <router-link
                 to="/statistics"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'Statistics',
+                  'text-brand font-semibold': $route.name === 'Statistics',
                 }"
               >
                 Statistics
               </router-link>
               <router-link
                 to="/constraints"
-                class="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
                 :class="{
-                  'text-blue-600 font-semibold': $route.name === 'Constraints',
+                  'text-brand font-semibold': $route.name === 'Constraints',
                 }"
               >
                 约束
@@ -66,14 +66,22 @@
           </div>
 
           <div class="hidden md:flex items-center gap-4">
+            <button
+              @click="themeCycle"
+              class="inline-flex items-center gap-2 rounded-full border border-default px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-default hover:text-text-primary"
+              :title="themeLabel"
+            >
+              <component :is="themeIcon" class="h-4 w-4" />
+              <span class="text-xs">{{ themeLabel }}</span>
+            </button>
             <router-link
               to="/passkey/register"
-              class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              class="inline-flex items-center gap-2 rounded-full border border-default px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-default hover:text-text-primary"
             >
               绑定设备
             </router-link>
             <button
-              class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+              class="inline-flex items-center gap-2 rounded-full bg-text-primary px-4 py-2 text-sm font-semibold text-bg-surface transition hover:bg-text-muted"
               @click="handleLogout"
             >
               退出
@@ -83,7 +91,7 @@
           <!-- 移动端菜单按钮 -->
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-text-tertiary hover:text-text-secondary hover:bg-bg-elevated"
           >
             <Bars3Icon v-if="!mobileMenuOpen" class="h-6 w-6" />
             <XMarkIcon v-else class="h-6 w-6" />
@@ -91,20 +99,29 @@
         </div>
 
         <!-- 移动端导航菜单 -->
-        <div v-if="mobileMenuOpen" class="md:hidden border-t border-gray-200 py-4">
+        <div v-if="mobileMenuOpen" class="md:hidden border-t border-default py-4">
           <nav class="space-y-1">
+            <button
+              class="block w-full px-3 py-2 text-left text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              @click="themeCycle; mobileMenuOpen = false"
+            >
+              <span class="flex items-center gap-2">
+                <component :is="themeIcon" class="h-5 w-5" />
+                主题: {{ themeLabel }}
+              </span>
+            </button>
             <router-link
               to="/passkey/register"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               @click="mobileMenuOpen = false"
             >
               绑定设备
             </router-link>
             <router-link
               to="/"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'Home',
+                'text-brand bg-brand-bg': $route.name === 'Home',
               }"
               @click="mobileMenuOpen = false"
             >
@@ -112,9 +129,9 @@
             </router-link>
             <router-link
               to="/timelogs"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'TimeLog',
+                'text-brand bg-brand-bg': $route.name === 'TimeLog',
               }"
               @click="mobileMenuOpen = false"
             >
@@ -122,9 +139,9 @@
             </router-link>
             <router-link
               to="/tasks"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'Tasks',
+                'text-brand bg-brand-bg': $route.name === 'Tasks',
               }"
               @click="mobileMenuOpen = false"
             >
@@ -132,9 +149,9 @@
             </router-link>
             <router-link
               to="/categories"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'Categories',
+                'text-brand bg-brand-bg': $route.name === 'Categories',
               }"
               @click="mobileMenuOpen = false"
             >
@@ -142,9 +159,9 @@
             </router-link>
             <router-link
               to="/statistics"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'Statistics',
+                'text-brand bg-brand-bg': $route.name === 'Statistics',
               }"
               @click="mobileMenuOpen = false"
             >
@@ -152,16 +169,16 @@
             </router-link>
             <router-link
               to="/constraints"
-              class="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               :class="{
-                'text-blue-600 bg-blue-50': $route.name === 'Constraints',
+                'text-brand bg-brand-bg': $route.name === 'Constraints',
               }"
               @click="mobileMenuOpen = false"
             >
               约束
             </router-link>
             <button
-              class="block w-full px-3 py-2 text-left text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              class="block w-full px-3 py-2 text-left text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
               @click="handleLogout"
             >
               退出
@@ -179,18 +196,18 @@
     <!-- 全局通知组件 -->
     <div
       v-if="notification.show"
-      class="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm z-50"
+      class="fixed bottom-4 right-4 bg-bg-surface border border-default rounded-lg shadow-md-md p-4 max-w-sm z-50"
       :class="{
-        'border-green-200 bg-green-50': notification.type === 'success',
-        'border-red-200 bg-red-50': notification.type === 'error',
+        'border-success-border bg-success-bg': notification.type === 'success',
+        'border-danger-border bg-danger-bg': notification.type === 'error',
       }"
     >
       <div class="flex items-center">
         <CheckCircleIcon
           v-if="notification.type === 'success'"
-          class="h-5 w-5 text-green-600 mr-2"
+          class="h-5 w-5 text-success mr-2"
         />
-        <XCircleIcon v-if="notification.type === 'error'" class="h-5 w-5 text-red-600 mr-2" />
+        <XCircleIcon v-if="notification.type === 'error'" class="h-5 w-5 text-danger mr-2" />
         <p
           class="text-sm font-medium"
           :class="{
@@ -206,8 +223,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, provide, onMounted, onUnmounted } from 'vue'
-  import { CheckCircleIcon, XCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+  import { ref, reactive, provide, onMounted, onUnmounted, computed } from 'vue'
+  import { CheckCircleIcon, XCircleIcon, Bars3Icon, XMarkIcon, MoonIcon, SunIcon, ComputerDesktopIcon } from '@heroicons/vue/24/outline'
   import { useSettings } from '@/composables/useSettings'
   import { setNotificationHandler } from '@/api'
   import { clearAuthToken } from '@/utils/auth'
@@ -290,10 +307,63 @@
     router.push('/login')
   }
 
+  // Theme toggle
+  const { theme, updateSetting } = useSettings()
+
+  const themeCycle = () => {
+    const cycle = ['light', 'dark', 'auto'] as const
+    const current = theme.value
+    const next = cycle[(cycle.indexOf(current) + 1) % cycle.length]
+    updateSetting('theme', next)
+
+    const html = document.documentElement
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isDark = next === 'dark' || (next === 'auto' && systemDark)
+    if (isDark) {
+      html.classList.add('dark')
+    } else {
+      html.classList.remove('dark')
+    }
+  }
+
+  const themeIcon = computed(() => {
+    if (theme.value === 'dark') return MoonIcon
+    if (theme.value === 'light') return SunIcon
+    return ComputerDesktopIcon
+  })
+
+  const themeLabel = computed(() => {
+    if (theme.value === 'dark') return '暗色'
+    if (theme.value === 'light') return '亮色'
+    return '自动'
+  })
+
   // Initialize settings on app mount
   onMounted(() => {
-    const { loadSettings } = useSettings()
+    const { loadSettings, theme } = useSettings()
     loadSettings()
+
+    // Theme switching logic
+    const applyTheme = (t: string) => {
+      const html = document.documentElement
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark = t === 'dark' || (t === 'auto' && systemDark)
+      if (isDark) {
+        html.classList.add('dark')
+      } else {
+        html.classList.remove('dark')
+      }
+    }
+
+    applyTheme(theme.value)
+
+    // Watch for system theme changes when auto
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (theme.value === 'auto') {
+        applyTheme('auto')
+      }
+    })
+
     initSystemNotifications()
 
     // Register notification handler for API timeout errors

@@ -8,6 +8,20 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <script>
+    (function() {
+      const theme = localStorage.getItem('timelog-settings');
+      if (theme) {
+        try {
+          const parsed = JSON.parse(theme);
+          const t = parsed.theme || 'auto';
+          const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = t === 'dark' || (t === 'auto' && systemDark);
+          if (isDark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      }
+    })();
+  </script>
+  <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1,17 +1,17 @@
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Time Logs</h1>
+      <h1 class="text-2xl font-bold text-text-primary">Time Logs</h1>
       <div class="flex gap-2">
         <button
           @click="handleRefresh"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-600 border border-transparent rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-bg-surface bg-text-muted border border-transparent rounded-md shadow-sm hover:bg-text-secondary focus:outline-none focus:ring-2 focus:ring-default"
         >
           Refresh
         </button>
         <button
           @click="toggleForm"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-bg-surface bg-brand border border-transparent rounded-md shadow-sm hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand"
         >
           <PlusIcon class="h-5 w-5 mr-2" />
           New Log
@@ -20,9 +20,9 @@
     </div>
 
     <!-- Time Filter -->
-    <div class="bg-white shadow rounded-lg p-4">
+    <div class="bg-bg-surface shadow-md-md rounded-lg p-4">
       <div class="flex flex-wrap items-center gap-4">
-        <span class="text-sm font-medium text-gray-700">Filter:</span>
+        <span class="text-sm font-medium text-text-muted">Filter:</span>
         <div class="flex gap-2">
           <button
             v-for="option in filterOptions"
@@ -31,14 +31,14 @@
             :class="[
               'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
               activeFilter === option.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+                ? 'bg-brand text-bg-surface'
+                : 'bg-bg-elevated text-text-muted hover:bg-bg-elevated',
             ]"
           >
             {{ option.label }}
           </button>
         </div>
-        <span class="text-sm text-gray-500 ml-auto"> {{ filteredTimeLogs.length }} entries </span>
+        <span class="text-sm text-text-secondary ml-auto"> {{ filteredTimeLogs.length }} entries </span>
       </div>
     </div>
 
