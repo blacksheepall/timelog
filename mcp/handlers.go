@@ -49,7 +49,7 @@ func GetDateInfo(ctx context.Context, req *mcp.CallToolRequest, args DateInfoPar
 
 func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args DateRangeParams) (*mcp.CallToolResult, interface{}, error) {
 	if args.ActiveOnly {
-		timeLogs, err := service.ListActiveTimeLogs()
+		timeLogs, err := server.service.ListActiveTimeLogs()
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get current activity: %w", err)
 		}
@@ -81,7 +81,7 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 		endDate = startDate
 	}
 
-	timeLogs, err := service.ListTimeLogsByLocalDateRange(startDate, endDate)
+	timeLogs, err := server.service.ListTimeLogsByLocalDateRange(startDate, endDate)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get time logs by date range: %w", err)
 	}
@@ -126,7 +126,7 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 }
 
 func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskStatusParams) (*mcp.CallToolResult, interface{}, error) {
-	tasks, err := service.ListTasksByCompletionStatus(args.Status)
+	tasks, err := server.service.ListTasksByCompletionStatus(args.Status)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get tasks: %w", err)
 	}
@@ -138,7 +138,7 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 		categoryName := ""
 		categoryColor := ""
 		if task.CategoryID > 0 {
-			if cat, err := service.GetCategoryByID(int32(task.CategoryID)); err == nil && cat != nil {
+			if cat, err := server.service.GetCategoryByID(int32(task.CategoryID)); err == nil && cat != nil {
 				categoryName = cat.Name
 				if cat.Color != nil {
 					categoryColor = *cat.Color
@@ -175,7 +175,7 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 }
 
 func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args ConstraintParams) (*mcp.CallToolResult, interface{}, error) {
-	constraints, err := service.GetActiveConstraints()
+	constraints, err := server.service.GetActiveConstraints()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get active constraints: %w", err)
 	}
@@ -212,7 +212,7 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 }
 
 func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args CategoryListParams) (*mcp.CallToolResult, interface{}, error) {
-	categories, err := service.ListCategories()
+	categories, err := server.service.ListCategories()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list categories: %w", err)
 	}
@@ -245,7 +245,7 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 }
 
 func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	createdLog, err := service.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
+	createdLog, err := server.service.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
 		CategoryID: args.CategoryID,
 		StartTime:  args.StartTime,
 		EndTime:    args.EndTime,
@@ -273,7 +273,7 @@ func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTim
 }
 
 func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	updatedLog, err := service.UpdateTimeLogFromMCPInput(service.UpdateTimeLogMCPInput{
+	updatedLog, err := server.service.UpdateTimeLogFromMCPInput(service.UpdateTimeLogMCPInput{
 		ID:         args.ID,
 		CategoryID: args.CategoryID,
 		StartTime:  args.StartTime,

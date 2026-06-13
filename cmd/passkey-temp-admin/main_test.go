@@ -79,7 +79,7 @@ func TestResolveTTL(t *testing.T) {
 	}
 }
 
-func setupCommandTestEnv(t *testing.T) *model.Dao {
+func setupCommandTestEnv(t *testing.T) (*service.Service, *model.Dao) {
 	t.Helper()
 
 	testCfg.Database.Host = ":memory:"
@@ -92,7 +92,6 @@ func setupCommandTestEnv(t *testing.T) *model.Dao {
 	}
 	repos := adapter.NewRepositories(dao)
 	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, fakeLogger{}, testCfg, nil)
-	service.SetDefaultService(svc)
 
 	if err := dao.Db().AutoMigrate(&model.TempPassword{}); err != nil {
 		t.Fatalf("auto migrate temp_passwords: %v", err)
@@ -100,14 +99,14 @@ func setupCommandTestEnv(t *testing.T) *model.Dao {
 	if err := dao.Db().Exec("DELETE FROM temp_passwords").Error; err != nil {
 		t.Fatalf("clear temp_passwords: %v", err)
 	}
-	return dao
+	return svc, dao
 }
 
 func TestRunCreateUsesDefaultTTLAndPersistsRecord(t *testing.T) {
-	dao := setupCommandTestEnv(t)
+	svc, dao := setupCommandTestEnv(t)
 
 	var stdout bytes.Buffer
-	err := runCreate(nil, testCfg, &stdout)
+	err := runCreate(nil, svc, testCfg, &stdout)
 	if err != nil {
 		t.Fatalf("runCreate returned error: %v", err)
 	}
@@ -125,10 +124,10 @@ func TestRunCreateUsesDefaultTTLAndPersistsRecord(t *testing.T) {
 }
 
 func TestRunCreateRejectsExtraArgs(t *testing.T) {
-	setupCommandTestEnv(t)
+	svc, _ := setupCommandTestEnv(t)
 
 	var stdout bytes.Buffer
-	err := runCreate([]string{"900", "extra"}, testCfg, &stdout)
+	err := runCreate([]string{"900", "extra"}, svc, testCfg, &stdout)
 	if err == nil || err.Error() != "too many positional arguments" {
 		t.Fatalf("expected extra-argument error, got %v", err)
 	}

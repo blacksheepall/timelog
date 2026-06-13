@@ -14,7 +14,7 @@ import (
 )
 
 func TestListTimeLogsByLocalDateRange(t *testing.T) {
-	dao := setupTestModel()
+	svc, dao := setupTestModel()
 	applyTestMigrations(t, dao)
 	seedTestCategory(t, dao)
 	db := dao.Db()
@@ -36,7 +36,7 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 		t.Fatalf("seed out-of-range log: %v", err)
 	}
 
-	logs, err := ListTimeLogsByLocalDateRange("2026-07-15", "2026-07-15")
+	logs, err := svc.ListTimeLogsByLocalDateRange("2026-07-15", "2026-07-15")
 	if err != nil {
 		t.Fatalf("ListTimeLogsByLocalDateRange: %v", err)
 	}

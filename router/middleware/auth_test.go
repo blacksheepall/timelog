@@ -35,7 +35,6 @@ func setupTestDAO() *service.Service {
 	}
 	repos := adapter.NewRepositories(dao)
 	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
-	service.SetDefaultService(svc)
 	return svc
 }
 
@@ -62,7 +61,7 @@ func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
 	svc := setupTestDAO()
 
 	token := "valid-auth-token-xyz789"
-	err := service.StoreSessionToken(token, 300)
+	err := svc.StoreSessionToken(token, 300)
 	if err != nil {
 		t.Fatalf("Failed to store auth token: %v", err)
 	}

@@ -4,18 +4,19 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/service"
 )
 
 func TestCategoryTreeStructure(t *testing.T) {
 	db := testDB().Db()
 	db.Exec("DELETE FROM categories")
 
+	svc := getTestService()
+
 	// Create test hierarchy: Root -> Child -> Grandchild
 	root := &gen.Category{
 		Name: "Root Category",
 	}
-	if err := service.CreateCategory(root); err != nil {
+	if err := svc.CreateCategory(root); err != nil {
 		t.Fatalf("Failed to create root category: %v", err)
 	}
 
@@ -23,7 +24,7 @@ func TestCategoryTreeStructure(t *testing.T) {
 		Name:     "Child Category",
 		ParentID: root.ID,
 	}
-	if err := service.CreateCategory(child); err != nil {
+	if err := svc.CreateCategory(child); err != nil {
 		t.Fatalf("Failed to create child category: %v", err)
 	}
 
@@ -31,12 +32,12 @@ func TestCategoryTreeStructure(t *testing.T) {
 		Name:     "Grandchild Category",
 		ParentID: child.ID,
 	}
-	if err := service.CreateCategory(grandchild); err != nil {
+	if err := svc.CreateCategory(grandchild); err != nil {
 		t.Fatalf("Failed to create grandchild category: %v", err)
 	}
 
 	// Get the tree
-	tree, err := service.GetCategoryTree()
+	tree, err := svc.GetCategoryTree()
 	if err != nil {
 		t.Fatalf("Failed to get category tree: %v", err)
 	}
@@ -88,11 +89,13 @@ func TestCategoryTreeMultipleRoots(t *testing.T) {
 	db := testDB().Db()
 	db.Exec("DELETE FROM categories")
 
+	svc := getTestService()
+
 	// Create multiple root categories with children
 	root1 := &gen.Category{
 		Name: "Root 1",
 	}
-	if err := service.CreateCategory(root1); err != nil {
+	if err := svc.CreateCategory(root1); err != nil {
 		t.Fatalf("Failed to create root1: %v", err)
 	}
 
@@ -100,14 +103,14 @@ func TestCategoryTreeMultipleRoots(t *testing.T) {
 		Name:     "Child 1",
 		ParentID: root1.ID,
 	}
-	if err := service.CreateCategory(child1); err != nil {
+	if err := svc.CreateCategory(child1); err != nil {
 		t.Fatalf("Failed to create child1: %v", err)
 	}
 
 	root2 := &gen.Category{
 		Name: "Root 2",
 	}
-	if err := service.CreateCategory(root2); err != nil {
+	if err := svc.CreateCategory(root2); err != nil {
 		t.Fatalf("Failed to create root2: %v", err)
 	}
 
@@ -115,12 +118,12 @@ func TestCategoryTreeMultipleRoots(t *testing.T) {
 		Name:     "Child 2",
 		ParentID: root2.ID,
 	}
-	if err := service.CreateCategory(child2); err != nil {
+	if err := svc.CreateCategory(child2); err != nil {
 		t.Fatalf("Failed to create child2: %v", err)
 	}
 
 	// Get the tree
-	tree, err := service.GetCategoryTree()
+	tree, err := svc.GetCategoryTree()
 	if err != nil {
 		t.Fatalf("Failed to get category tree: %v", err)
 	}

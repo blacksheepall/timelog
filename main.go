@@ -28,12 +28,13 @@ func main() {
 	if err != nil {
 		panic("Failed to initialize application: " + err.Error())
 	}
-	service.SetDefaultService(application.Service)
 
 	if cfg.Passkey.Enabled {
-		if err := service.InitWebAuthnWithConfig(cfg); err != nil {
+		webAuthn, err := service.InitWebAuthnWithConfig(cfg)
+		if err != nil {
 			panic("Failed to initialize WebAuthn: " + err.Error())
 		}
+		application.Service.SetWebAuthn(webAuthn)
 	}
 
 	r := router.Register(gin.New(), cfg, logger, staticFiles, router.Dependencies{

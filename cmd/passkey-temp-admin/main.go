@@ -36,13 +36,13 @@ func usage() string {
 	return "Usage: go run ./cmd/passkey-temp-admin [ttl]"
 }
 
-func runCreate(args []string, cfg *config.Config, stdout io.Writer) error {
+func runCreate(args []string, svc *service.Service, cfg *config.Config, stdout io.Writer) error {
 	ttl, err := resolveTTL(args, cfg.Passkey.TempPassword.TTL)
 	if err != nil {
 		return err
 	}
 
-	record, password, err := service.CreateTempPassword(ttl)
+	record, password, err := svc.CreateTempPassword(ttl)
 	if err != nil {
 		return fmt.Errorf("failed to create temp password: %w", err)
 	}
@@ -61,9 +61,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "failed to initialize application: %v\n", err)
 		os.Exit(1)
 	}
-	service.SetDefaultService(application.Service)
 
-	if err := runCreate(os.Args[1:], cfg, os.Stdout); err != nil {
+	if err := runCreate(os.Args[1:], application.Service, cfg, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		fmt.Fprintln(os.Stderr, usage())
 		os.Exit(1)

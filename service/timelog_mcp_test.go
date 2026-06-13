@@ -9,7 +9,7 @@ import (
 )
 
 func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
-	dao := setupTestModel()
+	svc, dao := setupTestModel()
 	applyTestMigrations(t, dao)
 	seedTestCategory(t, dao)
 
@@ -20,7 +20,7 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 		Remark:     "mcp create",
 	}
 
-	created, err := CreateTimeLogFromMCPInput(input)
+	created, err := svc.CreateTimeLogFromMCPInput(input)
 	if err != nil {
 		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 }
 
 func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
-	dao := setupTestModel()
+	svc, dao := setupTestModel()
 	applyTestMigrations(t, dao)
 	seedTestCategory(t, dao)
 	db := dao.Db()
@@ -47,7 +47,7 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 
-	updated, err := UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{
+	updated, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{
 		ID:     *seed.ID,
 		Remark: "after",
 	})

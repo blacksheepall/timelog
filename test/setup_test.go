@@ -17,15 +17,17 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
-var testDAO *model.Dao
+var (
+	testDAO     *model.Dao
+	testService *service.Service
+)
 
 func TestMain(m *testing.M) {
 	cfg := loadTestConfig()
 	gin.SetMode(gin.DebugMode)
 	testDAO = mustNewTestDAO(cfg, FakeLogger{})
 	repos := adapter.NewRepositories(testDAO)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
-	service.SetDefaultService(svc)
+	testService = service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 
 	if cfg.Test.Flush {
 		flushDb(testDAO)
@@ -47,6 +49,13 @@ func testDB() *model.Dao {
 		panic("integration test DAO is not initialized")
 	}
 	return testDAO
+}
+
+func getTestService() *service.Service {
+	if testService == nil {
+		panic("integration test service is not initialized")
+	}
+	return testService
 }
 
 func loadTestConfig() *config.Config {

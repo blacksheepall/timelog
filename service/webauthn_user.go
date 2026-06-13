@@ -54,13 +54,3 @@ func (s *Service) LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn
 
 	return s.LoadPasskeyUser()
 }
-
-// --- Package-level wrappers (transitional) ---
-
-func LoadPasskeyUser() (*PasskeyUser, error) {
-	return defaultService.LoadPasskeyUser()
-}
-
-func LoadPasskeyUserByHandle(_ []byte, userHandle []byte) (webauthn.User, error) {
-	return defaultService.LoadPasskeyUserByHandle(nil, userHandle)
-}

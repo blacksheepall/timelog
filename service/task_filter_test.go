@@ -9,7 +9,7 @@ import (
 )
 
 func TestListTasksByCompletionStatusFilters(t *testing.T) {
-	dao := setupTestModel()
+	svc, dao := setupTestModel()
 	applyTestMigrations(t, dao)
 	seedTestCategory(t, dao)
 	db := dao.Db()
@@ -34,7 +34,7 @@ func TestListTasksByCompletionStatusFilters(t *testing.T) {
 		t.Fatalf("seed done: %v", err)
 	}
 
-	pendingOnly, err := ListTasksByCompletionStatus("pending")
+	pendingOnly, err := svc.ListTasksByCompletionStatus("pending")
 	if err != nil {
 		t.Fatalf("pending: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestListTasksByCompletionStatusFilters(t *testing.T) {
 		t.Fatalf("unexpected pending result: %+v", pendingOnly)
 	}
 
-	completedOnly, err := ListTasksByCompletionStatus("completed")
+	completedOnly, err := svc.ListTasksByCompletionStatus("completed")
 	if err != nil {
 		t.Fatalf("completed: %v", err)
 	}

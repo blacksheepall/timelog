@@ -50,25 +50,3 @@ func (s *Service) MarkConstraintAsCompleted(constraintID int32, endReason string
 func (s *Service) MarkConstraintAsActive(constraintID int32) error {
 	return s.constraintRepo.MarkConstraintAsActive(constraintID)
 }
-
-// --- Package-level wrappers (transitional) ---
-
-func CreateConstraint(constraint *gen.Constraint) error { return defaultService.CreateConstraint(constraint) }
-func GetConstraintByID(id int32) (*gen.Constraint, error) {
-	return defaultService.GetConstraintByID(id)
-}
-func GetAllConstraints() ([]gen.Constraint, error)          { return defaultService.GetAllConstraints() }
-func GetActiveConstraints() ([]gen.Constraint, error)       { return defaultService.GetActiveConstraints() }
-func GetConstraintsByDateRange(startDate, endDate time.Time) ([]gen.Constraint, error) {
-	return defaultService.GetConstraintsByDateRange(startDate, endDate)
-}
-func UpdateConstraint(constraint *gen.Constraint) error {
-	return defaultService.UpdateConstraint(constraint)
-}
-func DeleteConstraint(id int32) error { return defaultService.DeleteConstraint(id) }
-func MarkConstraintAsCompleted(constraintID int32, endReason string) error {
-	return defaultService.MarkConstraintAsCompleted(constraintID, endReason)
-}
-func MarkConstraintAsActive(constraintID int32) error {
-	return defaultService.MarkConstraintAsActive(constraintID)
-}

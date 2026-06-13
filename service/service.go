@@ -51,40 +51,6 @@ func NewService(
 	}
 }
 
-var defaultService *Service
-
-func getDefaultService() *Service {
-	return defaultService
-}
-
-// SetDefaultService wires the process-wide defaultService used by package-level helpers.
-func SetDefaultService(svc *Service) {
-	defaultService = svc
-}
-
-var webAuthnProvider func() *webauthn.WebAuthn
-
-func getWebAuthn() *webauthn.WebAuthn {
-	if defaultService != nil && defaultService.webAuthn != nil {
-		return defaultService.webAuthn
-	}
-	if webAuthnProvider == nil {
-		return nil
-	}
-	return webAuthnProvider()
-}
-
-func setWebAuthnProviderForTest(provider func() *webauthn.WebAuthn) {
-	webAuthnProvider = provider
-}
-
-func setWebAuthn(instance *webauthn.WebAuthn) {
-	if defaultService != nil {
-		defaultService.webAuthn = instance
-	}
-	webAuthnProvider = func() *webauthn.WebAuthn { return instance }
-}
-
 // GetCache implements ports.SessionTokenStore so Service can be passed to auth middleware.
 func (s *Service) GetCache(key string) (any, bool) {
 	return s.cache.GetCache(key)

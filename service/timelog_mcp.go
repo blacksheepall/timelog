@@ -111,15 +111,3 @@ func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.T
 func (s *Service) ListActiveTimeLogs() ([]gen.Timelog, error) {
 	return s.ListTimeLogsWithOptions(0, "start_time DESC", "end_time IS NULL")
 }
-
-// --- Package-level wrappers (transitional) ---
-
-func CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error) {
-	return defaultService.CreateTimeLogFromMCPInput(input)
-}
-func UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error) {
-	return defaultService.UpdateTimeLogFromMCPInput(input)
-}
-func ListActiveTimeLogs() ([]gen.Timelog, error) {
-	return defaultService.ListActiveTimeLogs()
-}

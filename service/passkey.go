@@ -13,16 +13,18 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-func InitWebAuthnWithConfig(cfg *config.Config) error {
+// InitWebAuthnWithConfig creates a WebAuthn instance from the given config.
+// Callers must inject the returned instance into the Service via SetWebAuthn.
+func InitWebAuthnWithConfig(cfg *config.Config) (*webauthn.WebAuthn, error) {
 	if cfg == nil {
-		return errs.ErrPasskeyConfigNotInitialized
+		return nil, errs.ErrPasskeyConfigNotInitialized
 	}
 
 	if cfg.Passkey.RPID == "" || cfg.Passkey.RPName == "" || len(cfg.Passkey.RPOrigins) == 0 {
-		return errs.ErrPasskeyConfigIncomplete
+		return nil, errs.ErrPasskeyConfigIncomplete
 	}
 
-	instance, err := webauthn.New(&webauthn.Config{
+	return webauthn.New(&webauthn.Config{
 		RPID:          cfg.Passkey.RPID,
 		RPDisplayName: cfg.Passkey.RPName,
 		RPOrigins:     cfg.Passkey.RPOrigins,
@@ -30,19 +32,15 @@ func InitWebAuthnWithConfig(cfg *config.Config) error {
 			UserVerification: protocol.VerificationPreferred,
 		},
 	})
-	if err != nil {
-		return err
-	}
+}
 
-	webAuthnProvider = func() *webauthn.WebAuthn {
-		return instance
-	}
-	setWebAuthn(instance)
-	return nil
+// SetWebAuthn injects the WebAuthn instance used by passkey operations.
+func (s *Service) SetWebAuthn(instance *webauthn.WebAuthn) {
+	s.webAuthn = instance
 }
 
 func (s *Service) GetWebAuthn() *webauthn.WebAuthn {
-	return getWebAuthn()
+	return s.webAuthn
 }
 
 func (s *Service) StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
@@ -143,37 +141,4 @@ func (s *Service) CleanupExpiredTempPasswords() error {
 func (s *Service) ValidateTempPassword(password string) (*model.TempPassword, error) {
 	hash := temppassword.HashPassword(password)
 	return s.tempPasswordRepo.GetTempPasswordByHash(hash, time.Now())
-}
-
-// --- Package-level wrappers (transitional) ---
-
-func StorePasskeySession(sessionID string, session *webauthn.SessionData, ttlSeconds int64) error {
-	return defaultService.StorePasskeySession(sessionID, session, ttlSeconds)
-}
-func LoadPasskeySession(sessionID string) (*webauthn.SessionData, error) {
-	return defaultService.LoadPasskeySession(sessionID)
-}
-func CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
-	return defaultService.CreatePasskeyCredential(credential, deviceName)
-}
-func ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
-	return defaultService.ListPasskeyCredentials()
-}
-func DeletePasskeyCredential(id uint) error { return defaultService.DeletePasskeyCredential(id) }
-func LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
-	return defaultService.LoadPasskeyCredentialByID(rawID)
-}
-func GenerateSessionToken() (string, error) { return defaultService.GenerateSessionToken() }
-func StoreSessionToken(token string, ttlSeconds int64) error {
-	return defaultService.StoreSessionToken(token, ttlSeconds)
-}
-func GenerateTempPassword() (string, string, error) { return defaultService.GenerateTempPassword() }
-func CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
-	return defaultService.CreateTempPassword(ttlSeconds)
-}
-func ListTempPasswords() ([]model.TempPassword, error) { return defaultService.ListTempPasswords() }
-func DeleteTempPassword(id uint) error                 { return defaultService.DeleteTempPassword(id) }
-func CleanupExpiredTempPasswords() error               { return defaultService.CleanupExpiredTempPasswords() }
-func ValidateTempPassword(password string) (*model.TempPassword, error) {
-	return defaultService.ValidateTempPassword(password)
 }

@@ -11,9 +11,3 @@ func (s *Service) UpdatePasskeyCredentialAuth(credential *webauthn.Credential) e
 
 	return s.passkeyRepo.UpdateWebAuthnCredentialAuth(credential.ID, credential)
 }
-
-// --- Package-level wrapper (transitional) ---
-
-func UpdatePasskeyCredentialAuth(credential *webauthn.Credential) error {
-	return defaultService.UpdatePasskeyCredentialAuth(credential)
-}

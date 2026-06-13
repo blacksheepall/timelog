@@ -8,7 +8,7 @@ import (
 	"github.com/blacksheepaul/timelog/model"
 )
 
-func TestNewServiceWiresInjectedDAO(t *testing.T) {
+func TestNewServiceWiresInjectedRepositories(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Database.Host = ":memory:"
 	cfg.Log.ORMLogLevel = 1
@@ -22,10 +22,5 @@ func TestNewServiceWiresInjectedDAO(t *testing.T) {
 	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 	if svc == nil {
 		t.Fatal("expected non-nil service")
-	}
-
-	SetDefaultService(svc)
-	if getDefaultService() != svc {
-		t.Fatal("getDefaultService should return the injected service instance")
 	}
 }

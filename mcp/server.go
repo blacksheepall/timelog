@@ -12,13 +12,12 @@ import (
 	"github.com/blacksheepaul/timelog/internal/app"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"gorm.io/gorm"
 )
 
 // TimelogMCPServer is the main server struct
 type TimelogMCPServer struct {
-	db     *gorm.DB
-	config *config.Config
+	service *service.Service
+	config  *config.Config
 }
 
 // Tool parameter structs
@@ -72,15 +71,14 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 	if err != nil {
 		panic("Failed to initialize application: " + err.Error())
 	}
-	service.SetDefaultService(application.Service)
 
 	LogMCPDebug("Database initialized", map[string]interface{}{
 		"database_path": cfg.Database.Host,
 	})
 
 	return &TimelogMCPServer{
-		db:     application.DAO.Db(),
-		config: cfg,
+		service: application.Service,
+		config:  cfg,
 	}
 }
 

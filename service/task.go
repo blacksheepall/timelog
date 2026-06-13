@@ -129,34 +129,3 @@ func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, time
 	})
 }
 
-// --- Package-level wrappers (transitional) ---
-
-func CreateTask(task *gen.Task) error { return defaultService.CreateTask(task) }
-func GetTaskByID(id int32) (*gen.Task, error) { return defaultService.GetTaskByID(id) }
-func GetAllTasks(includeSuspended bool, includeCompleted bool) ([]gen.Task, error) {
-	return defaultService.GetAllTasks(includeSuspended, includeCompleted)
-}
-func ListTasksByCompletionStatus(status string) ([]gen.Task, error) {
-	return defaultService.ListTasksByCompletionStatus(status)
-}
-func GetTasksByDate(date time.Time, includeSuspended bool, includeCompleted bool) ([]gen.Task, error) {
-	return defaultService.GetTasksByDate(date, includeSuspended, includeCompleted)
-}
-func GetTasksByDateRange(startDate, endDate time.Time) ([]gen.Task, error) {
-	return defaultService.GetTasksByDateRange(startDate, endDate)
-}
-func UpdateTask(task *gen.Task) error        { return defaultService.UpdateTask(task) }
-func DeleteTask(id int32) error               { return defaultService.DeleteTask(id) }
-func MarkTaskAsCompleted(taskID int32) error  { return defaultService.MarkTaskAsCompleted(taskID) }
-func MarkTaskAsIncomplete(taskID int32) error { return defaultService.MarkTaskAsIncomplete(taskID) }
-func SuspendTask(taskID int32) error          { return defaultService.SuspendTask(taskID) }
-func UnsuspendTask(taskID int32) error        { return defaultService.UnsuspendTask(taskID) }
-func GetCompletedTasksInDateRange(startDate, endDate time.Time) ([]gen.Task, error) {
-	return defaultService.GetCompletedTasksInDateRange(startDate, endDate)
-}
-func GetTaskStats(date time.Time) (map[string]interface{}, error) {
-	return defaultService.GetTaskStats(date)
-}
-func CompleteTaskWithTimelog(taskID int32, createTimelog bool, timelogData *gen.Timelog) error {
-	return defaultService.CompleteTaskWithTimelog(taskID, createTimelog, timelogData)
-}
