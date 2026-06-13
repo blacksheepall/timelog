@@ -74,6 +74,19 @@ type ConstraintRepository interface {
 	MarkConstraintAsActive(constraintID int32) error
 }
 
+// MetricRepository handles persistence for behavior metrics and their records.
+type MetricRepository interface {
+	CreateMetric(metric *gen.Metric) error
+	GetMetricByID(id int32) (*gen.Metric, error)
+	GetMetricByName(name string) (*gen.Metric, error)
+	ListMetrics() ([]gen.Metric, error)
+	UpdateMetric(metric *gen.Metric) error
+	DeleteMetric(id int32) error
+	CreateMetricRecord(record *gen.MetricRecord) error
+	ListMetricRecordsByMetricID(metricID int32) ([]gen.MetricRecord, error)
+	UpdateMetricCurrentValue(metricID int32, value float64, recordedAt time.Time) error
+}
+
 // PasskeyCredentialRepository handles persistence for WebAuthn credentials.
 type PasskeyCredentialRepository interface {
 	CreateWebAuthnCredential(credential *model.WebAuthnCredential) error
@@ -99,6 +112,7 @@ type UnitOfWorkRepositories struct {
 	CategoryRepo     CategoryRepository
 	TaskRepo         TaskRepository
 	ConstraintRepo   ConstraintRepository
+	MetricRepo       MetricRepository
 	PasskeyRepo      PasskeyCredentialRepository
 	TempPasswordRepo TempPasswordRepository
 }

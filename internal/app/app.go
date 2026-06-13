@@ -31,6 +31,7 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 		repos, // categoryRepo
 		repos, // taskRepo
 		repos, // constraintRepo
+		repos, // metricRepo
 		repos, // passkeyRepo
 		repos, // tempPasswordRepo
 		repos, // cacheStore

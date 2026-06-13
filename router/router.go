@@ -49,6 +49,9 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	// 注册 Constraint 路由
 	setupConstraintRoutes(protected, deps)
 
+	// 注册 Metric 路由
+	setupMetricRoutes(protected, deps)
+
 	// 注册通用鉴权路由
 	setupAuthRoutes(api, cfg, deps)
 

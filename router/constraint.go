@@ -19,6 +19,7 @@ func setupConstraintRoutes(group *gin.RouterGroup, deps Dependencies) {
 	group.DELETE("/constraints/:id", deleteConstraintHandler(deps))
 	group.POST("/constraints/:id/complete", completeConstraintHandler(deps))
 	group.POST("/constraints/:id/reactivate", reactivateConstraintHandler(deps))
+	group.GET("/constraints/:id/evaluation", evaluateConstraintHandler(deps))
 }
 
 func createConstraintHandler(deps Dependencies) gin.HandlerFunc {
@@ -199,5 +200,25 @@ func reactivateConstraintHandler(deps Dependencies) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, SuccessResponse(nil, "Constraint reactivated successfully"))
+	}
+}
+
+func evaluateConstraintHandler(deps Dependencies) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+		id64, err := strconv.ParseInt(idStr, 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, "Invalid constraint ID"))
+			return
+		}
+		id := int32(id64)
+
+		eval, err := deps.Service.EvaluateConstraint(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintEvaluationToProto(eval), "Constraint evaluated successfully"))
 	}
 }

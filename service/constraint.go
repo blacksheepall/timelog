@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/blacksheepaul/timelog/model/gen"
@@ -49,4 +50,62 @@ func (s *Service) MarkConstraintAsCompleted(constraintID int32, endReason string
 // MarkConstraintAsActive 重新激活约束
 func (s *Service) MarkConstraintAsActive(constraintID int32) error {
 	return s.constraintRepo.MarkConstraintAsActive(constraintID)
+}
+
+type ConstraintEvaluation struct {
+	ConstraintID int32
+	Passed       bool
+	Actual       float64
+	Target       float64
+	Operator     string
+}
+
+func (s *Service) EvaluateConstraint(constraintID int32) (*ConstraintEvaluation, error) {
+	c, err := s.constraintRepo.GetConstraintByID(constraintID)
+	if err != nil {
+		return nil, err
+	}
+	if c.MetricID == nil || c.MetricOperator == nil || c.MetricTargetValue == nil {
+		return nil, fmt.Errorf("constraint has no metric rule")
+	}
+
+	metric, err := s.metricRepo.GetMetricByID(*c.MetricID)
+	if err != nil {
+		return nil, err
+	}
+	if metric.CurrentValue == nil {
+		return nil, fmt.Errorf("metric has no current value")
+	}
+
+	passed, err := evaluateMetric(*metric.CurrentValue, *c.MetricTargetValue, *c.MetricOperator)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConstraintEvaluation{
+		ConstraintID: constraintID,
+		Passed:       passed,
+		Actual:       *metric.CurrentValue,
+		Target:       *c.MetricTargetValue,
+		Operator:     *c.MetricOperator,
+	}, nil
+}
+
+func evaluateMetric(actual, target float64, op string) (bool, error) {
+	switch op {
+	case "eq":
+		return actual == target, nil
+	case "ne":
+		return actual != target, nil
+	case "gt":
+		return actual > target, nil
+	case "gte":
+		return actual >= target, nil
+	case "lt":
+		return actual < target, nil
+	case "lte":
+		return actual <= target, nil
+	default:
+		return false, fmt.Errorf("unsupported metric operator %q", op)
+	}
 }

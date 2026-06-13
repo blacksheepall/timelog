@@ -15,6 +15,7 @@ type Repositories struct {
 	*categoryRepo
 	*taskRepo
 	*constraintRepo
+	*metricRepo
 	*passkeyCredentialRepo
 	*tempPasswordRepo
 	*sqliteUnitOfWork
@@ -25,6 +26,7 @@ var (
 	_ ports.CategoryRepository          = (*Repositories)(nil)
 	_ ports.TaskRepository              = (*Repositories)(nil)
 	_ ports.ConstraintRepository        = (*Repositories)(nil)
+	_ ports.MetricRepository            = (*Repositories)(nil)
 	_ ports.PasskeyCredentialRepository = (*Repositories)(nil)
 	_ ports.TempPasswordRepository      = (*Repositories)(nil)
 	_ ports.CacheStore                  = (*Repositories)(nil)
@@ -40,6 +42,7 @@ func NewRepositories(dao *model.Dao) *Repositories {
 		categoryRepo:          newCategoryRepo(dao),
 		taskRepo:              newTaskRepo(dao),
 		constraintRepo:        newConstraintRepo(dao),
+		metricRepo:            newMetricRepo(dao),
 		passkeyCredentialRepo: newPasskeyCredentialRepo(dao),
 		tempPasswordRepo:      newTempPasswordRepo(dao),
 		sqliteUnitOfWork:      newUnitOfWork(dao),

@@ -10,15 +10,18 @@ func ConstraintToProto(c *gen.Constraint) *timelogv1.Constraint {
 		return nil
 	}
 	return &timelogv1.Constraint{
-		Id:              Int32Value(c.ID),
-		Description:     c.Description,
-		EndReason:       c.EndReason,
-		PunishmentQuote: c.PunishmentQuote,
-		StartDate:       FormatDate(c.StartDate),
-		EndDate:         optionalString(FormatDatePtr(c.EndDate)),
-		IsActive:        BoolValue(c.IsActive),
-		CreatedAt:       FormatTimeUTCPtr(c.CreatedAt),
-		UpdatedAt:       FormatTimeUTCPtr(c.UpdatedAt),
+		Id:                Int32Value(c.ID),
+		Description:       c.Description,
+		EndReason:         c.EndReason,
+		PunishmentQuote:   c.PunishmentQuote,
+		StartDate:         FormatDate(c.StartDate),
+		EndDate:           optionalString(FormatDatePtr(c.EndDate)),
+		IsActive:          BoolValue(c.IsActive),
+		MetricId:          c.MetricID,
+		MetricOperator:    c.MetricOperator,
+		MetricTargetValue: c.MetricTargetValue,
+		CreatedAt:         FormatTimeUTCPtr(c.CreatedAt),
+		UpdatedAt:         FormatTimeUTCPtr(c.UpdatedAt),
 	}
 }
 
@@ -44,11 +47,14 @@ func ConstraintFromCreateRequest(req *timelogv1.CreateConstraintRequest) (*gen.C
 	}
 	active := true
 	return &gen.Constraint{
-		Description:     req.Description,
-		PunishmentQuote: req.PunishmentQuote,
-		StartDate:       startDate,
-		EndDate:         endDate,
-		IsActive:        &active,
+		Description:       req.Description,
+		PunishmentQuote:   req.PunishmentQuote,
+		StartDate:         startDate,
+		EndDate:           endDate,
+		IsActive:          &active,
+		MetricID:          req.MetricId,
+		MetricOperator:    req.MetricOperator,
+		MetricTargetValue: req.MetricTargetValue,
 	}, nil
 }
 
@@ -75,6 +81,15 @@ func ApplyConstraintUpdate(c *gen.Constraint, req *timelogv1.UpdateConstraintReq
 			return err
 		}
 		c.EndDate = endDate
+	}
+	if req.MetricId != nil {
+		c.MetricID = req.MetricId
+	}
+	if req.MetricOperator != nil {
+		c.MetricOperator = req.MetricOperator
+	}
+	if req.MetricTargetValue != nil {
+		c.MetricTargetValue = req.MetricTargetValue
 	}
 	return nil
 }
