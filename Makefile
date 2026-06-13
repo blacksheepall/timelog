@@ -117,7 +117,7 @@ gen-model:
 
 gen-api:
 	@test -x ./web/node_modules/.bin/buf || (cd web && pnpm install)
-	./web/node_modules/.bin/buf generate
+	@PATH="$(shell go env GOROOT)/bin:./web/node_modules/.bin:$(PATH)" ./web/node_modules/.bin/buf generate
 	go run ./cmd/merge-openapi
 
 check-api:
