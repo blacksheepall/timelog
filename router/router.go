@@ -40,6 +40,9 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles em
 	// 注册 TimeLog 路由
 	RegisterTimeLogRoutes(protected, deps)
 
+	// 注册 Category 路由
+	setupCategoryRoutes(protected, deps)
+
 	// 注册 Task 路由
 	setupTaskRoutes(protected, deps)
 
