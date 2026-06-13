@@ -17,10 +17,8 @@ type App struct {
 	Service *service.Service
 }
 
-// New bootstraps the database, repositories, and service layer.
+// New bootstraps the database, per-domain repository adapters, and service layer.
 // It returns an App whose Service is ready for handlers or MCP tools.
-// Callers that still rely on package-level service helpers should also call
-// service.SetDefaultService(app.Service) after this function returns.
 func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*App, error) {
 	dao, err := model.NewDao(cfg, log)
 	if err != nil {
