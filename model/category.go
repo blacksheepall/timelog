@@ -201,6 +201,8 @@ func MoveCategory(db *gorm.DB, categoryID int32, newParentID *int32) error {
 		}
 
 		oldPath := GetFullPath(category)
+		oldLevel := *category.Level
+		levelDelta := newLevel - oldLevel
 
 		category.ParentID = newParentID
 		category.Level = &newLevel
@@ -211,7 +213,10 @@ func MoveCategory(db *gorm.DB, categoryID int32, newParentID *int32) error {
 		}
 
 		newFullPath := GetFullPath(category)
-		return tx.Model(&gen.Category{}).Where("path LIKE ?", oldPath+"%").Update("path", gorm.Expr("REPLACE(path, ?, ?)", oldPath, newFullPath)).Error
+		return tx.Model(&gen.Category{}).Where("path LIKE ?", oldPath+"%").Updates(map[string]interface{}{
+			"path":  gorm.Expr("REPLACE(path, ?, ?)", oldPath, newFullPath),
+			"level": gorm.Expr("level + ?", levelDelta),
+		}).Error
 	})
 }
 

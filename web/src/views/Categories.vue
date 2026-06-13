@@ -222,15 +222,32 @@
     return allCategories.value.filter(c => c.level < 3)
   })
 
-  // 可作为移动目标的选项（排除自己及其子分类）
+  // 获取某个分类的所有后代 ID（递归）
+  const getDescendantIds = (categoryId: number): number[] => {
+    const result: number[] = []
+    const findChildren = (parentId: number) => {
+      for (const c of allCategories.value) {
+        if (c.parent_id === parentId) {
+          result.push(c.id)
+          findChildren(c.id)
+        }
+      }
+    }
+    findChildren(categoryId)
+    return result
+  }
+
+  // 可作为移动目标的选项（排除自己、当前父分类及其子分类）
   const availableMoveTargets = computed(() => {
     if (!movingCategory.value) return []
-    return allCategories.value.filter(
-      c =>
-        c.id !== movingCategory.value!.id &&
-        c.level < 3 &&
-        !c.path.includes(`/${movingCategory.value!.name}`)
-    )
+    const excludedIds = new Set<number>([movingCategory.value.id])
+    if (movingCategory.value.parent_id) {
+      excludedIds.add(movingCategory.value.parent_id)
+    }
+    for (const id of getDescendantIds(movingCategory.value.id)) {
+      excludedIds.add(id)
+    }
+    return allCategories.value.filter(c => !excludedIds.has(c.id))
   })
 
   const resetForm = () => {

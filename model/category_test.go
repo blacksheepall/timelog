@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/blacksheepaul/timelog/model/gen"
+	sqlite "github.com/ncruces/go-sqlite3/gormlite"
+	"gorm.io/gorm"
 )
 
 // TestBuildCategoryTreePointers tests that the tree building uses pointers correctly
@@ -175,4 +177,129 @@ func TestBuildCategoryTreeSingleRoot(t *testing.T) {
 	if len(tree[0].Children) != 0 {
 		t.Errorf("Expected root to have no children, got %d", len(tree[0].Children))
 	}
+}
+
+
+// TestMoveCategoryUpdatesDescendantLevels verifies that moving a category
+// updates both its own level/path and those of all its descendants.
+func TestMoveCategoryUpdatesDescendantLevels(t *testing.T) {
+	db, err := openTestDB()
+	if err != nil {
+		t.Fatalf("open test db: %v", err)
+	}
+
+	if err := db.AutoMigrate(&gen.Category{}); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	// Create two roots, one child under rootA, one grandchild under child.
+	rootA := mustCreateCategory(t, db, "RootA", nil)
+	rootB := mustCreateCategory(t, db, "RootB", nil)
+	child := mustCreateCategory(t, db, "Child", rootA.ID)
+	grandchild := mustCreateCategory(t, db, "Grandchild", child.ID)
+
+	if *child.Level != 2 {
+		t.Fatalf("expected child level 2, got %d", *child.Level)
+	}
+	if *grandchild.Level != 3 {
+		t.Fatalf("expected grandchild level 3, got %d", *grandchild.Level)
+	}
+
+	// Move child (with its descendant) from rootA to rootB.
+	if err := MoveCategory(db, *child.ID, rootB.ID); err != nil {
+		t.Fatalf("move category: %v", err)
+	}
+
+	// Reload and verify.
+	movedChild, err := GetCategoryByID(db, *child.ID)
+	if err != nil {
+		t.Fatalf("get moved child: %v", err)
+	}
+	if *movedChild.ParentID != *rootB.ID {
+		t.Errorf("child parent: want %d, got %d", *rootB.ID, *movedChild.ParentID)
+	}
+	if *movedChild.Level != 2 {
+		t.Errorf("child level: want 2, got %d", *movedChild.Level)
+	}
+	if *movedChild.Path != "/RootB" {
+		t.Errorf("child path: want /RootB, got %s", *movedChild.Path)
+	}
+
+	movedGrandchild, err := GetCategoryByID(db, *grandchild.ID)
+	if err != nil {
+		t.Fatalf("get moved grandchild: %v", err)
+	}
+	if *movedGrandchild.Level != 3 {
+		t.Errorf("grandchild level: want 3, got %d", *movedGrandchild.Level)
+	}
+	if *movedGrandchild.Path != "/RootB/Child" {
+		t.Errorf("grandchild path: want /RootB/Child, got %s", *movedGrandchild.Path)
+	}
+}
+
+// TestMoveCategoryToRoot verifies that moving a category to root level
+// decreases its own level and its descendants' levels accordingly.
+func TestMoveCategoryToRoot(t *testing.T) {
+	db, err := openTestDB()
+	if err != nil {
+		t.Fatalf("open test db: %v", err)
+	}
+
+	if err := db.AutoMigrate(&gen.Category{}); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	child := mustCreateCategory(t, db, "Child", root.ID)
+	grandchild := mustCreateCategory(t, db, "Grandchild", child.ID)
+
+	// Move child to root.
+	if err := MoveCategory(db, *child.ID, nil); err != nil {
+		t.Fatalf("move category to root: %v", err)
+	}
+
+	movedChild, err := GetCategoryByID(db, *child.ID)
+	if err != nil {
+		t.Fatalf("get moved child: %v", err)
+	}
+	if movedChild.ParentID != nil {
+		t.Errorf("child parent: want nil, got %v", *movedChild.ParentID)
+	}
+	if *movedChild.Level != 1 {
+		t.Errorf("child level: want 1, got %d", *movedChild.Level)
+	}
+	if *movedChild.Path != "/" {
+		t.Errorf("child path: want /, got %s", *movedChild.Path)
+	}
+
+	movedGrandchild, err := GetCategoryByID(db, *grandchild.ID)
+	if err != nil {
+		t.Fatalf("get moved grandchild: %v", err)
+	}
+	if *movedGrandchild.Level != 2 {
+		t.Errorf("grandchild level: want 2, got %d", *movedGrandchild.Level)
+	}
+	if *movedGrandchild.Path != "/Child" {
+		t.Errorf("grandchild path: want /Child, got %s", *movedGrandchild.Path)
+	}
+}
+
+func openTestDB() (*gorm.DB, error) {
+	return gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+}
+
+func mustCreateCategory(t *testing.T, db *gorm.DB, name string, parentID *int32) *gen.Category {
+	t.Helper()
+	color := "#3B82F6"
+	desc := ""
+	cat := &gen.Category{
+		Name:        name,
+		Color:       &color,
+		Description: &desc,
+		ParentID:    parentID,
+	}
+	if err := CreateCategory(db, cat); err != nil {
+		t.Fatalf("create category %s: %v", name, err)
+	}
+	return cat
 }
