@@ -112,10 +112,7 @@
           <nav class="space-y-1">
             <button
               class="block w-full px-3 py-2 text-left text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
-              @click="
-                themeCycle();
-                mobileMenuOpen = false
-              "
+              @click="handleThemeToggle"
             >
               <span class="flex items-center gap-2">
                 <component :is="themeIcon" class="h-5 w-5" />
@@ -332,6 +329,11 @@
   const handleLogout = () => {
     clearAuthToken()
     router.push('/login')
+  }
+
+  const handleThemeToggle = () => {
+    themeCycle()
+    mobileMenuOpen.value = false
   }
 
   // Theme toggle
