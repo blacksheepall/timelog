@@ -36,6 +36,7 @@ func (u *sqliteUnitOfWork) Run(ctx context.Context, fn func(repos ports.UnitOfWo
 		CategoryRepo:     newCategoryRepo(tx),
 		TaskRepo:         newTaskRepo(tx),
 		ConstraintRepo:   newConstraintRepo(tx),
+		MetricRepo:       newMetricRepo(tx),
 		PasskeyRepo:      newPasskeyCredentialRepo(tx),
 		TempPasswordRepo: newTempPasswordRepo(tx),
 	}

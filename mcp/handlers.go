@@ -300,3 +300,99 @@ func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTim
 
 	return formatMCPResponse("Time log updated successfully", response)
 }
+
+func RecordMetric(ctx context.Context, req *mcp.CallToolRequest, args RecordMetricParams) (*mcp.CallToolResult, interface{}, error) {
+	metric, err := server.service.RecordMetric(service.RecordMetricInput{
+		MetricName: args.MetricName,
+		Value:      args.Value,
+		Source:     args.Source,
+		RecordedAt: args.RecordedAt,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	response := map[string]interface{}{
+		"id":            *metric.ID,
+		"name":          metric.Name,
+		"current_value": metric.CurrentValue,
+		"unit":          metric.Unit,
+	}
+	return formatMCPResponse("Metric recorded successfully", response)
+}
+
+func IncrementMetric(ctx context.Context, req *mcp.CallToolRequest, args IncrementMetricParams) (*mcp.CallToolResult, interface{}, error) {
+	metric, err := server.service.IncrementMetric(service.IncrementMetricInput{
+		MetricName: args.MetricName,
+		Delta:      args.Delta,
+		Source:     args.Source,
+		RecordedAt: args.RecordedAt,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	response := map[string]interface{}{
+		"id":            *metric.ID,
+		"name":          metric.Name,
+		"current_value": metric.CurrentValue,
+		"unit":          metric.Unit,
+	}
+	return formatMCPResponse("Metric incremented successfully", response)
+}
+
+func GetMetric(ctx context.Context, req *mcp.CallToolRequest, args GetMetricParams) (*mcp.CallToolResult, interface{}, error) {
+	metric, err := server.service.GetMetricByName(args.Name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get metric: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"id":            *metric.ID,
+		"name":          metric.Name,
+		"metric_type":   metric.MetricType,
+		"unit":          metric.Unit,
+		"current_value": metric.CurrentValue,
+	}
+	return formatMCPResponse("Metric retrieved successfully", response)
+}
+
+func ListMetrics(ctx context.Context, req *mcp.CallToolRequest, args ListMetricsParams) (*mcp.CallToolResult, interface{}, error) {
+	metrics, err := server.service.ListMetrics()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list metrics: %w", err)
+	}
+
+	var result []map[string]interface{}
+	for _, m := range metrics {
+		result = append(result, map[string]interface{}{
+			"id":            *m.ID,
+			"name":          m.Name,
+			"metric_type":   m.MetricType,
+			"unit":          m.Unit,
+			"current_value": m.CurrentValue,
+		})
+	}
+
+	response := map[string]interface{}{
+		"metrics": result,
+		"count":   len(result),
+	}
+	return formatMCPResponse(fmt.Sprintf("Found %d metrics", len(result)), response)
+}
+
+func EvaluateConstraintMCP(ctx context.Context, req *mcp.CallToolRequest, args EvaluateConstraintParams) (*mcp.CallToolResult, interface{}, error) {
+	eval, err := server.service.EvaluateConstraint(args.ConstraintID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to evaluate constraint: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"constraint_id": eval.ConstraintID,
+		"passed":        eval.Passed,
+		"actual":        eval.Actual,
+		"target":        eval.Target,
+		"operator":      eval.Operator,
+	}
+	return formatMCPResponse("Constraint evaluated successfully", response)
+}

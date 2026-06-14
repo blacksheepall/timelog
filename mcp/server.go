@@ -52,6 +52,30 @@ type UpdateTimeLogParams struct {
 	Remark     string `json:"remark,omitempty" jsonschema:"New remark, optional"`
 }
 
+type RecordMetricParams struct {
+	MetricName string  `json:"metric_name" jsonschema:"Metric name,required"`
+	Value      float64 `json:"value" jsonschema:"Metric value,required"`
+	Source     string  `json:"source" jsonschema:"Source of the measurement,required"`
+	RecordedAt string  `json:"recorded_at,omitempty" jsonschema:"Recording time in RFC3339 format"`
+}
+
+type IncrementMetricParams struct {
+	MetricName string  `json:"metric_name" jsonschema:"Metric name,required"`
+	Delta      float64 `json:"delta" jsonschema:"Amount to increment,required"`
+	Source     string  `json:"source" jsonschema:"Source of the measurement,required"`
+	RecordedAt string  `json:"recorded_at,omitempty" jsonschema:"Recording time in RFC3339 format"`
+}
+
+type GetMetricParams struct {
+	Name string `json:"name" jsonschema:"Metric name,required"`
+}
+
+type ListMetricsParams struct{}
+
+type EvaluateConstraintParams struct {
+	ConstraintID int32 `json:"constraint_id" jsonschema:"Constraint ID,required"`
+}
+
 var server *TimelogMCPServer
 
 // NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
@@ -124,6 +148,31 @@ func main() {
 		Name:        "update_timelog",
 		Description: "Update an existing time log, such as setting end_time to stop the current activity",
 	}, UpdateTimeLog)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "record_metric",
+		Description: "Record a new value for a metric (write-only). The metric must already exist.",
+	}, RecordMetric)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "increment_metric",
+		Description: "Increment a counter metric by a delta (write-only). The metric must already exist.",
+	}, IncrementMetric)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "get_metric",
+		Description: "Get a metric by name",
+	}, GetMetric)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "list_metrics",
+		Description: "List all metrics",
+	}, ListMetrics)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "evaluate_constraint",
+		Description: "Evaluate whether a constraint's metric rule is currently met",
+	}, EvaluateConstraintMCP)
 
 	transportMode := server.config.MCP.Transport
 	switch transportMode {

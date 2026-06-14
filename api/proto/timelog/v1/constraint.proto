@@ -14,6 +14,9 @@ message Constraint {
   bool is_active = 7;
   string created_at = 8;
   string updated_at = 9;
+  optional int32 metric_id = 10;
+  optional string metric_operator = 11;
+  optional double metric_target_value = 12;
 }
 
 message CreateConstraintRequest {
@@ -21,6 +24,9 @@ message CreateConstraintRequest {
   string punishment_quote = 2;
   string start_date = 3;
   optional string end_date = 4;
+  optional int32 metric_id = 5;
+  optional string metric_operator = 6;
+  optional double metric_target_value = 7;
 }
 
 message UpdateConstraintRequest {
@@ -28,6 +34,9 @@ message UpdateConstraintRequest {
   optional string punishment_quote = 2;
   optional string start_date = 3;
   optional string end_date = 4;
+  optional int32 metric_id = 5;
+  optional string metric_operator = 6;
+  optional double metric_target_value = 7;
 }
 
 message ListConstraintsQuery {
@@ -36,4 +45,16 @@ message ListConstraintsQuery {
 
 message CompleteConstraintRequest {
   string end_reason = 1;
+}
+
+message EvaluateConstraintRequest {
+  int32 id = 1;
+}
+
+message ConstraintEvaluation {
+  int32 constraint_id = 1;
+  bool passed = 2;
+  double actual = 3;
+  double target = 4;
+  string operator = 5;
 }

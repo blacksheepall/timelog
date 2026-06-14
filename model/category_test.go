@@ -179,7 +179,6 @@ func TestBuildCategoryTreeSingleRoot(t *testing.T) {
 	}
 }
 
-
 // TestMoveCategoryUpdatesDescendantLevels verifies that moving a category
 // updates both its own level/path and those of all its descendants.
 func TestMoveCategoryUpdatesDescendantLevels(t *testing.T) {

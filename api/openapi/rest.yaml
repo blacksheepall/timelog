@@ -13,6 +13,7 @@ tags:
   - name: category
   - name: task
   - name: constraint
+  - name: metric
   - name: auth
   - name: passkey
 components:
@@ -180,6 +181,62 @@ components:
                 type: array
                 items:
                   $ref: '#/components/schemas/Constraint'
+              message:
+                type: string
+              status:
+                type: integer
+    MetricEnvelope:
+      description: Metric payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Metric'
+              message:
+                type: string
+              status:
+                type: integer
+    MetricListEnvelope:
+      description: Metric list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Metric'
+              message:
+                type: string
+              status:
+                type: integer
+    MetricRecordListEnvelope:
+      description: Metric record list payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricRecord'
+              message:
+                type: string
+              status:
+                type: integer
+    ConstraintEvaluationEnvelope:
+      description: Constraint evaluation payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/ConstraintEvaluation'
               message:
                 type: string
               status:
@@ -759,6 +816,122 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /constraints/{id}/evaluation:
+    get:
+      tags: [constraint]
+      summary: Evaluate constraint against its metric
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/ConstraintEvaluationEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /metrics:
+    get:
+      tags: [metric]
+      summary: List metrics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/MetricListEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      tags: [metric]
+      summary: Create metric
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMetricRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/MetricEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /metrics/{id}:
+    get:
+      tags: [metric]
+      summary: Get metric
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/MetricEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    put:
+      tags: [metric]
+      summary: Update metric
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMetricRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/MetricEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+    delete:
+      tags: [metric]
+      summary: Delete metric
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/NullDataEnvelope'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /metrics/{id}/records:
+    get:
+      tags: [metric]
+      summary: List metric records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/MetricRecordListEnvelope'
         default:
           $ref: '#/components/responses/ApiError'
   /auth/dev-login:

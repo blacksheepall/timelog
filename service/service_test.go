@@ -19,7 +19,7 @@ func TestNewServiceWiresInjectedRepositories(t *testing.T) {
 	}
 
 	repos := adapter.NewRepositories(dao)
-	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 	if svc == nil {
 		t.Fatal("expected non-nil service")
 	}

@@ -13,6 +13,7 @@ type Service struct {
 	categoryRepo     ports.CategoryRepository
 	taskRepo         ports.TaskRepository
 	constraintRepo   ports.ConstraintRepository
+	metricRepo       ports.MetricRepository
 	passkeyRepo      ports.PasskeyCredentialRepository
 	tempPasswordRepo ports.TempPasswordRepository
 	cache            ports.CacheStore
@@ -28,6 +29,7 @@ func NewService(
 	categoryRepo ports.CategoryRepository,
 	taskRepo ports.TaskRepository,
 	constraintRepo ports.ConstraintRepository,
+	metricRepo ports.MetricRepository,
 	passkeyRepo ports.PasskeyCredentialRepository,
 	tempPasswordRepo ports.TempPasswordRepository,
 	cache ports.CacheStore,
@@ -41,13 +43,14 @@ func NewService(
 		categoryRepo:     categoryRepo,
 		taskRepo:         taskRepo,
 		constraintRepo:   constraintRepo,
+		metricRepo:       metricRepo,
 		passkeyRepo:      passkeyRepo,
 		tempPasswordRepo: tempPasswordRepo,
 		cache:            cache,
 		unitOfWork:       unitOfWork,
 		log:              log,
-		cfg:              cfg,
 		webAuthn:         webAuthn,
+		cfg:              cfg,
 	}
 }
 

@@ -10,6 +10,7 @@ const Categories = () => import('@/views/Categories.vue')
 const Statistics = () => import('@/views/Statistics.vue')
 // @ts-ignore
 const Constraints = () => import('@/views/Constraints.vue') as Promise<{ default: any }>
+const Metrics = () => import('@/views/Metrics.vue')
 const PasskeyRegister = () => import('@/views/PasskeyRegister.vue')
 const PasskeyLogin = () => import('@/views/PasskeyLogin.vue')
 
@@ -60,6 +61,14 @@ const routes: RouteRecordRaw[] = [
     component: Constraints,
     meta: {
       title: '约束',
+    },
+  },
+  {
+    path: '/metrics',
+    name: 'Metrics',
+    component: Metrics,
+    meta: {
+      title: '指标',
     },
   },
   {
