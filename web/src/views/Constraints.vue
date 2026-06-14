@@ -76,6 +76,14 @@
 
         <div class="border-t border-default pt-6">
           <h3 class="text-sm font-medium text-text-primary mb-4">关联指标（可选）</h3>
+          <div
+            v-if="metrics.length === 0"
+            class="mb-4 text-sm text-text-muted bg-bg-elevated rounded-md p-3"
+          >
+            还没有指标，请先前往
+            <router-link to="/metrics" class="text-brand hover:underline">指标页面</router-link>
+            创建一个。
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label for="metric_id" class="block text-sm font-medium text-text-muted mb-2">
@@ -275,6 +283,14 @@
               >
                 <ChartBarIcon class="h-4 w-4 mr-1" />
                 评估
+              </button>
+              <button
+                v-else
+                @click="editConstraint(constraint)"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-brand bg-brand-bg border border-brand-border rounded-md hover:bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <ChartBarIcon class="h-4 w-4 mr-1" />
+                关联指标
               </button>
               <button
                 v-if="constraint.is_active"
