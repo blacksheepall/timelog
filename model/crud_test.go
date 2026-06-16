@@ -1,28 +1,18 @@
-package model
+package model_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/testutil"
+	. "github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	sqlite "github.com/ncruces/go-sqlite3/gormlite"
-	"gorm.io/gorm"
 )
 
-func openMemoryDB(t *testing.T) *gorm.DB {
-	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	return db
-}
-
 func TestTimelogCRUD(t *testing.T) {
-	db := openMemoryDB(t)
-	if err := db.AutoMigrate(&gen.Timelog{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
 	tl := &gen.Timelog{StartTime: time.Now().UTC(), CategoryID: 1}
 	if err := CreateTimeLog(db, tl); err != nil {
@@ -64,10 +54,9 @@ func TestTimelogCRUD(t *testing.T) {
 }
 
 func TestTaskCRUD(t *testing.T) {
-	db := openMemoryDB(t)
-	if err := db.AutoMigrate(&gen.Task{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
 	task := &gen.Task{Title: "Test", CategoryID: 1, DueDate: time.Now()}
 	if err := CreateTask(db, task); err != nil {
@@ -113,10 +102,9 @@ func TestTaskCRUD(t *testing.T) {
 }
 
 func TestConstraintCRUD(t *testing.T) {
-	db := openMemoryDB(t)
-	if err := db.AutoMigrate(&gen.Constraint{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
 	c := &gen.Constraint{Description: "Test", PunishmentQuote: "Q", StartDate: time.Now()}
 	if err := CreateConstraint(db, c); err != nil {
@@ -151,10 +139,9 @@ func TestConstraintCRUD(t *testing.T) {
 }
 
 func TestMetricCRUD(t *testing.T) {
-	db := openMemoryDB(t)
-	if err := db.AutoMigrate(&gen.Metric{}, &gen.MetricRecord{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
 	m := &gen.Metric{Name: "Test", MetricType: "counter", Unit: "count"}
 	if err := CreateMetric(db, m); err != nil {
