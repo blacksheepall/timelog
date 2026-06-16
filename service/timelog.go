@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
@@ -34,6 +36,9 @@ func (s *Service) ListTimeLogsByLocalDateRange(startDate, endDate string) ([]dom
 
 // UpdateTimeLog 更新一条时间日志
 func (s *Service) UpdateTimeLog(tl *domain.TimeLog) error {
+	if _, err := s.timelogRepo.GetTimeLogByID(tl.ID); err != nil {
+		return fmt.Errorf("time log not found: %w", err)
+	}
 	return s.timelogRepo.UpdateTimeLog(tl)
 }
 
