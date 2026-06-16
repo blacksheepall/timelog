@@ -51,4 +51,16 @@ func TestListTasksByCompletionStatusFilters(t *testing.T) {
 	if len(completedOnly) != 1 || completedOnly[0].Title != "done" {
 		t.Fatalf("unexpected completed result: %+v", completedOnly)
 	}
+
+	all, err := svc.ListTasksByCompletionStatus("all")
+	if err != nil {
+		t.Fatalf("all: %v", err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 tasks for all, got %d", len(all))
+	}
+
+	if _, err := svc.ListTasksByCompletionStatus("invalid"); err == nil {
+		t.Fatal("expected error for invalid status")
+	}
 }

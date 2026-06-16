@@ -35,6 +35,37 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 	}
 }
 
+func TestCreateTimeLogFromMCPInputDefaults(t *testing.T) {
+	svc, dao := setupTestModel()
+	applyTestMigrations(t, dao)
+	seedTestCategory(t, dao)
+
+	created, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1})
+	if err != nil {
+		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
+	}
+	if created.StartTime.IsZero() {
+		t.Fatal("expected default start time")
+	}
+}
+
+func TestCreateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
+	svc, dao := setupTestModel()
+	applyTestMigrations(t, dao)
+	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 999}); err == nil {
+		t.Fatal("expected error for invalid category")
+	}
+}
+
+func TestCreateTimeLogFromMCPInputInvalidStartTime(t *testing.T) {
+	svc, dao := setupTestModel()
+	applyTestMigrations(t, dao)
+	seedTestCategory(t, dao)
+	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1, StartTime: "bad"}); err == nil {
+		t.Fatal("expected error for invalid start time")
+	}
+}
+
 func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 	svc, dao := setupTestModel()
 	applyTestMigrations(t, dao)

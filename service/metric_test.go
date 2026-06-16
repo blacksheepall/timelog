@@ -205,6 +205,63 @@ func TestEvaluateConstraint(t *testing.T) {
 	}
 }
 
+func TestEvaluateMetricOperators(t *testing.T) {
+	cases := []struct {
+		op     string
+		actual float64
+		target float64
+		want   bool
+	}{
+		{"eq", 5, 5, true},
+		{"eq", 5, 4, false},
+		{"ne", 5, 4, true},
+		{"ne", 5, 5, false},
+		{"gt", 5, 4, true},
+		{"gt", 4, 5, false},
+		{"gte", 5, 5, true},
+		{"gte", 4, 5, false},
+		{"lt", 4, 5, true},
+		{"lt", 5, 4, false},
+		{"lte", 5, 5, true},
+		{"lte", 5, 4, false},
+	}
+	for _, tc := range cases {
+		got, err := evaluateMetric(tc.actual, tc.target, tc.op)
+		if err != nil {
+			t.Fatalf("evaluateMetric(%s): %v", tc.op, err)
+		}
+		if got != tc.want {
+			t.Fatalf("evaluateMetric(%s, %v, %v) = %v, want %v", tc.op, tc.actual, tc.target, got, tc.want)
+		}
+	}
+
+	if _, err := evaluateMetric(0, 0, "unknown"); err == nil {
+		t.Fatal("expected error for unknown operator")
+	}
+}
+
+func TestParseMetricRecordedAt(t *testing.T) {
+	got, err := parseMetricRecordedAt("2026-06-13T08:00:00Z")
+	if err != nil || got.UTC().Format(time.RFC3339) != "2026-06-13T08:00:00Z" {
+		t.Fatalf("unexpected: (%v, %v)", got, err)
+	}
+
+	got, err = parseMetricRecordedAt("2026-06-13 08:00:00")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	emptyStart := time.Now().UTC()
+	got, err = parseMetricRecordedAt("")
+	if err != nil || got.Before(emptyStart) {
+		t.Fatalf("expected current time, got (%v, %v)", got, err)
+	}
+
+	if _, err := parseMetricRecordedAt("not-a-time"); err == nil {
+		t.Fatal("expected error for invalid time")
+	}
+}
+
 func TestEvaluateConstraintWithoutMetricRule(t *testing.T) {
 	svc := newTestMetricService(t)
 
