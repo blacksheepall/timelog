@@ -19,7 +19,12 @@ func newMetricRepo(db model.DBProvider) *metricRepo {
 }
 
 func (r *metricRepo) CreateMetric(metric *domain.Metric) error {
-	return model.CreateMetric(r.db.Db(), toGenMetric(metric))
+	g := toGenMetric(metric)
+	if err := model.CreateMetric(r.db.Db(), g); err != nil {
+		return err
+	}
+	*metric = *toDomainMetric(g)
+	return nil
 }
 
 func (r *metricRepo) GetMetricByID(id int32) (*domain.Metric, error) {
@@ -55,7 +60,12 @@ func (r *metricRepo) DeleteMetric(id int32) error {
 }
 
 func (r *metricRepo) CreateMetricRecord(record *domain.MetricRecord) error {
-	return model.CreateMetricRecord(r.db.Db(), toGenMetricRecord(record))
+	g := toGenMetricRecord(record)
+	if err := model.CreateMetricRecord(r.db.Db(), g); err != nil {
+		return err
+	}
+	*record = *toDomainMetricRecord(g)
+	return nil
 }
 
 func (r *metricRepo) ListMetricRecordsByMetricID(metricID int32) ([]domain.MetricRecord, error) {

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
@@ -42,13 +42,20 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 	db := dao.Db()
 
 	end := time.Now().UTC()
-	seed := &domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC(), EndTime: &end, Remark: "before"}
+	remark := "before"
+	seed := &gen.Timelog{
+		UserID:     int32Ptr(1),
+		CategoryID: 1,
+		StartTime:  time.Now().UTC(),
+		EndTime:    &end,
+		Remark:     &remark,
+	}
 	if err := model.CreateTimeLog(db, seed); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
 	updated, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{
-		ID:     seed.ID,
+		ID:     *seed.ID,
 		Remark: "after",
 	})
 	if err != nil {
@@ -61,8 +68,19 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 
 func seedTestCategory(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	cat := &domain.Category{Name: "test", Level: 1}
+	name := "test"
+	path := "/"
+	level := int32(1)
+	cat := &gen.Category{
+		Name:  name,
+		Path:  &path,
+		Level: &level,
+	}
 	if err := model.CreateCategory(dao.Db(), cat); err != nil {
 		t.Fatalf("seed category: %v", err)
 	}
+}
+
+func int32Ptr(v int32) *int32 {
+	return &v
 }

@@ -255,7 +255,7 @@ func passkeyDeleteCredentialHandler(deps Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		if err := deps.Service.DeletePasskeyCredential(id); err != nil {
+		if err := deps.Service.DeletePasskeyCredential(int32(id)); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}

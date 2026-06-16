@@ -13,14 +13,14 @@ func MetricToProto(m *domain.Metric) *timelogv1.Metric {
 	return &timelogv1.Metric{
 		Id:             m.ID,
 		Name:           m.Name,
-		Description:    &m.Description,
+		Description:    m.Description,
 		MetricType:     m.MetricType,
 		Unit:           m.Unit,
 		CurrentValue:   m.CurrentValue,
 		LastRecordedAt: optionalString(FormatTimeUTCPtr(m.LastRecordedAt)),
-		Extra:          &m.Extra,
-		CreatedAt:      optionalString(FormatTimeUTC(m.CreatedAt)),
-		UpdatedAt:      optionalString(FormatTimeUTC(m.UpdatedAt)),
+		Extra:          optionalString(m.Extra),
+		CreatedAt:      FormatTimeUTC(m.CreatedAt),
+		UpdatedAt:      FormatTimeUTC(m.UpdatedAt),
 	}
 }
 
@@ -42,7 +42,7 @@ func MetricRecordToProto(r *domain.MetricRecord) *timelogv1.MetricRecord {
 		Value:      r.Value,
 		Source:     &r.Source,
 		RecordedAt: optionalString(FormatTimeUTCPtr(r.RecordedAt)),
-		CreatedAt:  optionalString(FormatTimeUTC(r.CreatedAt)),
+		CreatedAt:  FormatTimeUTC(r.CreatedAt),
 	}
 }
 
@@ -63,7 +63,7 @@ func MetricFromCreateRequest(req *timelogv1.CreateMetricRequest) *domain.Metric 
 		Description: req.Description,
 		MetricType:  req.MetricType,
 		Unit:        req.Unit,
-		Extra:       req.Extra,
+		Extra:       req.GetExtra(),
 	}
 }
 

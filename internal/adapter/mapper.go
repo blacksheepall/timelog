@@ -43,15 +43,19 @@ func toGenTimelog(d *domain.TimeLog) *gen.Timelog {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
-	userID := d.UserID
 	g := &gen.Timelog{
-		ID:         &id,
-		UserID:     &userID,
 		StartTime:  d.StartTime,
 		CategoryID: d.CategoryID,
 		CreatedAt:  d.CreatedAt,
 		UpdatedAt:  d.UpdatedAt,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
+	}
+	if d.UserID != 0 {
+		userID := d.UserID
+		g.UserID = &userID
 	}
 	if d.EndTime != nil {
 		g.EndTime = d.EndTime
@@ -114,12 +118,14 @@ func toGenCategory(d *domain.Category) *gen.Category {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
 	g := &gen.Category{
-		ID:        &id,
 		Name:      d.Name,
 		CreatedAt: d.CreatedAt,
 		UpdatedAt: d.UpdatedAt,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
 	}
 	if d.Color != "" {
 		g.Color = &d.Color
@@ -221,13 +227,15 @@ func toGenTask(d *domain.Task) *gen.Task {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
 	g := &gen.Task{
-		ID:               &id,
 		Title:            d.Title,
 		CategoryID:       d.CategoryID,
 		DueDate:          d.DueDate,
 		EstimatedMinutes: d.EstimatedMinutes,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
 	}
 	if d.Description != "" {
 		g.Description = &d.Description
@@ -279,6 +287,15 @@ func toDomainConstraint(g *gen.Constraint) *domain.Constraint {
 	if g.IsActive != nil {
 		d.IsActive = *g.IsActive
 	}
+	if g.MetricID != nil {
+		d.MetricID = g.MetricID
+	}
+	if g.MetricOperator != nil {
+		d.MetricOperator = g.MetricOperator
+	}
+	if g.MetricTargetValue != nil {
+		d.MetricTargetValue = g.MetricTargetValue
+	}
 	if g.CreatedAt != nil {
 		d.CreatedAt = *g.CreatedAt
 	}
@@ -292,12 +309,14 @@ func toGenConstraint(d *domain.Constraint) *gen.Constraint {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
 	g := &gen.Constraint{
-		ID:              &id,
 		Description:     d.Description,
 		PunishmentQuote: d.PunishmentQuote,
 		StartDate:       d.StartDate,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
 	}
 	if d.EndReason != "" {
 		g.EndReason = &d.EndReason
@@ -307,6 +326,9 @@ func toGenConstraint(d *domain.Constraint) *gen.Constraint {
 	}
 	isActive := d.IsActive
 	g.IsActive = &isActive
+	g.MetricID = d.MetricID
+	g.MetricOperator = d.MetricOperator
+	g.MetricTargetValue = d.MetricTargetValue
 	g.CreatedAt = &d.CreatedAt
 	g.UpdatedAt = &d.UpdatedAt
 	return g
@@ -364,12 +386,14 @@ func toGenMetric(d *domain.Metric) *gen.Metric {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
 	g := &gen.Metric{
-		ID:     &id,
-		Name:   d.Name,
+		Name:       d.Name,
 		MetricType: d.MetricType,
-		Unit:   d.Unit,
+		Unit:       d.Unit,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
 	}
 	if d.Description != "" {
 		g.Description = &d.Description
@@ -427,11 +451,13 @@ func toGenMetricRecord(d *domain.MetricRecord) *gen.MetricRecord {
 	if d == nil {
 		return nil
 	}
-	id := d.ID
 	g := &gen.MetricRecord{
-		ID:       &id,
 		MetricID: d.MetricID,
 		Value:    d.Value,
+	}
+	if d.ID != 0 {
+		id := d.ID
+		g.ID = &id
 	}
 	if d.Source != "" {
 		g.Source = &d.Source

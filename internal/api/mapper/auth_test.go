@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 func TestPasskeyCredentialToProto(t *testing.T) {
-	credential := &model.WebAuthnCredential{
+	credential := &domain.PasskeyCredential{
 		ID:         42,
 		DeviceName: "Laptop",
 		CreatedAt:  time.Date(2026, 5, 30, 12, 0, 0, 0, time.UTC),

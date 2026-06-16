@@ -14,15 +14,15 @@ func TaskToProto(t *domain.Task) *timelogv1.Task {
 	return &timelogv1.Task{
 		Id:               t.ID,
 		Title:            t.Title,
-		Description:      &t.Description,
+		Description:      t.Description,
 		CategoryId:       t.CategoryID,
 		DueDate:          FormatDate(t.DueDate),
 		EstimatedMinutes: t.EstimatedMinutes,
 		IsCompleted:      t.IsCompleted,
 		CompletedAt:      optionalString(FormatTimeUTCPtr(t.CompletedAt)),
 		IsSuspended:      t.IsSuspended,
-		CreatedAt:        optionalString(FormatTimeUTC(t.CreatedAt)),
-		UpdatedAt:        optionalString(FormatTimeUTC(t.UpdatedAt)),
+		CreatedAt:        FormatTimeUTC(t.CreatedAt),
+		UpdatedAt:        FormatTimeUTC(t.UpdatedAt),
 	}
 }
 

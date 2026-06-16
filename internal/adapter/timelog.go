@@ -18,7 +18,12 @@ func newTimelogRepo(db model.DBProvider) *timelogRepo {
 }
 
 func (r *timelogRepo) CreateTimeLog(tl *domain.TimeLog) error {
-	return model.CreateTimeLog(r.db.Db(), toGenTimelog(tl))
+	g := toGenTimelog(tl)
+	if err := model.CreateTimeLog(r.db.Db(), g); err != nil {
+		return err
+	}
+	*tl = *toDomainTimelog(g)
+	return nil
 }
 
 func (r *timelogRepo) GetTimeLogByID(id int32) (*domain.TimeLog, error) {

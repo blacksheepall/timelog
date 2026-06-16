@@ -20,7 +20,12 @@ func newTaskRepo(db model.DBProvider) *taskRepo {
 }
 
 func (r *taskRepo) CreateTask(task *domain.Task) error {
-	return model.CreateTask(r.db.Db(), toGenTask(task))
+	g := toGenTask(task)
+	if err := model.CreateTask(r.db.Db(), g); err != nil {
+		return err
+	}
+	*task = *toDomainTask(g)
+	return nil
 }
 
 func (r *taskRepo) GetTaskByID(id int32) (*domain.Task, error) {

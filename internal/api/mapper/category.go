@@ -15,12 +15,12 @@ func CategoryToProto(c *domain.Category) *timelogv1.Category {
 	return &timelogv1.Category{
 		Id:          c.ID,
 		Name:        c.Name,
-		Color:       &c.Color,
-		Description: &c.Description,
+		Color:       c.Color,
+		Description: c.Description,
 		ParentId:    c.ParentID,
 		Level:       c.Level,
 		SortOrder:   c.SortOrder,
-		Path:        &c.Path,
+		Path:        c.Path,
 		CreatedAt:   FormatTimeUTC(c.CreatedAt),
 		UpdatedAt:   FormatTimeUTC(c.UpdatedAt),
 	}

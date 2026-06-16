@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 func TestListTasksByCompletionStatusFilters(t *testing.T) {
@@ -14,17 +14,21 @@ func TestListTasksByCompletionStatusFilters(t *testing.T) {
 	seedTestCategory(t, dao)
 	db := dao.Db()
 
-	pending := &domain.Task{
-		Title:      "pending",
-		CategoryID: 1,
-		DueDate:    time.Now(),
+	pending := &gen.Task{
+		Title:            "pending",
+		CategoryID:       1,
+		DueDate:          time.Now(),
+		EstimatedMinutes: 30,
 	}
-	done := &domain.Task{
-		Title:       "done",
-		CategoryID:  1,
-		DueDate:     time.Now(),
-		IsCompleted: true,
+	done := &gen.Task{
+		Title:            "done",
+		CategoryID:       1,
+		DueDate:          time.Now(),
+		EstimatedMinutes: 30,
 	}
+	doneIsCompleted := true
+	done.IsCompleted = &doneIsCompleted
+
 	if err := model.CreateTask(db, done); err != nil {
 		t.Fatalf("seed done: %v", err)
 	}

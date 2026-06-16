@@ -20,7 +20,12 @@ func newConstraintRepo(db model.DBProvider) *constraintRepo {
 }
 
 func (r *constraintRepo) CreateConstraint(constraint *domain.Constraint) error {
-	return model.CreateConstraint(r.db.Db(), toGenConstraint(constraint))
+	g := toGenConstraint(constraint)
+	if err := model.CreateConstraint(r.db.Db(), g); err != nil {
+		return err
+	}
+	*constraint = *toDomainConstraint(g)
+	return nil
 }
 
 func (r *constraintRepo) GetConstraintByID(id int32) (*domain.Constraint, error) {

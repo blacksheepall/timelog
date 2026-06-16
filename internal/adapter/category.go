@@ -18,7 +18,12 @@ func newCategoryRepo(db model.DBProvider) *categoryRepo {
 }
 
 func (r *categoryRepo) CreateCategory(category *domain.Category) error {
-	return model.CreateCategory(r.db.Db(), toGenCategory(category))
+	g := toGenCategory(category)
+	if err := model.CreateCategory(r.db.Db(), g); err != nil {
+		return err
+	}
+	*category = *toDomainCategory(g)
+	return nil
 }
 
 func (r *categoryRepo) GetCategoryByID(id int32) (*domain.Category, error) {

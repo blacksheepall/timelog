@@ -20,8 +20,8 @@ func ConstraintToProto(c *domain.Constraint) *timelogv1.Constraint {
 		MetricId:          c.MetricID,
 		MetricOperator:    c.MetricOperator,
 		MetricTargetValue: c.MetricTargetValue,
-		CreatedAt:         optionalString(FormatTimeUTC(c.CreatedAt)),
-		UpdatedAt:         optionalString(FormatTimeUTC(c.UpdatedAt)),
+		CreatedAt:         FormatTimeUTC(c.CreatedAt),
+		UpdatedAt:         FormatTimeUTC(c.UpdatedAt),
 	}
 }
 
