@@ -2,10 +2,10 @@ package mapper
 
 import (
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
-func PasskeyCredentialToProto(credential *model.WebAuthnCredential) *timelogv1.PasskeyCredential {
+func PasskeyCredentialToProto(credential *domain.PasskeyCredential) *timelogv1.PasskeyCredential {
 	if credential == nil {
 		return nil
 	}
@@ -16,7 +16,7 @@ func PasskeyCredentialToProto(credential *model.WebAuthnCredential) *timelogv1.P
 	}
 }
 
-func PasskeyCredentialsToProto(credentials []model.WebAuthnCredential) []*timelogv1.PasskeyCredential {
+func PasskeyCredentialsToProto(credentials []domain.PasskeyCredential) []*timelogv1.PasskeyCredential {
 	out := make([]*timelogv1.PasskeyCredential, 0, len(credentials))
 	for i := range credentials {
 		out = append(out, PasskeyCredentialToProto(&credentials[i]))

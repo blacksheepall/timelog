@@ -2,29 +2,29 @@ package mapper
 
 import (
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/service"
 )
 
-func MetricToProto(m *gen.Metric) *timelogv1.Metric {
+func MetricToProto(m *domain.Metric) *timelogv1.Metric {
 	if m == nil {
 		return nil
 	}
 	return &timelogv1.Metric{
-		Id:             Int32Value(m.ID),
+		Id:             m.ID,
 		Name:           m.Name,
-		Description:    StringValue(m.Description),
+		Description:    &m.Description,
 		MetricType:     m.MetricType,
 		Unit:           m.Unit,
 		CurrentValue:   m.CurrentValue,
 		LastRecordedAt: optionalString(FormatTimeUTCPtr(m.LastRecordedAt)),
-		Extra:          m.Extra,
-		CreatedAt:      FormatTimeUTCPtr(m.CreatedAt),
-		UpdatedAt:      FormatTimeUTCPtr(m.UpdatedAt),
+		Extra:          &m.Extra,
+		CreatedAt:      optionalString(FormatTimeUTC(m.CreatedAt)),
+		UpdatedAt:      optionalString(FormatTimeUTC(m.UpdatedAt)),
 	}
 }
 
-func MetricsToProto(metrics []gen.Metric) []*timelogv1.Metric {
+func MetricsToProto(metrics []domain.Metric) []*timelogv1.Metric {
 	out := make([]*timelogv1.Metric, 0, len(metrics))
 	for i := range metrics {
 		out = append(out, MetricToProto(&metrics[i]))
@@ -32,21 +32,21 @@ func MetricsToProto(metrics []gen.Metric) []*timelogv1.Metric {
 	return out
 }
 
-func MetricRecordToProto(r *gen.MetricRecord) *timelogv1.MetricRecord {
+func MetricRecordToProto(r *domain.MetricRecord) *timelogv1.MetricRecord {
 	if r == nil {
 		return nil
 	}
 	return &timelogv1.MetricRecord{
-		Id:         Int32Value(r.ID),
+		Id:         r.ID,
 		MetricId:   r.MetricID,
 		Value:      r.Value,
-		Source:     r.Source,
+		Source:     &r.Source,
 		RecordedAt: optionalString(FormatTimeUTCPtr(r.RecordedAt)),
-		CreatedAt:  FormatTimeUTCPtr(r.CreatedAt),
+		CreatedAt:  optionalString(FormatTimeUTC(r.CreatedAt)),
 	}
 }
 
-func MetricRecordsToProto(records []gen.MetricRecord) []*timelogv1.MetricRecord {
+func MetricRecordsToProto(records []domain.MetricRecord) []*timelogv1.MetricRecord {
 	out := make([]*timelogv1.MetricRecord, 0, len(records))
 	for i := range records {
 		out = append(out, MetricRecordToProto(&records[i]))
@@ -54,20 +54,20 @@ func MetricRecordsToProto(records []gen.MetricRecord) []*timelogv1.MetricRecord 
 	return out
 }
 
-func MetricFromCreateRequest(req *timelogv1.CreateMetricRequest) *gen.Metric {
+func MetricFromCreateRequest(req *timelogv1.CreateMetricRequest) *domain.Metric {
 	if req == nil {
 		return nil
 	}
-	return &gen.Metric{
+	return &domain.Metric{
 		Name:        req.Name,
-		Description: &req.Description,
+		Description: req.Description,
 		MetricType:  req.MetricType,
 		Unit:        req.Unit,
 		Extra:       req.Extra,
 	}
 }
 
-func ApplyMetricUpdate(m *gen.Metric, req *timelogv1.UpdateMetricRequest) {
+func ApplyMetricUpdate(m *domain.Metric, req *timelogv1.UpdateMetricRequest) {
 	if m == nil || req == nil {
 		return
 	}
@@ -75,7 +75,7 @@ func ApplyMetricUpdate(m *gen.Metric, req *timelogv1.UpdateMetricRequest) {
 		m.Name = req.GetName()
 	}
 	if req.Description != nil {
-		m.Description = req.Description
+		m.Description = req.GetDescription()
 	}
 	if req.MetricType != nil {
 		m.MetricType = req.GetMetricType()
@@ -84,7 +84,7 @@ func ApplyMetricUpdate(m *gen.Metric, req *timelogv1.UpdateMetricRequest) {
 		m.Unit = req.GetUnit()
 	}
 	if req.Extra != nil {
-		m.Extra = req.Extra
+		m.Extra = req.GetExtra()
 	}
 }
 

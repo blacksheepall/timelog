@@ -4,29 +4,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 func TestTaskToProtoFormatsDateAndOptionalTime(t *testing.T) {
-	id := int32(5)
-	description := "Write tests"
-	completed := true
-	suspended := false
 	completedAt := time.Date(2026, 5, 30, 12, 0, 0, 0, time.UTC)
-	createdAt := time.Date(2026, 5, 29, 12, 0, 0, 0, time.UTC)
-	updatedAt := time.Date(2026, 5, 30, 13, 0, 0, 0, time.UTC)
-	task := &gen.Task{
-		ID:               &id,
+	task := &domain.Task{
+		ID:               5,
 		Title:            "IDL",
-		Description:      &description,
+		Description:      "Write tests",
 		CategoryID:       3,
 		DueDate:          time.Date(2026, 5, 30, 0, 0, 0, 0, time.UTC),
 		EstimatedMinutes: 90,
-		IsCompleted:      &completed,
+		IsCompleted:      true,
 		CompletedAt:      &completedAt,
-		IsSuspended:      &suspended,
-		CreatedAt:        &createdAt,
-		UpdatedAt:        &updatedAt,
+		IsSuspended:      false,
+		CreatedAt:        time.Date(2026, 5, 29, 12, 0, 0, 0, time.UTC),
+		UpdatedAt:        time.Date(2026, 5, 30, 13, 0, 0, 0, time.UTC),
 	}
 	got := TaskToProto(task)
 	if got.GetDueDate() != "2026-05-30" || got.GetCompletedAt() != "2026-05-30T12:00:00Z" || got.GetIsSuspended() {

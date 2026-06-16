@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
@@ -25,8 +25,8 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
 	}
-	if created.UserID == nil || *created.UserID != 1 {
-		t.Fatalf("expected default user_id 1, got %+v", created.UserID)
+	if created.UserID != 1 {
+		t.Fatalf("expected default user_id 1, got %d", created.UserID)
 	}
 	loc := timeutil.GetSingaporeLocation()
 	wantStart := time.Date(2026, 5, 29, 10, 0, 0, 0, loc).UTC()
@@ -41,29 +41,27 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 	seedTestCategory(t, dao)
 	db := dao.Db()
 
-	remark := "before"
 	end := time.Now().UTC()
-	seed := &gen.Timelog{CategoryID: 1, StartTime: time.Now().UTC(), EndTime: &end, Remark: &remark}
+	seed := &domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC(), EndTime: &end, Remark: "before"}
 	if err := model.CreateTimeLog(db, seed); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
 	updated, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{
-		ID:     *seed.ID,
+		ID:     seed.ID,
 		Remark: "after",
 	})
 	if err != nil {
 		t.Fatalf("UpdateTimeLogFromMCPInput: %v", err)
 	}
-	if updated.Remark == nil || *updated.Remark != "after" {
-		t.Fatalf("remark not updated: %+v", updated.Remark)
+	if updated.Remark != "after" {
+		t.Fatalf("remark not updated: %s", updated.Remark)
 	}
 }
 
 func seedTestCategory(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	level := int32(1)
-	cat := &gen.Category{Name: "test", Level: &level}
+	cat := &domain.Category{Name: "test", Level: 1}
 	if err := model.CreateCategory(dao.Db(), cat); err != nil {
 		t.Fatalf("seed category: %v", err)
 	}

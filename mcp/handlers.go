@@ -133,15 +133,13 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 
 	var result []map[string]interface{}
 	for _, task := range tasks {
-		isCompleted := task.IsCompleted != nil && *task.IsCompleted
-
 		categoryName := ""
 		categoryColor := ""
 		if task.CategoryID > 0 {
 			if cat, err := server.service.GetCategoryByID(int32(task.CategoryID)); err == nil && cat != nil {
 				categoryName = cat.Name
-				if cat.Color != nil {
-					categoryColor = *cat.Color
+				if cat.Color != "" {
+					categoryColor = cat.Color
 				}
 			}
 		}
@@ -154,8 +152,8 @@ func GetTasksByStatus(ctx context.Context, req *mcp.CallToolRequest, args TaskSt
 			"category_color":    categoryColor,
 			"due_date":          service.FormatSGDate(task.DueDate),
 			"estimated_minutes": task.EstimatedMinutes,
-			"is_completed":      isCompleted,
-			"created_at":        service.FormatSGDateTimePtr(task.CreatedAt),
+			"is_completed":      task.IsCompleted,
+			"created_at":        service.FormatSGDateTime(task.CreatedAt),
 		}
 
 		if task.CompletedAt != nil {
@@ -182,22 +180,20 @@ func GetActiveConstraints(ctx context.Context, req *mcp.CallToolRequest, args Co
 
 	var result []map[string]interface{}
 	for _, constraint := range constraints {
-		isActive := constraint.IsActive != nil && *constraint.IsActive
-
 		entry := map[string]interface{}{
 			"id":               constraint.ID,
 			"description":      constraint.Description,
 			"punishment_quote": constraint.PunishmentQuote,
 			"start_date":       service.FormatSGDate(constraint.StartDate),
-			"is_active":        isActive,
-			"created_at":       service.FormatSGDateTimePtr(constraint.CreatedAt),
+			"is_active":        constraint.IsActive,
+			"created_at":       service.FormatSGDateTime(constraint.CreatedAt),
 		}
 
 		if constraint.EndDate != nil {
 			entry["end_date"] = service.FormatSGDate(*constraint.EndDate)
 		}
-		if constraint.EndReason != nil && *constraint.EndReason != "" {
-			entry["end_reason"] = *constraint.EndReason
+		if constraint.EndReason != "" {
+			entry["end_reason"] = constraint.EndReason
 		}
 
 		result = append(result, entry)
@@ -222,13 +218,10 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 		entry := map[string]interface{}{
 			"id":    cat.ID,
 			"name":  cat.Name,
-			"level": int32(1),
+			"level": cat.Level,
 		}
-		if cat.Level != nil {
-			entry["level"] = *cat.Level
-		}
-		if cat.Color != nil {
-			entry["color"] = *cat.Color
+		if cat.Color != "" {
+			entry["color"] = cat.Color
 		}
 		if cat.ParentID != nil && *cat.ParentID > 0 {
 			entry["parent_id"] = *cat.ParentID
@@ -257,7 +250,7 @@ func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTim
 	}
 
 	response := map[string]interface{}{
-		"id":          *createdLog.ID,
+		"id":          createdLog.ID,
 		"category_id": createdLog.CategoryID,
 		"start_time":  service.FormatSGDateTime(createdLog.StartTime),
 		"remark":      createdLog.Remark,
@@ -286,7 +279,7 @@ func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTim
 	}
 
 	response := map[string]interface{}{
-		"id":          *updatedLog.ID,
+		"id":          updatedLog.ID,
 		"category_id": updatedLog.CategoryID,
 		"start_time":  service.FormatSGDateTime(updatedLog.StartTime),
 		"remark":      updatedLog.Remark,
@@ -313,7 +306,7 @@ func RecordMetric(ctx context.Context, req *mcp.CallToolRequest, args RecordMetr
 	}
 
 	response := map[string]interface{}{
-		"id":            *metric.ID,
+		"id":            metric.ID,
 		"name":          metric.Name,
 		"current_value": metric.CurrentValue,
 		"unit":          metric.Unit,
@@ -333,7 +326,7 @@ func IncrementMetric(ctx context.Context, req *mcp.CallToolRequest, args Increme
 	}
 
 	response := map[string]interface{}{
-		"id":            *metric.ID,
+		"id":            metric.ID,
 		"name":          metric.Name,
 		"current_value": metric.CurrentValue,
 		"unit":          metric.Unit,
@@ -348,7 +341,7 @@ func GetMetric(ctx context.Context, req *mcp.CallToolRequest, args GetMetricPara
 	}
 
 	response := map[string]interface{}{
-		"id":            *metric.ID,
+		"id":            metric.ID,
 		"name":          metric.Name,
 		"metric_type":   metric.MetricType,
 		"unit":          metric.Unit,
@@ -366,7 +359,7 @@ func ListMetrics(ctx context.Context, req *mcp.CallToolRequest, args ListMetrics
 	var result []map[string]interface{}
 	for _, m := range metrics {
 		result = append(result, map[string]interface{}{
-			"id":            *m.ID,
+			"id":            m.ID,
 			"name":          m.Name,
 			"metric_type":   m.MetricType,
 			"unit":          m.Unit,

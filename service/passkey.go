@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/blacksheepaul/timelog/pkg/temppassword"
 	"github.com/go-webauthn/webauthn/protocol"
@@ -67,8 +67,37 @@ func (s *Service) LoadPasskeySession(sessionID string) (*webauthn.SessionData, e
 	return session, nil
 }
 
-func (s *Service) CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*model.WebAuthnCredential, error) {
-	record := model.WebAuthnCredentialFromCredential(credential)
+func passkeyCredentialFromWebAuthn(credential *webauthn.Credential) *domain.PasskeyCredential {
+	if credential == nil {
+		return nil
+	}
+	transport := ""
+	if len(credential.Transport) > 0 {
+		transport = string(credential.Transport[0])
+	}
+	return &domain.PasskeyCredential{
+		CredentialID:                  credential.ID,
+		PublicKey:                     credential.PublicKey,
+		AttestationType:               credential.AttestationType,
+		Transport:                     transport,
+		UserPresent:                   credential.Flags.UserPresent,
+		UserVerified:                  credential.Flags.UserVerified,
+		BackupEligible:                credential.Flags.BackupEligible,
+		BackupState:                   credential.Flags.BackupState,
+		AuthenticatorAaguid:           credential.Authenticator.AAGUID,
+		AuthenticatorSignCount:        int32(credential.Authenticator.SignCount),
+		AuthenticatorCloneWarning:     credential.Authenticator.CloneWarning,
+		AuthenticatorAttachment:       string(credential.Authenticator.Attachment),
+		AttestationClientDataJSON:     credential.Attestation.ClientDataJSON,
+		AttestationClientDataHash:     credential.Attestation.ClientDataHash,
+		AttestationAuthenticatorData:  credential.Attestation.AuthenticatorData,
+		AttestationPublicKeyAlgorithm: int32(credential.Attestation.PublicKeyAlgorithm),
+		AttestationObject:             credential.Attestation.Object,
+	}
+}
+
+func (s *Service) CreatePasskeyCredential(credential *webauthn.Credential, deviceName string) (*domain.PasskeyCredential, error) {
+	record := passkeyCredentialFromWebAuthn(credential)
 	if record == nil {
 		return nil, errs.ErrPasskeyCredentialNil
 	}
@@ -79,15 +108,15 @@ func (s *Service) CreatePasskeyCredential(credential *webauthn.Credential, devic
 	return record, nil
 }
 
-func (s *Service) ListPasskeyCredentials() ([]model.WebAuthnCredential, error) {
+func (s *Service) ListPasskeyCredentials() ([]domain.PasskeyCredential, error) {
 	return s.passkeyRepo.ListWebAuthnCredentials()
 }
 
-func (s *Service) DeletePasskeyCredential(id uint) error {
+func (s *Service) DeletePasskeyCredential(id int32) error {
 	return s.passkeyRepo.DeleteWebAuthnCredential(id)
 }
 
-func (s *Service) LoadPasskeyCredentialByID(rawID []byte) (*model.WebAuthnCredential, error) {
+func (s *Service) LoadPasskeyCredentialByID(rawID []byte) (*domain.PasskeyCredential, error) {
 	return s.passkeyRepo.GetWebAuthnCredentialByCredentialID(rawID)
 }
 
@@ -109,13 +138,13 @@ func (s *Service) GenerateTempPassword() (string, string, error) {
 	return temppassword.GeneratePassword()
 }
 
-func (s *Service) CreateTempPassword(ttlSeconds int) (*model.TempPassword, string, error) {
+func (s *Service) CreateTempPassword(ttlSeconds int) (*domain.TempPassword, string, error) {
 	password, hash, err := s.GenerateTempPassword()
 	if err != nil {
 		return nil, "", err
 	}
 
-	record := &model.TempPassword{
+	record := &domain.TempPassword{
 		PasswordHash: hash,
 		ExpiresAt:    time.Now().Add(time.Duration(ttlSeconds) * time.Second),
 	}
@@ -126,11 +155,11 @@ func (s *Service) CreateTempPassword(ttlSeconds int) (*model.TempPassword, strin
 	return record, password, nil
 }
 
-func (s *Service) ListTempPasswords() ([]model.TempPassword, error) {
+func (s *Service) ListTempPasswords() ([]domain.TempPassword, error) {
 	return s.tempPasswordRepo.ListTempPasswords()
 }
 
-func (s *Service) DeleteTempPassword(id uint) error {
+func (s *Service) DeleteTempPassword(id int32) error {
 	return s.tempPasswordRepo.DeleteTempPassword(id)
 }
 
@@ -138,7 +167,7 @@ func (s *Service) CleanupExpiredTempPasswords() error {
 	return s.tempPasswordRepo.DeleteExpiredTempPasswords(time.Now())
 }
 
-func (s *Service) ValidateTempPassword(password string) (*model.TempPassword, error) {
+func (s *Service) ValidateTempPassword(password string) (*domain.TempPassword, error) {
 	hash := temppassword.HashPassword(password)
 	return s.tempPasswordRepo.GetTempPasswordByHash(hash, time.Now())
 }

@@ -6,7 +6,7 @@ import (
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,7 +42,7 @@ func createConstraintHandler(deps Dependencies) gin.HandlerFunc {
 		}
 
 		// 重新查询以获取完整信息
-		if createdConstraint, err := deps.Service.GetConstraintByID(*constraint.ID); err == nil {
+		if createdConstraint, err := deps.Service.GetConstraintByID(constraint.ID); err == nil {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(createdConstraint), "Constraint created successfully"))
 		} else {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.ConstraintToProto(constraint), "Constraint created successfully"))
@@ -54,7 +54,7 @@ func listConstraintsHandler(deps Dependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		activeStr := c.Query("active")
 
-		var constraints []gen.Constraint
+		var constraints []domain.Constraint
 		var err error
 
 		if activeStr == "true" {

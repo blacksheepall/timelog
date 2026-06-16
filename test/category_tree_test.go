@@ -3,7 +3,7 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 func TestCategoryTreeStructure(t *testing.T) {
@@ -13,24 +13,24 @@ func TestCategoryTreeStructure(t *testing.T) {
 	svc := getTestService()
 
 	// Create test hierarchy: Root -> Child -> Grandchild
-	root := &gen.Category{
+	root := &domain.Category{
 		Name: "Root Category",
 	}
 	if err := svc.CreateCategory(root); err != nil {
 		t.Fatalf("Failed to create root category: %v", err)
 	}
 
-	child := &gen.Category{
+	child := &domain.Category{
 		Name:     "Child Category",
-		ParentID: root.ID,
+		ParentID: &root.ID,
 	}
 	if err := svc.CreateCategory(child); err != nil {
 		t.Fatalf("Failed to create child category: %v", err)
 	}
 
-	grandchild := &gen.Category{
+	grandchild := &domain.Category{
 		Name:     "Grandchild Category",
-		ParentID: child.ID,
+		ParentID: &child.ID,
 	}
 	if err := svc.CreateCategory(grandchild); err != nil {
 		t.Fatalf("Failed to create grandchild category: %v", err)
@@ -74,14 +74,13 @@ func TestCategoryTreeStructure(t *testing.T) {
 		t.Errorf("Expected grandchild to have no children, got %d", len(grandchildNode.Children))
 	}
 
-	// Verify pointers are preserved (this is the key test)
-	// If pointers weren't used, the children arrays would be empty or incomplete
-	if *rootNode.Children[0].Category.ID != *child.ID {
-		t.Error("Child node ID doesn't match expected child ID - pointer reference may be lost")
+	// Verify IDs are preserved
+	if rootNode.Children[0].Category.ID != child.ID {
+		t.Error("Child node ID doesn't match expected child ID")
 	}
 
-	if *rootNode.Children[0].Children[0].Category.ID != *grandchild.ID {
-		t.Error("Grandchild node ID doesn't match expected grandchild ID - pointer reference may be lost")
+	if rootNode.Children[0].Children[0].Category.ID != grandchild.ID {
+		t.Error("Grandchild node ID doesn't match expected grandchild ID")
 	}
 }
 
@@ -92,31 +91,31 @@ func TestCategoryTreeMultipleRoots(t *testing.T) {
 	svc := getTestService()
 
 	// Create multiple root categories with children
-	root1 := &gen.Category{
+	root1 := &domain.Category{
 		Name: "Root 1",
 	}
 	if err := svc.CreateCategory(root1); err != nil {
 		t.Fatalf("Failed to create root1: %v", err)
 	}
 
-	child1 := &gen.Category{
+	child1 := &domain.Category{
 		Name:     "Child 1",
-		ParentID: root1.ID,
+		ParentID: &root1.ID,
 	}
 	if err := svc.CreateCategory(child1); err != nil {
 		t.Fatalf("Failed to create child1: %v", err)
 	}
 
-	root2 := &gen.Category{
+	root2 := &domain.Category{
 		Name: "Root 2",
 	}
 	if err := svc.CreateCategory(root2); err != nil {
 		t.Fatalf("Failed to create root2: %v", err)
 	}
 
-	child2 := &gen.Category{
+	child2 := &domain.Category{
 		Name:     "Child 2",
-		ParentID: root2.ID,
+		ParentID: &root2.ID,
 	}
 	if err := svc.CreateCategory(child2); err != nil {
 		t.Fatalf("Failed to create child2: %v", err)

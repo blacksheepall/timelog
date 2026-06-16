@@ -6,7 +6,7 @@ import (
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,7 +37,7 @@ func createTimeLogHandler(deps Dependencies) gin.HandlerFunc {
 		}
 
 		// 重新查询以获取完整信息
-		createdLog, err := deps.Service.GetTimeLogByID(*tl.ID)
+		createdLog, err := deps.Service.GetTimeLogByID(tl.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
@@ -52,7 +52,7 @@ func listTimeLogsHandler(deps Dependencies) gin.HandlerFunc {
 		limitStr := c.Query("limit")
 		orderBy := c.Query("order")
 
-		var tls []gen.Timelog
+		var tls []domain.TimeLog
 		var err error
 
 		if limitStr != "" || orderBy != "" {
@@ -117,14 +117,14 @@ func updateTimeLogHandler(deps Dependencies) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
 		}
-		existing.ID = &id
+		existing.ID = id
 		if err := deps.Service.UpdateTimeLog(existing); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
 
 		// 重新查询以获取完整信息
-		updatedLog, err := deps.Service.GetTimeLogByID(*existing.ID)
+		updatedLog, err := deps.Service.GetTimeLogByID(existing.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return

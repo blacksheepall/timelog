@@ -32,7 +32,7 @@ func createMetricHandler(deps Dependencies) gin.HandlerFunc {
 			return
 		}
 
-		if created, err := deps.Service.GetMetricByID(*metric.ID); err == nil {
+		if created, err := deps.Service.GetMetricByID(metric.ID); err == nil {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.MetricToProto(created), "Metric created successfully"))
 		} else {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.MetricToProto(metric), "Metric created successfully"))

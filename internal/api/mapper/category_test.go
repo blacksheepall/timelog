@@ -6,7 +6,7 @@ import (
 	"time"
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 )
 
@@ -39,22 +39,16 @@ func TestCategoryFromCreateRequestRejectsClientLevel(t *testing.T) {
 }
 
 func TestCategoryToProtoKeepsSnakeCaseFields(t *testing.T) {
-	id := int32(7)
 	parentID := int32(3)
-	level := int32(1)
-	sortOrder := int32(2)
-	color := "#3366ff"
-	description := "Deep work"
-	path := "/3"
-	c := &gen.Category{
-		ID:          &id,
+	c := &domain.Category{
+		ID:          7,
 		Name:        "Coding",
-		Color:       &color,
-		Description: &description,
+		Color:       "#3366ff",
+		Description: "Deep work",
 		ParentID:    &parentID,
-		Level:       &level,
-		SortOrder:   &sortOrder,
-		Path:        &path,
+		Level:       1,
+		SortOrder:   2,
+		Path:        "/3",
 		CreatedAt:   time.Date(2026, 5, 30, 12, 0, 0, 0, time.UTC),
 		UpdatedAt:   time.Date(2026, 5, 30, 13, 0, 0, 0, time.UTC),
 	}

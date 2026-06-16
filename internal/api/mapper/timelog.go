@@ -2,26 +2,26 @@ package mapper
 
 import (
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
-func TimelogToProto(t *gen.Timelog) *timelogv1.Timelog {
+func TimelogToProto(t *domain.TimeLog) *timelogv1.Timelog {
 	if t == nil {
 		return nil
 	}
 	return &timelogv1.Timelog{
-		Id:         Int32Value(t.ID),
+		Id:         t.ID,
 		StartTime:  FormatTimeUTC(t.StartTime),
 		EndTime:    optionalString(FormatTimeUTCPtr(t.EndTime)),
 		CategoryId: t.CategoryID,
 		TaskId:     t.TaskID,
-		Remark:     t.Remark,
+		Remark:     &t.Remark,
 		CreatedAt:  FormatTimeUTC(t.CreatedAt),
 		UpdatedAt:  FormatTimeUTC(t.UpdatedAt),
 	}
 }
 
-func TimelogsToProto(logs []gen.Timelog) []*timelogv1.Timelog {
+func TimelogsToProto(logs []domain.TimeLog) []*timelogv1.Timelog {
 	out := make([]*timelogv1.Timelog, 0, len(logs))
 	for i := range logs {
 		out = append(out, TimelogToProto(&logs[i]))
@@ -29,7 +29,7 @@ func TimelogsToProto(logs []gen.Timelog) []*timelogv1.Timelog {
 	return out
 }
 
-func TimelogFromCreateRequest(req *timelogv1.CreateTimelogRequest) (*gen.Timelog, error) {
+func TimelogFromCreateRequest(req *timelogv1.CreateTimelogRequest) (*domain.TimeLog, error) {
 	if req == nil {
 		return nil, nil
 	}
@@ -41,16 +41,16 @@ func TimelogFromCreateRequest(req *timelogv1.CreateTimelogRequest) (*gen.Timelog
 	if err != nil {
 		return nil, err
 	}
-	return &gen.Timelog{
+	return &domain.TimeLog{
 		StartTime:  startTime,
 		EndTime:    endTime,
 		CategoryID: req.CategoryId,
 		TaskID:     req.TaskId,
-		Remark:     &req.Remark,
+		Remark:     req.Remark,
 	}, nil
 }
 
-func ApplyTimelogUpdate(t *gen.Timelog, req *timelogv1.UpdateTimelogRequest) error {
+func ApplyTimelogUpdate(t *domain.TimeLog, req *timelogv1.UpdateTimelogRequest) error {
 	if t == nil || req == nil {
 		return nil
 	}
@@ -75,8 +75,7 @@ func ApplyTimelogUpdate(t *gen.Timelog, req *timelogv1.UpdateTimelogRequest) err
 		t.TaskID = req.TaskId
 	}
 	if req.Remark != nil {
-		remark := req.GetRemark()
-		t.Remark = &remark
+		t.Remark = req.GetRemark()
 	}
 	return nil
 }

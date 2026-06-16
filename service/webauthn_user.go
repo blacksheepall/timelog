@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -28,6 +30,41 @@ func (u *PasskeyUser) WebAuthnCredentials() []webauthn.Credential {
 	return u.credentials
 }
 
+func passkeyCredentialToWebAuthn(p *domain.PasskeyCredential) webauthn.Credential {
+	if p == nil {
+		return webauthn.Credential{}
+	}
+	transport := []protocol.AuthenticatorTransport{}
+	if p.Transport != "" {
+		transport = append(transport, protocol.AuthenticatorTransport(p.Transport))
+	}
+	return webauthn.Credential{
+		ID:              p.CredentialID,
+		PublicKey:       p.PublicKey,
+		AttestationType: p.AttestationType,
+		Transport:       transport,
+		Flags: webauthn.CredentialFlags{
+			UserPresent:    p.UserPresent,
+			UserVerified:   p.UserVerified,
+			BackupEligible: p.BackupEligible,
+			BackupState:    p.BackupState,
+		},
+		Authenticator: webauthn.Authenticator{
+			AAGUID:       p.AuthenticatorAaguid,
+			SignCount:    uint32(p.AuthenticatorSignCount),
+			CloneWarning: p.AuthenticatorCloneWarning,
+			Attachment:   protocol.AuthenticatorAttachment(p.AuthenticatorAttachment),
+		},
+		Attestation: webauthn.CredentialAttestation{
+			ClientDataJSON:     p.AttestationClientDataJSON,
+			ClientDataHash:     p.AttestationClientDataHash,
+			AuthenticatorData:  p.AttestationAuthenticatorData,
+			PublicKeyAlgorithm: int64(p.AttestationPublicKeyAlgorithm),
+			Object:             p.AttestationObject,
+		},
+	}
+}
+
 func (s *Service) LoadPasskeyUser() (*PasskeyUser, error) {
 	records, err := s.ListPasskeyCredentials()
 	if err != nil {
@@ -35,8 +72,8 @@ func (s *Service) LoadPasskeyUser() (*PasskeyUser, error) {
 	}
 
 	credentials := make([]webauthn.Credential, 0, len(records))
-	for _, record := range records {
-		credentials = append(credentials, record.ToCredential())
+	for i := range records {
+		credentials = append(credentials, passkeyCredentialToWebAuthn(&records[i]))
 	}
 
 	return &PasskeyUser{

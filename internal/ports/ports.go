@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
@@ -22,53 +21,53 @@ type CacheStore interface {
 
 // TimelogRepository handles persistence for time logs.
 type TimelogRepository interface {
-	CreateTimeLog(tl *gen.Timelog) error
-	GetTimeLogByID(id int32) (*gen.Timelog, error)
-	ListTimeLogs(conds ...interface{}) ([]gen.Timelog, error)
-	ListTimeLogsWithOptions(limit int, orderBy string, conds ...interface{}) ([]gen.Timelog, error)
-	ListTimeLogsByLocalDateRange(startDateStr, endDateStr string) ([]gen.Timelog, error)
-	UpdateTimeLog(tl *gen.Timelog) error
+	CreateTimeLog(tl *domain.TimeLog) error
+	GetTimeLogByID(id int32) (*domain.TimeLog, error)
+	ListTimeLogs(conds ...interface{}) ([]domain.TimeLog, error)
+	ListTimeLogsWithOptions(limit int, orderBy string, conds ...interface{}) ([]domain.TimeLog, error)
+	ListTimeLogsByLocalDateRange(startDateStr, endDateStr string) ([]domain.TimeLog, error)
+	UpdateTimeLog(tl *domain.TimeLog) error
 	DeleteTimeLog(id int32) error
 }
 
 // CategoryRepository handles persistence for categories.
 type CategoryRepository interface {
-	CreateCategory(category *gen.Category) error
-	GetCategoryByID(id int32) (*gen.Category, error)
-	GetCategoryByName(name string, parentID *int32) (*gen.Category, error)
-	ListCategories(conds ...interface{}) ([]gen.Category, error)
-	ListCategoriesByLevel(level int32) ([]gen.Category, error)
-	GetCategoriesByParentID(parentID *int32) ([]gen.Category, error)
-	GetCategoryTree() ([]*model.CategoryNode, error)
-	UpdateCategory(category *gen.Category) error
+	CreateCategory(category *domain.Category) error
+	GetCategoryByID(id int32) (*domain.Category, error)
+	GetCategoryByName(name string, parentID *int32) (*domain.Category, error)
+	ListCategories(conds ...interface{}) ([]domain.Category, error)
+	ListCategoriesByLevel(level int32) ([]domain.Category, error)
+	GetCategoriesByParentID(parentID *int32) ([]domain.Category, error)
+	GetCategoryTree() ([]*domain.CategoryNode, error)
+	UpdateCategory(category *domain.Category) error
 	MoveCategory(categoryID int32, newParentID *int32) error
 }
 
 // TaskRepository handles persistence for tasks.
 type TaskRepository interface {
-	CreateTask(task *gen.Task) error
-	GetTaskByID(id int32) (*gen.Task, error)
-	GetAllTasks(includeSuspended, includeCompleted bool) ([]gen.Task, error)
-	GetTasksByDate(date time.Time, includeSuspended, includeCompleted bool) ([]gen.Task, error)
-	GetTasksByDateRange(startDate, endDate time.Time) ([]gen.Task, error)
-	UpdateTask(task *gen.Task) error
+	CreateTask(task *domain.Task) error
+	GetTaskByID(id int32) (*domain.Task, error)
+	GetAllTasks(includeSuspended, includeCompleted bool) ([]domain.Task, error)
+	GetTasksByDate(date time.Time, includeSuspended, includeCompleted bool) ([]domain.Task, error)
+	GetTasksByDateRange(startDate, endDate time.Time) ([]domain.Task, error)
+	UpdateTask(task *domain.Task) error
 	DeleteTask(id int32) error
 	MarkTaskAsCompleted(taskID int32) error
 	MarkTaskAsIncomplete(taskID int32) error
 	SuspendTask(taskID int32) error
 	UnsuspendTask(taskID int32) error
-	GetCompletedTasksInDateRange(startDate, endDate time.Time) ([]gen.Task, error)
+	GetCompletedTasksInDateRange(startDate, endDate time.Time) ([]domain.Task, error)
 	GetTaskStats(date time.Time) (map[string]interface{}, error)
 }
 
 // ConstraintRepository handles persistence for constraints.
 type ConstraintRepository interface {
-	CreateConstraint(constraint *gen.Constraint) error
-	GetConstraintByID(id int32) (*gen.Constraint, error)
-	GetAllConstraints() ([]gen.Constraint, error)
-	GetActiveConstraints() ([]gen.Constraint, error)
-	GetConstraintsByDateRange(startDate, endDate time.Time) ([]gen.Constraint, error)
-	UpdateConstraint(constraint *gen.Constraint) error
+	CreateConstraint(constraint *domain.Constraint) error
+	GetConstraintByID(id int32) (*domain.Constraint, error)
+	GetAllConstraints() ([]domain.Constraint, error)
+	GetActiveConstraints() ([]domain.Constraint, error)
+	GetConstraintsByDateRange(startDate, endDate time.Time) ([]domain.Constraint, error)
+	UpdateConstraint(constraint *domain.Constraint) error
 	DeleteConstraint(id int32) error
 	MarkConstraintAsCompleted(constraintID int32, endReason string) error
 	MarkConstraintAsActive(constraintID int32) error
@@ -76,33 +75,33 @@ type ConstraintRepository interface {
 
 // MetricRepository handles persistence for behavior metrics and their records.
 type MetricRepository interface {
-	CreateMetric(metric *gen.Metric) error
-	GetMetricByID(id int32) (*gen.Metric, error)
-	GetMetricByName(name string) (*gen.Metric, error)
-	ListMetrics() ([]gen.Metric, error)
-	UpdateMetric(metric *gen.Metric) error
+	CreateMetric(metric *domain.Metric) error
+	GetMetricByID(id int32) (*domain.Metric, error)
+	GetMetricByName(name string) (*domain.Metric, error)
+	ListMetrics() ([]domain.Metric, error)
+	UpdateMetric(metric *domain.Metric) error
 	DeleteMetric(id int32) error
-	CreateMetricRecord(record *gen.MetricRecord) error
-	ListMetricRecordsByMetricID(metricID int32) ([]gen.MetricRecord, error)
+	CreateMetricRecord(record *domain.MetricRecord) error
+	ListMetricRecordsByMetricID(metricID int32) ([]domain.MetricRecord, error)
 	UpdateMetricCurrentValue(metricID int32, value float64, recordedAt time.Time) error
 }
 
 // PasskeyCredentialRepository handles persistence for WebAuthn credentials.
 type PasskeyCredentialRepository interface {
-	CreateWebAuthnCredential(credential *model.WebAuthnCredential) error
-	GetWebAuthnCredentialByCredentialID(credentialID []byte) (*model.WebAuthnCredential, error)
-	ListWebAuthnCredentials() ([]model.WebAuthnCredential, error)
-	DeleteWebAuthnCredential(id uint) error
+	CreateWebAuthnCredential(credential *domain.PasskeyCredential) error
+	GetWebAuthnCredentialByCredentialID(credentialID []byte) (*domain.PasskeyCredential, error)
+	ListWebAuthnCredentials() ([]domain.PasskeyCredential, error)
+	DeleteWebAuthnCredential(id int32) error
 	UpdateWebAuthnCredentialAuth(credentialID []byte, credential *webauthn.Credential) error
 }
 
 // TempPasswordRepository handles persistence for temporary passwords.
 type TempPasswordRepository interface {
-	CreateTempPassword(tempPassword *model.TempPassword) error
-	ListTempPasswords() ([]model.TempPassword, error)
-	DeleteTempPassword(id uint) error
+	CreateTempPassword(tempPassword *domain.TempPassword) error
+	ListTempPasswords() ([]domain.TempPassword, error)
+	DeleteTempPassword(id int32) error
 	DeleteExpiredTempPasswords(now time.Time) error
-	GetTempPasswordByHash(hash string, now time.Time) (*model.TempPassword, error)
+	GetTempPasswordByHash(hash string, now time.Time) (*domain.TempPassword, error)
 }
 
 // UnitOfWorkRepositories exposes repository adapters bound to a single

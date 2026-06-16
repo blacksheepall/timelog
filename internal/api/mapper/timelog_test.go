@@ -4,21 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 func TestTimelogToProtoFormatsOptionalEndTime(t *testing.T) {
-	id := int32(10)
-	taskID := int32(20)
-	remark := "implementation"
 	endTime := time.Date(2026, 5, 30, 12, 30, 0, 0, time.UTC)
-	log := &gen.Timelog{
-		ID:         &id,
+	log := &domain.TimeLog{
+		ID:         10,
 		StartTime:  time.Date(2026, 5, 30, 12, 0, 0, 0, time.UTC),
 		EndTime:    &endTime,
 		CategoryID: 3,
-		TaskID:     &taskID,
-		Remark:     &remark,
+		TaskID:     &[]int32{20}[0],
+		Remark:     "implementation",
 		CreatedAt:  time.Date(2026, 5, 30, 11, 0, 0, 0, time.UTC),
 		UpdatedAt:  time.Date(2026, 5, 30, 13, 0, 0, 0, time.UTC),
 	}

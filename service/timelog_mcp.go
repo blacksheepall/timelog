@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 type CreateTimeLogMCPInput struct {
@@ -24,14 +24,15 @@ type UpdateTimeLogMCPInput struct {
 	Remark     string
 }
 
-func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.Timelog, error) {
+func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*domain.TimeLog, error) {
 	if _, err := s.GetCategoryByID(input.CategoryID); err != nil {
 		return nil, fmt.Errorf("category not found: %w", err)
 	}
 
-	tl := &gen.Timelog{CategoryID: input.CategoryID}
-	defaultUserID := int32(1)
-	tl.UserID = &defaultUserID
+	tl := &domain.TimeLog{
+		UserID:     1,
+		CategoryID: input.CategoryID,
+	}
 
 	if input.StartTime != "" {
 		st, err := ParseSGDateTime(input.StartTime)
@@ -56,16 +57,16 @@ func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*gen.T
 		tl.TaskID = &input.TaskID
 	}
 	if input.Remark != "" {
-		tl.Remark = &input.Remark
+		tl.Remark = input.Remark
 	}
 
 	if err := s.CreateTimeLog(tl); err != nil {
 		return nil, fmt.Errorf("failed to create time log: %w", err)
 	}
-	return s.GetTimeLogByID(*tl.ID)
+	return s.GetTimeLogByID(tl.ID)
 }
 
-func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.Timelog, error) {
+func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*domain.TimeLog, error) {
 	tl, err := s.GetTimeLogByID(input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("time log not found: %w", err)
@@ -99,7 +100,7 @@ func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.T
 		tl.TaskID = &input.TaskID
 	}
 	if input.Remark != "" {
-		tl.Remark = &input.Remark
+		tl.Remark = input.Remark
 	}
 
 	if err := s.UpdateTimeLog(tl); err != nil {
@@ -108,6 +109,6 @@ func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*gen.T
 	return s.GetTimeLogByID(input.ID)
 }
 
-func (s *Service) ListActiveTimeLogs() ([]gen.Timelog, error) {
+func (s *Service) ListActiveTimeLogs() ([]domain.TimeLog, error) {
 	return s.ListTimeLogsWithOptions(0, "start_time DESC", "end_time IS NULL")
 }

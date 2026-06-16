@@ -5,30 +5,30 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/ports"
-	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 // CreateTask 创建任务
-func (s *Service) CreateTask(task *gen.Task) error {
+func (s *Service) CreateTask(task *domain.Task) error {
 	return s.taskRepo.CreateTask(task)
 }
 
 // GetTaskByID 根据ID获取任务
-func (s *Service) GetTaskByID(id int32) (*gen.Task, error) {
+func (s *Service) GetTaskByID(id int32) (*domain.Task, error) {
 	return s.taskRepo.GetTaskByID(id)
 }
 
 // GetAllTasks 获取所有任务
 // includeSuspended: 是否包含暂停的任务
 // includeCompleted: 是否包含已完成的任务
-func (s *Service) GetAllTasks(includeSuspended bool, includeCompleted bool) ([]gen.Task, error) {
+func (s *Service) GetAllTasks(includeSuspended bool, includeCompleted bool) ([]domain.Task, error) {
 	return s.taskRepo.GetAllTasks(includeSuspended, includeCompleted)
 }
 
 // ListTasksByCompletionStatus returns tasks filtered by completion state.
 // status must be "completed", "pending", or "all".
-func (s *Service) ListTasksByCompletionStatus(status string) ([]gen.Task, error) {
+func (s *Service) ListTasksByCompletionStatus(status string) ([]domain.Task, error) {
 	tasks, err := s.taskRepo.GetAllTasks(true, true)
 	if err != nil {
 		return nil, err
@@ -37,16 +37,15 @@ func (s *Service) ListTasksByCompletionStatus(status string) ([]gen.Task, error)
 		return tasks, nil
 	}
 
-	filtered := make([]gen.Task, 0, len(tasks))
+	filtered := make([]domain.Task, 0, len(tasks))
 	for _, task := range tasks {
-		isCompleted := task.IsCompleted != nil && *task.IsCompleted
 		switch status {
 		case "completed":
-			if isCompleted {
+			if task.IsCompleted {
 				filtered = append(filtered, task)
 			}
 		case "pending":
-			if !isCompleted {
+			if !task.IsCompleted {
 				filtered = append(filtered, task)
 			}
 		default:
@@ -59,17 +58,17 @@ func (s *Service) ListTasksByCompletionStatus(status string) ([]gen.Task, error)
 // GetTasksByDate 根据日期获取任务
 // includeSuspended: 是否包含暂停的任务
 // includeCompleted: 是否包含已完成的任务
-func (s *Service) GetTasksByDate(date time.Time, includeSuspended bool, includeCompleted bool) ([]gen.Task, error) {
+func (s *Service) GetTasksByDate(date time.Time, includeSuspended bool, includeCompleted bool) ([]domain.Task, error) {
 	return s.taskRepo.GetTasksByDate(date, includeSuspended, includeCompleted)
 }
 
 // GetTasksByDateRange 根据日期范围获取任务
-func (s *Service) GetTasksByDateRange(startDate, endDate time.Time) ([]gen.Task, error) {
+func (s *Service) GetTasksByDateRange(startDate, endDate time.Time) ([]domain.Task, error) {
 	return s.taskRepo.GetTasksByDateRange(startDate, endDate)
 }
 
 // UpdateTask 更新任务
-func (s *Service) UpdateTask(task *gen.Task) error {
+func (s *Service) UpdateTask(task *domain.Task) error {
 	return s.taskRepo.UpdateTask(task)
 }
 
@@ -99,7 +98,7 @@ func (s *Service) UnsuspendTask(taskID int32) error {
 }
 
 // GetCompletedTasksInDateRange 获取指定日期范围内的已完成任务
-func (s *Service) GetCompletedTasksInDateRange(startDate, endDate time.Time) ([]gen.Task, error) {
+func (s *Service) GetCompletedTasksInDateRange(startDate, endDate time.Time) ([]domain.Task, error) {
 	return s.taskRepo.GetCompletedTasksInDateRange(startDate, endDate)
 }
 
@@ -110,7 +109,7 @@ func (s *Service) GetTaskStats(date time.Time) (map[string]interface{}, error) {
 
 // CompleteTaskWithTimelog 完成任务并创建时间记录
 // 这是一个组合操作，将任务标记为完成，并可选地创建关联的时间记录
-func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, timelogData *gen.Timelog) error {
+func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, timelogData *domain.TimeLog) error {
 	return s.unitOfWork.Run(context.Background(), func(repos ports.UnitOfWorkRepositories) error {
 		// 标记任务为完成
 		if err := repos.TaskRepo.MarkTaskAsCompleted(taskID); err != nil {

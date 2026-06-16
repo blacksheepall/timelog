@@ -3,9 +3,9 @@ package adapter
 import (
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 type metricRepo struct {
@@ -18,36 +18,52 @@ func newMetricRepo(db model.DBProvider) *metricRepo {
 	return &metricRepo{db: db}
 }
 
-func (r *metricRepo) CreateMetric(metric *gen.Metric) error {
-	return model.CreateMetric(r.db.Db(), metric)
+func (r *metricRepo) CreateMetric(metric *domain.Metric) error {
+	return model.CreateMetric(r.db.Db(), toGenMetric(metric))
 }
 
-func (r *metricRepo) GetMetricByID(id int32) (*gen.Metric, error) {
-	return model.GetMetricByID(r.db.Db(), id)
+func (r *metricRepo) GetMetricByID(id int32) (*domain.Metric, error) {
+	g, err := model.GetMetricByID(r.db.Db(), id)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainMetric(g), nil
 }
 
-func (r *metricRepo) GetMetricByName(name string) (*gen.Metric, error) {
-	return model.GetMetricByName(r.db.Db(), name)
+func (r *metricRepo) GetMetricByName(name string) (*domain.Metric, error) {
+	g, err := model.GetMetricByName(r.db.Db(), name)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainMetric(g), nil
 }
 
-func (r *metricRepo) ListMetrics() ([]gen.Metric, error) {
-	return model.ListMetrics(r.db.Db())
+func (r *metricRepo) ListMetrics() ([]domain.Metric, error) {
+	list, err := model.ListMetrics(r.db.Db())
+	if err != nil {
+		return nil, err
+	}
+	return toDomainMetrics(list), nil
 }
 
-func (r *metricRepo) UpdateMetric(metric *gen.Metric) error {
-	return model.UpdateMetric(r.db.Db(), metric)
+func (r *metricRepo) UpdateMetric(metric *domain.Metric) error {
+	return model.UpdateMetric(r.db.Db(), toGenMetric(metric))
 }
 
 func (r *metricRepo) DeleteMetric(id int32) error {
 	return model.DeleteMetric(r.db.Db(), id)
 }
 
-func (r *metricRepo) CreateMetricRecord(record *gen.MetricRecord) error {
-	return model.CreateMetricRecord(r.db.Db(), record)
+func (r *metricRepo) CreateMetricRecord(record *domain.MetricRecord) error {
+	return model.CreateMetricRecord(r.db.Db(), toGenMetricRecord(record))
 }
 
-func (r *metricRepo) ListMetricRecordsByMetricID(metricID int32) ([]gen.MetricRecord, error) {
-	return model.ListMetricRecordsByMetricID(r.db.Db(), metricID)
+func (r *metricRepo) ListMetricRecordsByMetricID(metricID int32) ([]domain.MetricRecord, error) {
+	list, err := model.ListMetricRecordsByMetricID(r.db.Db(), metricID)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainMetricRecords(list), nil
 }
 
 func (r *metricRepo) UpdateMetricCurrentValue(metricID int32, value float64, recordedAt time.Time) error {

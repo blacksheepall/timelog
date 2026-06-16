@@ -9,8 +9,8 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 func applyMigrations(t *testing.T, dao *model.Dao) {
@@ -72,7 +72,7 @@ func ptrString(v string) *string {
 func TestCreateAndGetMetric(t *testing.T) {
 	svc := newTestMetricService(t)
 
-	metric := &gen.Metric{
+	metric := &domain.Metric{
 		Name:       "sleep_time",
 		MetricType: "time",
 		Unit:       "minutes",
@@ -80,7 +80,7 @@ func TestCreateAndGetMetric(t *testing.T) {
 	if err := svc.CreateMetric(metric); err != nil {
 		t.Fatalf("CreateMetric: %v", err)
 	}
-	if metric.ID == nil || *metric.ID == 0 {
+	if metric.ID == 0 {
 		t.Fatal("expected metric ID after create")
 	}
 
@@ -96,7 +96,7 @@ func TestCreateAndGetMetric(t *testing.T) {
 func TestRecordMetricUpdatesCurrentValue(t *testing.T) {
 	svc := newTestMetricService(t)
 
-	metric := &gen.Metric{
+	metric := &domain.Metric{
 		Name:       "pushups",
 		MetricType: "count",
 		Unit:       "times",
@@ -118,7 +118,7 @@ func TestRecordMetricUpdatesCurrentValue(t *testing.T) {
 		t.Fatalf("expected current value 20, got %v", updated.CurrentValue)
 	}
 
-	records, err := svc.ListMetricRecords(*metric.ID)
+	records, err := svc.ListMetricRecords(metric.ID)
 	if err != nil {
 		t.Fatalf("ListMetricRecords: %v", err)
 	}
@@ -133,7 +133,7 @@ func TestRecordMetricUpdatesCurrentValue(t *testing.T) {
 func TestIncrementMetricAccumulates(t *testing.T) {
 	svc := newTestMetricService(t)
 
-	metric := &gen.Metric{
+	metric := &domain.Metric{
 		Name:       "steps",
 		MetricType: "count",
 		Unit:       "steps",
@@ -157,7 +157,7 @@ func TestIncrementMetricAccumulates(t *testing.T) {
 func TestEvaluateConstraint(t *testing.T) {
 	svc := newTestMetricService(t)
 
-	metric := &gen.Metric{
+	metric := &domain.Metric{
 		Name:       "sleep_time",
 		MetricType: "time",
 		Unit:       "minutes",
@@ -169,13 +169,12 @@ func TestEvaluateConstraint(t *testing.T) {
 		t.Fatalf("RecordMetric: %v", err)
 	}
 
-	active := true
-	constraint := &gen.Constraint{
+	constraint := &domain.Constraint{
 		Description:       "sleep before 23:00",
 		PunishmentQuote:   "stay focused",
 		StartDate:         time.Now(),
-		IsActive:          &active,
-		MetricID:          metric.ID,
+		IsActive:          true,
+		MetricID:          &metric.ID,
 		MetricOperator:    ptrString("lte"),
 		MetricTargetValue: ptrFloat64(1380),
 	}
@@ -183,7 +182,7 @@ func TestEvaluateConstraint(t *testing.T) {
 		t.Fatalf("CreateConstraint: %v", err)
 	}
 
-	eval, err := svc.EvaluateConstraint(*constraint.ID)
+	eval, err := svc.EvaluateConstraint(constraint.ID)
 	if err != nil {
 		t.Fatalf("EvaluateConstraint: %v", err)
 	}
@@ -197,7 +196,7 @@ func TestEvaluateConstraint(t *testing.T) {
 	if _, err := svc.RecordMetric(RecordMetricInput{MetricName: "sleep_time", Value: 1430, Source: "test"}); err != nil {
 		t.Fatalf("RecordMetric: %v", err)
 	}
-	eval, err = svc.EvaluateConstraint(*constraint.ID)
+	eval, err = svc.EvaluateConstraint(constraint.ID)
 	if err != nil {
 		t.Fatalf("EvaluateConstraint: %v", err)
 	}
@@ -209,18 +208,17 @@ func TestEvaluateConstraint(t *testing.T) {
 func TestEvaluateConstraintWithoutMetricRule(t *testing.T) {
 	svc := newTestMetricService(t)
 
-	active := true
-	constraint := &gen.Constraint{
+	constraint := &domain.Constraint{
 		Description:     "no metric",
 		PunishmentQuote: "just do it",
 		StartDate:       time.Now(),
-		IsActive:        &active,
+		IsActive:        true,
 	}
 	if err := svc.CreateConstraint(constraint); err != nil {
 		t.Fatalf("CreateConstraint: %v", err)
 	}
 
-	_, err := svc.EvaluateConstraint(*constraint.ID)
+	_, err := svc.EvaluateConstraint(constraint.ID)
 	if err == nil {
 		t.Fatal("expected error for constraint without metric rule")
 	}

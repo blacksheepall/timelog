@@ -8,7 +8,7 @@ import (
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +28,7 @@ func listCategoriesHandler(deps Dependencies) gin.HandlerFunc {
 		levelStr := c.Query("level")
 		parentIDStr := c.Query("parent_id")
 
-		var categories []gen.Category
+		var categories []domain.Category
 		var err error
 
 		if levelStr != "" {
@@ -126,7 +126,7 @@ func updateCategoryHandler(deps Dependencies) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
 		}
-		category.ID = &id
+		category.ID = id
 		if err := deps.Service.UpdateCategory(category); err != nil {
 			c.JSON(categoryErrorStatus(err), ErrorResponse(categoryErrorStatus(err), err.Error()))
 			return

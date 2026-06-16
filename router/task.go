@@ -7,7 +7,7 @@ import (
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,7 +45,7 @@ func createTaskHandler(deps Dependencies) gin.HandlerFunc {
 		}
 
 		// 重新查询以获取完整的Tag信息
-		if createdTask, err := deps.Service.GetTaskByID(*task.ID); err == nil {
+		if createdTask, err := deps.Service.GetTaskByID(task.ID); err == nil {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(createdTask), "Task created successfully"))
 		} else {
 			c.JSON(http.StatusOK, SuccessResponse(mapper.TaskToProto(task), "Task created successfully"))
@@ -59,7 +59,7 @@ func listTasksHandler(deps Dependencies) gin.HandlerFunc {
 		includeSuspended := c.Query("include_suspended") == "true"
 		includeCompleted := c.Query("include_completed") == "true"
 
-		var tasks []gen.Task
+		var tasks []domain.Task
 		var err error
 
 		if dateStr != "" {

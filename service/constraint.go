@@ -4,36 +4,36 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
 // CreateConstraint 创建约束
-func (s *Service) CreateConstraint(constraint *gen.Constraint) error {
+func (s *Service) CreateConstraint(constraint *domain.Constraint) error {
 	return s.constraintRepo.CreateConstraint(constraint)
 }
 
 // GetConstraintByID 根据ID获取约束
-func (s *Service) GetConstraintByID(id int32) (*gen.Constraint, error) {
+func (s *Service) GetConstraintByID(id int32) (*domain.Constraint, error) {
 	return s.constraintRepo.GetConstraintByID(id)
 }
 
 // GetAllConstraints 获取所有约束
-func (s *Service) GetAllConstraints() ([]gen.Constraint, error) {
+func (s *Service) GetAllConstraints() ([]domain.Constraint, error) {
 	return s.constraintRepo.GetAllConstraints()
 }
 
 // GetActiveConstraints 获取活跃的约束
-func (s *Service) GetActiveConstraints() ([]gen.Constraint, error) {
+func (s *Service) GetActiveConstraints() ([]domain.Constraint, error) {
 	return s.constraintRepo.GetActiveConstraints()
 }
 
 // GetConstraintsByDateRange 根据日期范围获取约束
-func (s *Service) GetConstraintsByDateRange(startDate, endDate time.Time) ([]gen.Constraint, error) {
+func (s *Service) GetConstraintsByDateRange(startDate, endDate time.Time) ([]domain.Constraint, error) {
 	return s.constraintRepo.GetConstraintsByDateRange(startDate, endDate)
 }
 
 // UpdateConstraint 更新约束
-func (s *Service) UpdateConstraint(constraint *gen.Constraint) error {
+func (s *Service) UpdateConstraint(constraint *domain.Constraint) error {
 	return s.constraintRepo.UpdateConstraint(constraint)
 }
 

@@ -3,9 +3,9 @@ package adapter
 import (
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 // constraintRepo implements ports.ConstraintRepository using the model layer.
@@ -19,28 +19,44 @@ func newConstraintRepo(db model.DBProvider) *constraintRepo {
 	return &constraintRepo{db: db}
 }
 
-func (r *constraintRepo) CreateConstraint(constraint *gen.Constraint) error {
-	return model.CreateConstraint(r.db.Db(), constraint)
+func (r *constraintRepo) CreateConstraint(constraint *domain.Constraint) error {
+	return model.CreateConstraint(r.db.Db(), toGenConstraint(constraint))
 }
 
-func (r *constraintRepo) GetConstraintByID(id int32) (*gen.Constraint, error) {
-	return model.GetConstraintByID(r.db.Db(), id)
+func (r *constraintRepo) GetConstraintByID(id int32) (*domain.Constraint, error) {
+	g, err := model.GetConstraintByID(r.db.Db(), id)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainConstraint(g), nil
 }
 
-func (r *constraintRepo) GetAllConstraints() ([]gen.Constraint, error) {
-	return model.GetAllConstraints(r.db.Db())
+func (r *constraintRepo) GetAllConstraints() ([]domain.Constraint, error) {
+	list, err := model.GetAllConstraints(r.db.Db())
+	if err != nil {
+		return nil, err
+	}
+	return toDomainConstraints(list), nil
 }
 
-func (r *constraintRepo) GetActiveConstraints() ([]gen.Constraint, error) {
-	return model.GetActiveConstraints(r.db.Db())
+func (r *constraintRepo) GetActiveConstraints() ([]domain.Constraint, error) {
+	list, err := model.GetActiveConstraints(r.db.Db())
+	if err != nil {
+		return nil, err
+	}
+	return toDomainConstraints(list), nil
 }
 
-func (r *constraintRepo) GetConstraintsByDateRange(startDate, endDate time.Time) ([]gen.Constraint, error) {
-	return model.GetConstraintsByDateRange(r.db.Db(), startDate, endDate)
+func (r *constraintRepo) GetConstraintsByDateRange(startDate, endDate time.Time) ([]domain.Constraint, error) {
+	list, err := model.GetConstraintsByDateRange(r.db.Db(), startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainConstraints(list), nil
 }
 
-func (r *constraintRepo) UpdateConstraint(constraint *gen.Constraint) error {
-	return model.UpdateConstraint(r.db.Db(), constraint)
+func (r *constraintRepo) UpdateConstraint(constraint *domain.Constraint) error {
+	return model.UpdateConstraint(r.db.Db(), toGenConstraint(constraint))
 }
 
 func (r *constraintRepo) DeleteConstraint(id int32) error {

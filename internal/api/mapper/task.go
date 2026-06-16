@@ -4,29 +4,29 @@ import (
 	"fmt"
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
-func TaskToProto(t *gen.Task) *timelogv1.Task {
+func TaskToProto(t *domain.Task) *timelogv1.Task {
 	if t == nil {
 		return nil
 	}
 	return &timelogv1.Task{
-		Id:               Int32Value(t.ID),
+		Id:               t.ID,
 		Title:            t.Title,
-		Description:      StringValue(t.Description),
+		Description:      &t.Description,
 		CategoryId:       t.CategoryID,
 		DueDate:          FormatDate(t.DueDate),
 		EstimatedMinutes: t.EstimatedMinutes,
-		IsCompleted:      BoolValue(t.IsCompleted),
+		IsCompleted:      t.IsCompleted,
 		CompletedAt:      optionalString(FormatTimeUTCPtr(t.CompletedAt)),
-		IsSuspended:      BoolValue(t.IsSuspended),
-		CreatedAt:        FormatTimeUTCPtr(t.CreatedAt),
-		UpdatedAt:        FormatTimeUTCPtr(t.UpdatedAt),
+		IsSuspended:      t.IsSuspended,
+		CreatedAt:        optionalString(FormatTimeUTC(t.CreatedAt)),
+		UpdatedAt:        optionalString(FormatTimeUTC(t.UpdatedAt)),
 	}
 }
 
-func TasksToProto(tasks []gen.Task) []*timelogv1.Task {
+func TasksToProto(tasks []domain.Task) []*timelogv1.Task {
 	out := make([]*timelogv1.Task, 0, len(tasks))
 	for i := range tasks {
 		out = append(out, TaskToProto(&tasks[i]))
@@ -34,7 +34,7 @@ func TasksToProto(tasks []gen.Task) []*timelogv1.Task {
 	return out
 }
 
-func TaskFromCreateRequest(req *timelogv1.CreateTaskRequest) (*gen.Task, error) {
+func TaskFromCreateRequest(req *timelogv1.CreateTaskRequest) (*domain.Task, error) {
 	if req == nil {
 		return nil, nil
 	}
@@ -42,17 +42,16 @@ func TaskFromCreateRequest(req *timelogv1.CreateTaskRequest) (*gen.Task, error) 
 	if err != nil {
 		return nil, err
 	}
-	description := req.Description
-	return &gen.Task{
+	return &domain.Task{
 		Title:            req.Title,
-		Description:      &description,
+		Description:      req.Description,
 		CategoryID:       req.CategoryId,
 		DueDate:          dueDate,
 		EstimatedMinutes: req.EstimatedMinutes,
 	}, nil
 }
 
-func ApplyTaskUpdate(task *gen.Task, req *timelogv1.UpdateTaskRequest) error {
+func ApplyTaskUpdate(task *domain.Task, req *timelogv1.UpdateTaskRequest) error {
 	if task == nil || req == nil {
 		return nil
 	}
@@ -60,8 +59,7 @@ func ApplyTaskUpdate(task *gen.Task, req *timelogv1.UpdateTaskRequest) error {
 		task.Title = req.GetTitle()
 	}
 	if req.Description != nil {
-		description := req.GetDescription()
-		task.Description = &description
+		task.Description = req.GetDescription()
 	}
 	if req.CategoryId != nil {
 		task.CategoryID = req.GetCategoryId()
@@ -77,8 +75,7 @@ func ApplyTaskUpdate(task *gen.Task, req *timelogv1.UpdateTaskRequest) error {
 		task.EstimatedMinutes = req.GetEstimatedMinutes()
 	}
 	if req.IsCompleted != nil {
-		completed := req.GetIsCompleted()
-		task.IsCompleted = &completed
+		task.IsCompleted = req.GetIsCompleted()
 	}
 	return nil
 }

@@ -4,30 +4,29 @@ import (
 	"fmt"
 
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
-	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/pkg/errs"
 )
 
-func CategoryToProto(c *gen.Category) *timelogv1.Category {
+func CategoryToProto(c *domain.Category) *timelogv1.Category {
 	if c == nil {
 		return nil
 	}
 	return &timelogv1.Category{
-		Id:          Int32Value(c.ID),
+		Id:          c.ID,
 		Name:        c.Name,
-		Color:       StringValue(c.Color),
-		Description: StringValue(c.Description),
+		Color:       &c.Color,
+		Description: &c.Description,
 		ParentId:    c.ParentID,
-		Level:       Int32Value(c.Level),
-		SortOrder:   Int32Value(c.SortOrder),
-		Path:        StringValue(c.Path),
+		Level:       c.Level,
+		SortOrder:   c.SortOrder,
+		Path:        &c.Path,
 		CreatedAt:   FormatTimeUTC(c.CreatedAt),
 		UpdatedAt:   FormatTimeUTC(c.UpdatedAt),
 	}
 }
 
-func CategoriesToProto(categories []gen.Category) []*timelogv1.Category {
+func CategoriesToProto(categories []domain.Category) []*timelogv1.Category {
 	out := make([]*timelogv1.Category, 0, len(categories))
 	for i := range categories {
 		out = append(out, CategoryToProto(&categories[i]))
@@ -35,7 +34,7 @@ func CategoriesToProto(categories []gen.Category) []*timelogv1.Category {
 	return out
 }
 
-func CategoryTreeNodeToProto(node *model.CategoryNode) *timelogv1.CategoryTreeNode {
+func CategoryTreeNodeToProto(node *domain.CategoryNode) *timelogv1.CategoryTreeNode {
 	if node == nil {
 		return nil
 	}
@@ -49,7 +48,7 @@ func CategoryTreeNodeToProto(node *model.CategoryNode) *timelogv1.CategoryTreeNo
 	return out
 }
 
-func CategoryTreeToProto(nodes []*model.CategoryNode) []*timelogv1.CategoryTreeNode {
+func CategoryTreeToProto(nodes []*domain.CategoryNode) []*timelogv1.CategoryTreeNode {
 	out := make([]*timelogv1.CategoryTreeNode, 0, len(nodes))
 	for _, node := range nodes {
 		out = append(out, CategoryTreeNodeToProto(node))
@@ -57,7 +56,7 @@ func CategoryTreeToProto(nodes []*model.CategoryNode) []*timelogv1.CategoryTreeN
 	return out
 }
 
-func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) (*gen.Category, error) {
+func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) (*domain.Category, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request is required")
 	}
@@ -70,12 +69,10 @@ func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) (*gen.Categ
 	if req.ParentId != nil && *req.ParentId <= 0 {
 		return nil, errs.ErrInvalidParentID
 	}
-	color := req.Color
-	description := req.Description
-	return &gen.Category{
+	return &domain.Category{
 		Name:        req.Name,
-		Color:       &color,
-		Description: &description,
+		Color:       req.Color,
+		Description: req.Description,
 		ParentID:    req.ParentId,
 	}, nil
 }
@@ -90,7 +87,7 @@ func ValidateMoveCategoryRequest(req *timelogv1.MoveCategoryRequest) error {
 	return nil
 }
 
-func ApplyCategoryUpdate(category *gen.Category, req *timelogv1.UpdateCategoryRequest) error {
+func ApplyCategoryUpdate(category *domain.Category, req *timelogv1.UpdateCategoryRequest) error {
 	if category == nil || req == nil {
 		return nil
 	}
@@ -107,12 +104,10 @@ func ApplyCategoryUpdate(category *gen.Category, req *timelogv1.UpdateCategoryRe
 		category.Name = req.GetName()
 	}
 	if req.Color != nil {
-		color := req.GetColor()
-		category.Color = &color
+		category.Color = req.GetColor()
 	}
 	if req.Description != nil {
-		description := req.GetDescription()
-		category.Description = &description
+		category.Description = req.GetDescription()
 	}
 	return nil
 }

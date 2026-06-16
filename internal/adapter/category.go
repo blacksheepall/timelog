@@ -1,9 +1,9 @@
 package adapter
 
 import (
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model"
-	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 // categoryRepo implements ports.CategoryRepository using the model layer.
@@ -17,36 +17,60 @@ func newCategoryRepo(db model.DBProvider) *categoryRepo {
 	return &categoryRepo{db: db}
 }
 
-func (r *categoryRepo) CreateCategory(category *gen.Category) error {
-	return model.CreateCategory(r.db.Db(), category)
+func (r *categoryRepo) CreateCategory(category *domain.Category) error {
+	return model.CreateCategory(r.db.Db(), toGenCategory(category))
 }
 
-func (r *categoryRepo) GetCategoryByID(id int32) (*gen.Category, error) {
-	return model.GetCategoryByID(r.db.Db(), id)
+func (r *categoryRepo) GetCategoryByID(id int32) (*domain.Category, error) {
+	g, err := model.GetCategoryByID(r.db.Db(), id)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategory(g), nil
 }
 
-func (r *categoryRepo) GetCategoryByName(name string, parentID *int32) (*gen.Category, error) {
-	return model.GetCategoryByName(r.db.Db(), name, parentID)
+func (r *categoryRepo) GetCategoryByName(name string, parentID *int32) (*domain.Category, error) {
+	g, err := model.GetCategoryByName(r.db.Db(), name, parentID)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategory(g), nil
 }
 
-func (r *categoryRepo) ListCategories(conds ...interface{}) ([]gen.Category, error) {
-	return model.ListCategories(r.db.Db(), conds...)
+func (r *categoryRepo) ListCategories(conds ...interface{}) ([]domain.Category, error) {
+	list, err := model.ListCategories(r.db.Db(), conds...)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategories(list), nil
 }
 
-func (r *categoryRepo) ListCategoriesByLevel(level int32) ([]gen.Category, error) {
-	return model.ListCategoriesByLevel(r.db.Db(), level)
+func (r *categoryRepo) ListCategoriesByLevel(level int32) ([]domain.Category, error) {
+	list, err := model.ListCategoriesByLevel(r.db.Db(), level)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategories(list), nil
 }
 
-func (r *categoryRepo) GetCategoriesByParentID(parentID *int32) ([]gen.Category, error) {
-	return model.GetCategoriesByParentID(r.db.Db(), parentID)
+func (r *categoryRepo) GetCategoriesByParentID(parentID *int32) ([]domain.Category, error) {
+	list, err := model.GetCategoriesByParentID(r.db.Db(), parentID)
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategories(list), nil
 }
 
-func (r *categoryRepo) GetCategoryTree() ([]*model.CategoryNode, error) {
-	return model.GetCategoryTree(r.db.Db())
+func (r *categoryRepo) GetCategoryTree() ([]*domain.CategoryNode, error) {
+	tree, err := model.GetCategoryTree(r.db.Db())
+	if err != nil {
+		return nil, err
+	}
+	return toDomainCategoryNodes(tree), nil
 }
 
-func (r *categoryRepo) UpdateCategory(category *gen.Category) error {
-	return model.UpdateCategory(r.db.Db(), category)
+func (r *categoryRepo) UpdateCategory(category *domain.Category) error {
+	return model.UpdateCategory(r.db.Db(), toGenCategory(category))
 }
 
 func (r *categoryRepo) MoveCategory(categoryID int32, newParentID *int32) error {
