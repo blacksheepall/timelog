@@ -3,23 +3,14 @@ package service
 import (
 	"testing"
 
-	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter"
-	"github.com/blacksheepaul/timelog/model"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 )
 
 func TestNewServiceWiresInjectedRepositories(t *testing.T) {
-	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
-	cfg.Log.ORMLogLevel = 1
-
-	dao, err := model.NewDao(cfg, FakeLogger{})
-	if err != nil {
-		t.Fatalf("NewDao: %v", err)
-	}
-
+	dao := testutil.NewTestDAO(t)
 	repos := adapter.NewRepositories(dao)
-	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, testutil.NewTestConfig(), nil)
 	if svc == nil {
 		t.Fatal("expected non-nil service")
 	}

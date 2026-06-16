@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/internal/domain"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 )
 
 func TestTaskCRUD(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	task := &domain.Task{Title: "Test", CategoryID: 1, DueDate: time.Now()}
 	if err := svc.CreateTask(task); err != nil {
@@ -51,9 +51,8 @@ func TestTaskCRUD(t *testing.T) {
 }
 
 func TestTimelogCRUD(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	tl := &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}
 	if err := svc.CreateTimeLog(tl); err != nil {
@@ -92,8 +91,7 @@ func TestTimelogCRUD(t *testing.T) {
 }
 
 func TestCategoryCRUD(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
+	svc, _ := newTestService(t)
 
 	cat := &domain.Category{Name: "Root"}
 	if err := svc.CreateCategory(cat); err != nil {
@@ -137,8 +135,7 @@ func TestCategoryCRUD(t *testing.T) {
 }
 
 func TestConstraintCRUD(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
+	svc, _ := newTestService(t)
 
 	c := &domain.Constraint{Description: "Test", PunishmentQuote: "Q", StartDate: time.Now(), IsActive: true}
 	if err := svc.CreateConstraint(c); err != nil {
@@ -178,8 +175,7 @@ func TestConstraintCRUD(t *testing.T) {
 }
 
 func TestMetricCRUD(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
+	svc, _ := newTestService(t)
 
 	m := &domain.Metric{Name: "Test", MetricType: "counter", Unit: "count"}
 	if err := svc.CreateMetric(m); err != nil {
@@ -207,9 +203,8 @@ func TestMetricCRUD(t *testing.T) {
 }
 
 func TestCompleteTaskWithTimelog(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	task := &domain.Task{Title: "Complete", CategoryID: 1, DueDate: time.Now()}
 	if err := svc.CreateTask(task); err != nil {
@@ -226,9 +221,8 @@ func TestCompleteTaskWithTimelog(t *testing.T) {
 }
 
 func TestListActiveTimeLogs(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	if err := svc.CreateTimeLog(&domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
 		t.Fatalf("CreateTimeLog: %v", err)

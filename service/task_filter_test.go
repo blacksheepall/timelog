@@ -4,14 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
 )
 
 func TestListTasksByCompletionStatusFilters(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 	db := dao.Db()
 
 	pending := &gen.Task{

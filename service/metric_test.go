@@ -7,19 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/internal/domain"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 )
 
 func applyMigrations(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	files, err := filepath.Glob("../model/migrations/*.up.sql")
-	if err != nil {
-		t.Fatalf("glob migrations: %v", err)
-	}
-	sort.Strings(files)
 	rawDB := dao.RawDB
 	if rawDB == nil {
 		t.Fatal("raw database is nil")
@@ -27,6 +22,11 @@ func applyMigrations(t *testing.T, dao *model.Dao) {
 	if _, err := rawDB.Exec("PRAGMA foreign_keys = OFF"); err != nil {
 		t.Fatalf("disable foreign keys: %v", err)
 	}
+	files, err := filepath.Glob("../model/migrations/*.up.sql")
+	if err != nil {
+		t.Fatalf("glob migrations: %v", err)
+	}
+	sort.Strings(files)
 	for _, f := range files {
 		content, err := os.ReadFile(f)
 		if err != nil {
@@ -43,31 +43,16 @@ func applyMigrations(t *testing.T, dao *model.Dao) {
 
 func newTestMetricService(t *testing.T) *Service {
 	t.Helper()
-	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
-	cfg.Log.ORMLogLevel = 1
-
-	dao, err := model.NewDao(cfg, FakeLogger{})
-	if err != nil {
-		t.Fatalf("NewDao: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
 	applyMigrations(t, dao)
-
 	repos := adapter.NewRepositories(dao)
-	return NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
+	cfg := testutil.NewTestConfig()
+	return NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 }
 
-func ptrFloat64(v float64) *float64 {
-	return &v
-}
-
-func ptrInt32(v int32) *int32 {
-	return &v
-}
-
-func ptrString(v string) *string {
-	return &v
-}
+func ptrFloat64(v float64) *float64 { return &v }
+func ptrInt32(v int32) *int32       { return &v }
+func ptrString(v string) *string    { return &v }
 
 func TestCreateAndGetMetric(t *testing.T) {
 	svc := newTestMetricService(t)

@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/pkg/timeutil"
 )
 
 func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	input := CreateTimeLogMCPInput{
 		CategoryID: 1,
@@ -26,7 +26,7 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
 	}
 	if created.UserID != 1 {
-		t.Fatalf("expected default user_id 1, got %d", created.UserID)
+		t.Fatalf("expected user_id 1, got %d", created.UserID)
 	}
 	loc := timeutil.GetSingaporeLocation()
 	wantStart := time.Date(2026, 5, 29, 10, 0, 0, 0, loc).UTC()
@@ -36,9 +36,8 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 }
 
 func TestCreateTimeLogFromMCPInputDefaults(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 
 	created, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1})
 	if err != nil {
@@ -50,26 +49,23 @@ func TestCreateTimeLogFromMCPInputDefaults(t *testing.T) {
 }
 
 func TestCreateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
+	svc, _ := newTestService(t)
 	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 999}); err == nil {
 		t.Fatal("expected error for invalid category")
 	}
 }
 
 func TestCreateTimeLogFromMCPInputInvalidStartTime(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1, StartTime: "bad"}); err == nil {
 		t.Fatal("expected error for invalid start time")
 	}
 }
 
 func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
-	svc, dao := setupTestModel()
-	applyTestMigrations(t, dao)
-	seedTestCategory(t, dao)
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
 	db := dao.Db()
 
 	end := time.Now().UTC()
@@ -97,21 +93,4 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 	}
 }
 
-func seedTestCategory(t *testing.T, dao *model.Dao) {
-	t.Helper()
-	name := "test"
-	path := "/"
-	level := int32(1)
-	cat := &gen.Category{
-		Name:  name,
-		Path:  &path,
-		Level: &level,
-	}
-	if err := model.CreateCategory(dao.Db(), cat); err != nil {
-		t.Fatalf("seed category: %v", err)
-	}
-}
-
-func int32Ptr(v int32) *int32 {
-	return &v
-}
+func int32Ptr(v int32) *int32 { return &v }

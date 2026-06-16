@@ -9,10 +9,8 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
-	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/service"
 )
 
 // FakeLogger is a no-op logger for tests.
@@ -81,20 +79,6 @@ func ApplyMigrations(t *testing.T, dao *model.Dao) {
 			t.Fatalf("apply migration %s: %v", f, err)
 		}
 	}
-}
-
-// NewTestService creates a migrated in-memory DAO and assembles a Service.
-func NewTestService(t *testing.T) (*service.Service, *model.Dao) {
-	t.Helper()
-	dao := NewTestDAO(t)
-	ApplyMigrations(t, dao)
-	repos := adapter.NewRepositories(dao)
-	cfg := NewTestConfig()
-	svc := service.NewService(
-		repos, repos, repos, repos, repos, repos, repos, repos, repos,
-		FakeLogger{}, cfg, nil,
-	)
-	return svc, dao
 }
 
 // SeedTestCategory inserts a root category named "test", failing the test on error.

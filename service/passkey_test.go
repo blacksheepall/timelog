@@ -3,140 +3,65 @@ package service
 import (
 	"testing"
 
-	"github.com/blacksheepaul/timelog/core/config"
-	"github.com/blacksheepaul/timelog/internal/adapter"
-	"github.com/blacksheepaul/timelog/model"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-// FakeLogger for testing
-type FakeLogger struct{}
-
-func (l FakeLogger) Debug(fields ...interface{})                     {}
-func (l FakeLogger) Debugw(msg string, keysAndValues ...interface{}) {}
-func (l FakeLogger) Info(fields ...interface{})                      {}
-func (l FakeLogger) Infow(msg string, keysAndValues ...interface{})  {}
-func (l FakeLogger) Warn(fields ...interface{})                      {}
-func (l FakeLogger) Warnw(msg string, keysAndValues ...interface{})  {}
-func (l FakeLogger) Error(fields ...interface{})                     {}
-func (l FakeLogger) Errorw(msg string, keysAndValues ...interface{}) {}
-func (l FakeLogger) Fatal(fields ...interface{})                     {}
-func (l FakeLogger) Fatalw(msg string, keysAndValues ...interface{}) {}
-
-// setupTestModel initializes the model with an in-memory database for testing
-func setupTestModel() (*Service, *model.Dao) {
-	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
-	cfg.Log.ORMLogLevel = 1
-	dao, err := model.NewDao(cfg, FakeLogger{})
-	if err != nil {
-		panic(err)
-	}
-	repos := adapter.NewRepositories(dao)
-	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
-	return svc, dao
-}
-
 func TestPasskeySessionKeyNamespacing(t *testing.T) {
-	svc, _ := setupTestModel()
+	svc, _ := newTestService(t)
 
-	// Test 1: Verify passkey session uses namespaced key
 	sessionID := "test-session-123"
-	sessionData := &webauthn.SessionData{
-		Challenge: "test-challenge",
+	sessionData := &webauthn.SessionData{Challenge: "test-challenge"}
+
+	if err := svc.StorePasskeySession(sessionID, sessionData, 300); err != nil {
+		t.Fatalf("StorePasskeySession: %v", err)
 	}
 
-	err := svc.StorePasskeySession(sessionID, sessionData, 300)
-	if err != nil {
-		t.Fatalf("Failed to store passkey session: %v", err)
+	if _, foundRaw := svc.GetCache(sessionID); foundRaw {
+		t.Error("raw session ID found in cache without namespace")
 	}
-
-	// The raw sessionID should NOT be in cache
-	_, foundRaw := svc.GetCache(sessionID)
-	if foundRaw {
-		t.Error("Security vulnerability: raw session ID found in cache without namespace")
+	if _, foundNamespaced := svc.GetCache("passkey_session:" + sessionID); !foundNamespaced {
+		t.Error("namespaced passkey session not found in cache")
 	}
-
-	// The namespaced key should be in cache
-	_, foundNamespaced := svc.GetCache("passkey_session:" + sessionID)
-	if !foundNamespaced {
-		t.Error("Namespaced passkey session not found in cache")
+	loaded, err := svc.LoadPasskeySession(sessionID)
+	if err != nil || loaded == nil {
+		t.Fatalf("LoadPasskeySession: (%v, %v)", loaded, err)
 	}
-
-	// LoadPasskeySession should work with the sessionID (it adds the namespace internally)
-	loadedSession, err := svc.LoadPasskeySession(sessionID)
-	if err != nil {
-		t.Errorf("Failed to load passkey session: %v", err)
-	}
-	if loadedSession == nil {
-		t.Error("Loaded session is nil")
-	}
-
-	t.Log("✓ Passkey sessions are correctly namespaced with 'passkey_session:' prefix")
 }
 
 func TestAuthTokenKeyNamespacing(t *testing.T) {
-	svc, _ := setupTestModel()
+	svc, _ := newTestService(t)
 
-	// Test 2: Verify auth token uses namespaced key
 	token := "test-auth-token-456"
-
-	err := svc.StoreSessionToken(token, 300)
-	if err != nil {
-		t.Fatalf("Failed to store auth token: %v", err)
+	if err := svc.StoreSessionToken(token, 300); err != nil {
+		t.Fatalf("StoreSessionToken: %v", err)
 	}
 
-	// The raw token should NOT be in cache
-	_, foundRaw := svc.GetCache(token)
-	if foundRaw {
-		t.Error("Security vulnerability: raw token found in cache without namespace")
+	if _, foundRaw := svc.GetCache(token); foundRaw {
+		t.Error("raw token found in cache without namespace")
 	}
-
-	// The namespaced key should be in cache
-	_, foundNamespaced := svc.GetCache("auth_token:" + token)
-	if !foundNamespaced {
-		t.Error("Namespaced auth token not found in cache")
+	if _, foundNamespaced := svc.GetCache("auth_token:" + token); !foundNamespaced {
+		t.Error("namespaced auth token not found in cache")
 	}
-
-	t.Log("✓ Auth tokens are correctly namespaced with 'auth_token:' prefix")
 }
 
 func TestSessionAndTokenIsolation(t *testing.T) {
-	svc, _ := setupTestModel()
+	svc, _ := newTestService(t)
 
-	// Test 3: Verify that using the same ID for both doesn't cause collision
 	sharedID := "shared-id-789"
-
-	// Store a passkey session
-	sessionData := &webauthn.SessionData{
-		Challenge: "test-challenge",
+	sessionData := &webauthn.SessionData{Challenge: "test-challenge"}
+	if err := svc.StorePasskeySession(sharedID, sessionData, 300); err != nil {
+		t.Fatalf("StorePasskeySession: %v", err)
 	}
-	err := svc.StorePasskeySession(sharedID, sessionData, 300)
-	if err != nil {
-		t.Fatalf("Failed to store passkey session: %v", err)
+	if err := svc.StoreSessionToken(sharedID, 300); err != nil {
+		t.Fatalf("StoreSessionToken: %v", err)
 	}
 
-	// Store an auth token with the same ID
-	err = svc.StoreSessionToken(sharedID, 300)
-	if err != nil {
-		t.Fatalf("Failed to store auth token: %v", err)
-	}
-
-	// Both should exist independently
 	passkeyVal, passkeyFound := svc.GetCache("passkey_session:" + sharedID)
 	tokenVal, tokenFound := svc.GetCache("auth_token:" + sharedID)
-
-	if !passkeyFound {
-		t.Error("Passkey session not found")
+	if !passkeyFound || !tokenFound {
+		t.Fatalf("expected both entries, got passkey=%v token=%v", passkeyFound, tokenFound)
 	}
-	if !tokenFound {
-		t.Error("Auth token not found")
-	}
-
-	// They should be different values
 	if passkeyVal == tokenVal {
-		t.Error("Passkey session and auth token should be different but are the same")
+		t.Error("passkey session and auth token should be different")
 	}
-
-	t.Log("✓ Passkey sessions and auth tokens are properly isolated even with same ID")
 }
