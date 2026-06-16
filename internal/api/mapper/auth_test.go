@@ -19,6 +19,23 @@ func TestPasskeyCredentialToProto(t *testing.T) {
 	}
 }
 
+func TestPasskeyCredentialToProtoNil(t *testing.T) {
+	if PasskeyCredentialToProto(nil) != nil {
+		t.Fatal("expected nil for nil input")
+	}
+}
+
+func TestPasskeyCredentialsToProto(t *testing.T) {
+	credentials := []domain.PasskeyCredential{
+		{ID: 1, DeviceName: "A"},
+		{ID: 2, DeviceName: "B"},
+	}
+	got := PasskeyCredentialsToProto(credentials)
+	if len(got) != 2 || got[0].GetDeviceName() != "A" || got[1].GetDeviceName() != "B" {
+		t.Fatalf("unexpected mapped credentials: %#v", got)
+	}
+}
+
 func TestLoginResponse(t *testing.T) {
 	got := LoginResponse("token", "Bearer", 3600)
 	if got.GetToken() != "token" || got.GetTokenType() != "Bearer" || got.GetExpiresIn() != 3600 {
