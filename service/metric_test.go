@@ -1,53 +1,16 @@
 package service
 
 import (
-	"os"
-	"path/filepath"
-	"sort"
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/internal/domain"
-	"github.com/blacksheepaul/timelog/internal/testutil"
-	"github.com/blacksheepaul/timelog/model"
 )
-
-func applyMigrations(t *testing.T, dao *model.Dao) {
-	t.Helper()
-	rawDB := dao.RawDB
-	if rawDB == nil {
-		t.Fatal("raw database is nil")
-	}
-	if _, err := rawDB.Exec("PRAGMA foreign_keys = OFF"); err != nil {
-		t.Fatalf("disable foreign keys: %v", err)
-	}
-	files, err := filepath.Glob("../model/migrations/*.up.sql")
-	if err != nil {
-		t.Fatalf("glob migrations: %v", err)
-	}
-	sort.Strings(files)
-	for _, f := range files {
-		content, err := os.ReadFile(f)
-		if err != nil {
-			t.Fatalf("read migration %s: %v", f, err)
-		}
-		if _, err := rawDB.Exec(string(content)); err != nil {
-			t.Fatalf("apply migration %s: %v", f, err)
-		}
-	}
-	if _, err := rawDB.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		t.Fatalf("enable foreign keys: %v", err)
-	}
-}
 
 func newTestMetricService(t *testing.T) *Service {
 	t.Helper()
-	dao := testutil.NewTestDAO(t)
-	applyMigrations(t, dao)
-	repos := adapter.NewRepositories(dao)
-	cfg := testutil.NewTestConfig()
-	return NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	svc, _ := newTestService(t)
+	return svc
 }
 
 func ptrFloat64(v float64) *float64 { return &v }
