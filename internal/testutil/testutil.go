@@ -3,10 +3,12 @@ package testutil
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"testing"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
@@ -15,6 +17,8 @@ import (
 
 // FakeLogger is a no-op logger for tests.
 type FakeLogger struct{}
+
+var _ logger.Logger = (*FakeLogger)(nil)
 
 func (FakeLogger) Debug(...interface{})          {}
 func (FakeLogger) Debugw(string, ...interface{}) {}
@@ -54,9 +58,17 @@ func ApplyMigrations(t *testing.T, dao *model.Dao) {
 		t.Fatal("raw database is nil")
 	}
 
-	migrationFiles, err := filepath.Glob("../../model/migrations/*.up.sql")
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("failed to determine testutil source path")
+	}
+	migrationsDir := filepath.Join(filepath.Dir(filename), "..", "..", "model", "migrations")
+	migrationFiles, err := filepath.Glob(filepath.Join(migrationsDir, "*.up.sql"))
 	if err != nil {
 		t.Fatalf("list migrations: %v", err)
+	}
+	if len(migrationFiles) == 0 {
+		t.Fatalf("no migration files found in %s", migrationsDir)
 	}
 	sort.Strings(migrationFiles)
 
