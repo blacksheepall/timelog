@@ -5,26 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 )
 
-type fakeLogger struct{}
-
-func (fakeLogger) Debug(fields ...interface{})                     {}
-func (fakeLogger) Debugw(msg string, keysAndValues ...interface{}) {}
-func (fakeLogger) Info(fields ...interface{})                      {}
-func (fakeLogger) Infow(msg string, keysAndValues ...interface{})  {}
-func (fakeLogger) Warn(fields ...interface{})                      {}
-func (fakeLogger) Warnw(msg string, keysAndValues ...interface{})  {}
-func (fakeLogger) Error(fields ...interface{})                     {}
-func (fakeLogger) Errorw(msg string, keysAndValues ...interface{}) {}
-func (fakeLogger) Fatal(fields ...interface{})                     {}
-func (fakeLogger) Fatalw(msg string, keysAndValues ...interface{}) {}
-
-var testCfg = &config.Config{}
+var testCfg = testutil.NewTestConfig()
 
 func TestResolveTTL(t *testing.T) {
 	tests := []struct {
@@ -86,12 +73,10 @@ func setupCommandTestEnv(t *testing.T) (*service.Service, *model.Dao) {
 	testCfg.Log.ORMLogLevel = 1
 	testCfg.Passkey.TempPassword.TTL = 900
 
-	dao, err := model.NewDao(testCfg, fakeLogger{})
-	if err != nil {
-		t.Fatalf("NewDao: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
 	repos := adapter.NewRepositories(dao)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, fakeLogger{}, testCfg, nil)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, testCfg, nil)
 
 	if err := dao.Db().AutoMigrate(&model.TempPassword{}); err != nil {
 		t.Fatalf("auto migrate temp_passwords: %v", err)
