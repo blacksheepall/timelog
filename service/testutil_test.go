@@ -21,3 +21,6 @@ func newTestService(t *testing.T) (*Service, *model.Dao) {
 	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 	return svc, dao
 }
+
+func strPtr(s string) *string { return &s }
+func int32Ptr(v int32) *int32 { return &v }

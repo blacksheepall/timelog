@@ -41,5 +41,3 @@ func TestListTimeLogsByLocalDateRange(t *testing.T) {
 		t.Fatalf("expected 1 log, got %d", len(logs))
 	}
 }
-
-func strPtr(s string) *string { return &s }
