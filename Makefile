@@ -125,3 +125,11 @@ check-api:
 
 test: gen-api
 	go test ./...
+
+cover: gen-api
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -1
+
+cover-html: cover
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "打开 coverage.html 可浏览详细覆盖率"
