@@ -1,92 +1,28 @@
 package adapter
 
 import (
-	"database/sql"
-	"os"
-	"path/filepath"
-	"sort"
-	"sync"
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/ports"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 )
 
-type fakeLogger struct{}
-
-func (fakeLogger) Debug(...interface{})          {}
-func (fakeLogger) Debugw(string, ...interface{}) {}
-func (fakeLogger) Info(...interface{})           {}
-func (fakeLogger) Infow(string, ...interface{})  {}
-func (fakeLogger) Warn(...interface{})           {}
-func (fakeLogger) Warnw(string, ...interface{})  {}
-func (fakeLogger) Error(...interface{})          {}
-func (fakeLogger) Errorw(string, ...interface{}) {}
-func (fakeLogger) Fatal(...interface{})          {}
-func (fakeLogger) Fatalw(string, ...interface{}) {}
-
 func setupTestDao(t *testing.T) *model.Dao {
 	t.Helper()
-	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
-	cfg.Log.ORMLogLevel = 1
-	dao, err := model.NewDao(cfg, fakeLogger{})
-	if err != nil {
-		t.Fatalf("NewDao: %v", err)
-	}
-	return dao
+	return testutil.NewTestDAO(t)
 }
-
-var (
-	adapterMigrationsMu sync.Mutex
-	adapterMigratedDBs  = map[*sql.DB]struct{}{}
-)
 
 func applyMigrations(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	rawDB := dao.RawDB
-	if rawDB == nil {
-		t.Fatal("raw database is nil")
-	}
-
-	adapterMigrationsMu.Lock()
-	if _, done := adapterMigratedDBs[rawDB]; done {
-		adapterMigrationsMu.Unlock()
-		return
-	}
-	adapterMigrationsMu.Unlock()
-
-	migrationFiles, err := filepath.Glob("../../model/migrations/*.up.sql")
-	if err != nil {
-		t.Fatalf("list migrations: %v", err)
-	}
-	sort.Strings(migrationFiles)
-
-	for _, migrationFile := range migrationFiles {
-		content, err := os.ReadFile(migrationFile)
-		if err != nil {
-			t.Fatalf("read migration %s: %v", migrationFile, err)
-		}
-		if _, err := rawDB.Exec(string(content)); err != nil {
-			t.Fatalf("apply migration %s: %v", migrationFile, err)
-		}
-	}
-
-	adapterMigrationsMu.Lock()
-	adapterMigratedDBs[rawDB] = struct{}{}
-	adapterMigrationsMu.Unlock()
+	testutil.ApplyMigrations(t, dao)
 }
 
 func seedCategory(t *testing.T, dao *model.Dao) {
 	t.Helper()
-	repo := newCategoryRepo(dao)
-	cat := &domain.Category{Name: "test"}
-	if err := repo.CreateCategory(cat); err != nil {
-		t.Fatalf("seed category: %v", err)
-	}
+	testutil.SeedTestCategory(t, dao)
 }
 
 func TestNewRepositories(t *testing.T) {
