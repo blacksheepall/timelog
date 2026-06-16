@@ -7,18 +7,8 @@ import (
 	"github.com/blacksheepaul/timelog/internal/domain"
 )
 
-func newTestMetricService(t *testing.T) *Service {
-	t.Helper()
-	svc, _ := newTestService(t)
-	return svc
-}
-
-func ptrFloat64(v float64) *float64 { return &v }
-func ptrInt32(v int32) *int32       { return &v }
-func ptrString(v string) *string    { return &v }
-
 func TestCreateAndGetMetric(t *testing.T) {
-	svc := newTestMetricService(t)
+	svc, _ := newTestService(t)
 
 	metric := &domain.Metric{
 		Name:       "sleep_time",
@@ -42,7 +32,7 @@ func TestCreateAndGetMetric(t *testing.T) {
 }
 
 func TestRecordMetricUpdatesCurrentValue(t *testing.T) {
-	svc := newTestMetricService(t)
+	svc, _ := newTestService(t)
 
 	metric := &domain.Metric{
 		Name:       "pushups",
@@ -79,7 +69,7 @@ func TestRecordMetricUpdatesCurrentValue(t *testing.T) {
 }
 
 func TestIncrementMetricAccumulates(t *testing.T) {
-	svc := newTestMetricService(t)
+	svc, _ := newTestService(t)
 
 	metric := &domain.Metric{
 		Name:       "steps",
@@ -103,7 +93,7 @@ func TestIncrementMetricAccumulates(t *testing.T) {
 }
 
 func TestEvaluateConstraint(t *testing.T) {
-	svc := newTestMetricService(t)
+	svc, _ := newTestService(t)
 
 	metric := &domain.Metric{
 		Name:       "sleep_time",
@@ -123,8 +113,8 @@ func TestEvaluateConstraint(t *testing.T) {
 		StartDate:         time.Now(),
 		IsActive:          true,
 		MetricID:          &metric.ID,
-		MetricOperator:    ptrString("lte"),
-		MetricTargetValue: ptrFloat64(1380),
+		MetricOperator:    strPtr("lte"),
+		MetricTargetValue: float64Ptr(1380),
 	}
 	if err := svc.CreateConstraint(constraint); err != nil {
 		t.Fatalf("CreateConstraint: %v", err)
@@ -211,7 +201,7 @@ func TestParseMetricRecordedAt(t *testing.T) {
 }
 
 func TestEvaluateConstraintWithoutMetricRule(t *testing.T) {
-	svc := newTestMetricService(t)
+	svc, _ := newTestService(t)
 
 	constraint := &domain.Constraint{
 		Description:     "no metric",

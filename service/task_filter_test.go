@@ -25,9 +25,8 @@ func TestListTasksByCompletionStatusFilters(t *testing.T) {
 		CategoryID:       1,
 		DueDate:          time.Now(),
 		EstimatedMinutes: 30,
+		IsCompleted:      boolPtr(true),
 	}
-	doneIsCompleted := true
-	done.IsCompleted = &doneIsCompleted
 
 	if err := model.CreateTask(db, done); err != nil {
 		t.Fatalf("seed done: %v", err)
