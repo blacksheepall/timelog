@@ -2,8 +2,10 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/blacksheepaul/timelog/internal/adapter"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 )
@@ -26,3 +28,17 @@ func strPtr(s string) *string    { return &s }
 func int32Ptr(v int32) *int32    { return &v }
 func boolPtr(v bool) *bool       { return &v }
 func float64Ptr(v float64) *float64 { return &v }
+
+func seedServiceConstraint(t *testing.T, svc *Service) *domain.Constraint {
+	t.Helper()
+	c := &domain.Constraint{
+		Description:     "seed",
+		PunishmentQuote: "seed",
+		StartDate:       time.Now().UTC(),
+		IsActive:        true,
+	}
+	if err := svc.CreateConstraint(c); err != nil {
+		t.Fatalf("seed constraint: %v", err)
+	}
+	return c
+}

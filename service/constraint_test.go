@@ -104,3 +104,24 @@ func TestMarkConstraintAsCompletedNotFound(t *testing.T) {
 		t.Fatalf("expected no error marking non-existent constraint completed, got %v", err)
 	}
 }
+
+func TestGetConstraintsByDateRange(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	start := time.Now().UTC().Add(-24 * time.Hour)
+	end := time.Now().UTC().Add(24 * time.Hour)
+
+	c := seedServiceConstraint(t, svc)
+	c.StartDate = time.Now().UTC()
+	if err := svc.UpdateConstraint(c); err != nil {
+		t.Fatalf("UpdateConstraint: %v", err)
+	}
+
+	constraints, err := svc.GetConstraintsByDateRange(start, end)
+	if err != nil {
+		t.Fatalf("GetConstraintsByDateRange: %v", err)
+	}
+	if len(constraints) != 1 {
+		t.Fatalf("expected 1 constraint in range, got %d", len(constraints))
+	}
+}
