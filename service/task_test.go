@@ -67,3 +67,59 @@ func TestCompleteTaskWithTimelogInvalidState(t *testing.T) {
 		t.Fatal("expected error when createTimelog true but timelogData nil")
 	}
 }
+
+func TestGetTasksByDateAndRange(t *testing.T) {
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
+
+	today := time.Now().UTC()
+	todayStart := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+	tomorrowStart := todayStart.Add(24 * time.Hour)
+
+	// Task due today
+	todayTask := seedServiceTask(t, svc)
+	todayTask.DueDate = todayStart.Add(1 * time.Hour)
+	if err := svc.UpdateTask(todayTask); err != nil {
+		t.Fatalf("UpdateTask: %v", err)
+	}
+
+	// Task due tomorrow
+	tomorrowTask := seedServiceTask(t, svc)
+	tomorrowTask.Title = "tomorrow"
+	tomorrowTask.DueDate = tomorrowStart.Add(1 * time.Hour)
+	if err := svc.UpdateTask(tomorrowTask); err != nil {
+		t.Fatalf("UpdateTask: %v", err)
+	}
+
+	byDate, err := svc.GetTasksByDate(todayStart, true, true)
+	if err != nil {
+		t.Fatalf("GetTasksByDate: %v", err)
+	}
+	if len(byDate) != 1 || byDate[0].ID != todayTask.ID {
+		t.Fatalf("expected 1 task today, got %d", len(byDate))
+	}
+
+	byRange, err := svc.GetTasksByDateRange(todayStart, tomorrowStart.Add(24*time.Hour))
+	if err != nil {
+		t.Fatalf("GetTasksByDateRange: %v", err)
+	}
+	if len(byRange) != 2 {
+		t.Fatalf("expected 2 tasks in range, got %d", len(byRange))
+	}
+
+	completed, err := svc.GetCompletedTasksInDateRange(todayStart, tomorrowStart.Add(24*time.Hour))
+	if err != nil {
+		t.Fatalf("GetCompletedTasksInDateRange: %v", err)
+	}
+	if len(completed) != 0 {
+		t.Fatalf("expected 0 completed tasks, got %d", len(completed))
+	}
+
+	stats, err := svc.GetTaskStats(todayStart)
+	if err != nil {
+		t.Fatalf("GetTaskStats: %v", err)
+	}
+	if stats["total_tasks"].(int64) != 1 {
+		t.Fatalf("expected total 1, got %v", stats["total_tasks"])
+	}
+}
