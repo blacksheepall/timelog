@@ -22,6 +22,9 @@ func setupMCPTestServer(t *testing.T) *service.Service {
 	testutil.ApplyMigrations(t, dao)
 	repos := adapter.NewRepositories(dao)
 	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+
+	oldServer := server
+	t.Cleanup(func() { server = oldServer })
 	server = &TimelogMCPServer{service: svc, config: cfg}
 	return svc
 }

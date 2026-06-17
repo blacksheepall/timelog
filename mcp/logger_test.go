@@ -8,6 +8,9 @@ import (
 )
 
 func TestInitMCPLoggerDisabled(t *testing.T) {
+	old := mcpLogger
+	t.Cleanup(func() { mcpLogger = old })
+
 	cfg := &config.Config{}
 	cfg.MCP.Enabled = false
 	log := InitMCPLogger(cfg)
@@ -17,6 +20,9 @@ func TestInitMCPLoggerDisabled(t *testing.T) {
 }
 
 func TestInitMCPLoggerDebugFalse(t *testing.T) {
+	old := mcpLogger
+	t.Cleanup(func() { mcpLogger = old })
+
 	cfg := &config.Config{}
 	cfg.MCP.Enabled = true
 	t.Setenv("MCP_DEBUG", "false")
@@ -27,11 +33,17 @@ func TestInitMCPLoggerDebugFalse(t *testing.T) {
 }
 
 func TestLogMCPErrorBeforeInit(t *testing.T) {
+	old := mcpLogger
+	t.Cleanup(func() { mcpLogger = old })
+
 	mcpLogger = nil
 	LogMCPError("op", errors.New("boom"), map[string]interface{}{"k": "v"})
 }
 
 func TestLogMCPDebugBeforeInit(t *testing.T) {
+	old := mcpLogger
+	t.Cleanup(func() { mcpLogger = old })
+
 	mcpLogger = nil
 	LogMCPDebug("msg", map[string]interface{}{"k": "v"})
 }

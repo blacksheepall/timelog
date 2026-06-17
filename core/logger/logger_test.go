@@ -9,6 +9,9 @@ import (
 )
 
 func TestGetLoggerBeforeSet(t *testing.T) {
+	old := ilogger
+	t.Cleanup(func() { ilogger = old })
+
 	ilogger = nil
 	if got := GetLogger(); got != nil {
 		t.Fatalf("expected nil, got %v", got)
@@ -16,6 +19,9 @@ func TestGetLoggerBeforeSet(t *testing.T) {
 }
 
 func TestSetZapLogger(t *testing.T) {
+	old := ilogger
+	t.Cleanup(func() { ilogger = old })
+
 	dir := t.TempDir()
 	cfg := config.Config{}
 	cfg.Log.Level = "info"
@@ -36,6 +42,9 @@ func TestSetZapLogger(t *testing.T) {
 }
 
 func TestSetZapLoggerCreatesDirectory(t *testing.T) {
+	old := ilogger
+	t.Cleanup(func() { ilogger = old })
+
 	dir := t.TempDir()
 	cfg := config.Config{}
 	cfg.Log.Level = "debug"
