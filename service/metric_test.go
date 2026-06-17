@@ -218,3 +218,78 @@ func TestEvaluateConstraintWithoutMetricRule(t *testing.T) {
 		t.Fatal("expected error for constraint without metric rule")
 	}
 }
+
+func TestGetMetricByIDNotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	_, err := svc.GetMetricByID(9999)
+	if err == nil {
+		t.Fatal("expected error for non-existent metric ID")
+	}
+}
+
+func TestGetMetricByNameNotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	_, err := svc.GetMetricByName("missing")
+	if err == nil {
+		t.Fatal("expected error for non-existent metric name")
+	}
+}
+
+func TestRecordMetricNotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	_, err := svc.RecordMetric(RecordMetricInput{
+		MetricName: "missing",
+		Value:      1,
+		Source:     "test",
+	})
+	if err == nil {
+		t.Fatal("expected error recording to non-existent metric")
+	}
+}
+
+func TestRecordMetricInvalidRecordedAt(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	metric := &domain.Metric{
+		Name:       "pages",
+		MetricType: "count",
+		Unit:       "pages",
+	}
+	if err := svc.CreateMetric(metric); err != nil {
+		t.Fatalf("CreateMetric: %v", err)
+	}
+
+	_, err := svc.RecordMetric(RecordMetricInput{
+		MetricName: "pages",
+		Value:      10,
+		Source:     "test",
+		RecordedAt: "bad",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid recorded_at")
+	}
+}
+
+func TestIncrementMetricNotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	_, err := svc.IncrementMetric(IncrementMetricInput{
+		MetricName: "missing",
+		Delta:      1,
+		Source:     "test",
+	})
+	if err == nil {
+		t.Fatal("expected error incrementing non-existent metric")
+	}
+}
+
+func TestDeleteMetricNotFound(t *testing.T) {
+	svc, _ := newTestService(t)
+
+	if err := svc.DeleteMetric(9999); err != nil {
+		t.Fatalf("expected no error deleting non-existent metric, got %v", err)
+	}
+}
