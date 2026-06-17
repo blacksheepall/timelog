@@ -92,3 +92,56 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 		t.Fatalf("remark not updated: %s", updated.Remark)
 	}
 }
+
+func TestUpdateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
+	db := dao.Db()
+
+	seed := &gen.Timelog{UserID: int32Ptr(1), CategoryID: 1, StartTime: time.Now().UTC()}
+	if err := model.CreateTimeLog(db, seed); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, CategoryID: 9999}); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestUpdateTimeLogFromMCPInputInvalidStartTime(t *testing.T) {
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
+	db := dao.Db()
+
+	seed := &gen.Timelog{UserID: int32Ptr(1), CategoryID: 1, StartTime: time.Now().UTC()}
+	if err := model.CreateTimeLog(db, seed); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, StartTime: "bad"}); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestUpdateTimeLogFromMCPInputInvalidEndTime(t *testing.T) {
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
+	db := dao.Db()
+
+	seed := &gen.Timelog{UserID: int32Ptr(1), CategoryID: 1, StartTime: time.Now().UTC()}
+	if err := model.CreateTimeLog(db, seed); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, EndTime: "bad"}); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestCreateTimeLogFromMCPInputInvalidEndTime(t *testing.T) {
+	svc, dao := newTestService(t)
+	testutil.SeedTestCategory(t, dao)
+	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1, EndTime: "bad"}); err == nil {
+		t.Fatal("expected error")
+	}
+}
