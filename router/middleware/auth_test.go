@@ -4,42 +4,25 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter"
+	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
 
-// FakeLogger for testing
-type FakeLogger struct{}
-
-func (l FakeLogger) Debug(fields ...interface{})                     {}
-func (l FakeLogger) Debugw(msg string, keysAndValues ...interface{}) {}
-func (l FakeLogger) Info(fields ...interface{})                      {}
-func (l FakeLogger) Infow(msg string, keysAndValues ...interface{})  {}
-func (l FakeLogger) Warn(fields ...interface{})                      {}
-func (l FakeLogger) Warnw(msg string, keysAndValues ...interface{})  {}
-func (l FakeLogger) Error(fields ...interface{})                     {}
-func (l FakeLogger) Errorw(msg string, keysAndValues ...interface{}) {}
-func (l FakeLogger) Fatal(fields ...interface{})                     {}
-func (l FakeLogger) Fatalw(msg string, keysAndValues ...interface{}) {}
-
-func setupTestDAO() *service.Service {
-	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
-	cfg.Log.ORMLogLevel = 1
-	dao, err := model.NewDao(cfg, FakeLogger{})
+func setupTestService() *service.Service {
+	cfg := testutil.NewTestConfig()
+	dao, err := model.NewDao(cfg, testutil.FakeLogger{})
 	if err != nil {
 		panic(err)
 	}
 	repos := adapter.NewRepositories(dao)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
-	return svc
+	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 }
 
 func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
-	svc := setupTestDAO()
+	svc := setupTestService()
 
 	sessionID := "test-session-abc123"
 	svc.WriteCache("passkey_session:"+sessionID, map[string]string{"challenge": "test-challenge"}, 300)
@@ -58,7 +41,7 @@ func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
 }
 
 func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
-	svc := setupTestDAO()
+	svc := setupTestService()
 
 	token := "valid-auth-token-xyz789"
 	err := svc.StoreSessionToken(token, 300)
@@ -80,7 +63,7 @@ func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
-	svc := setupTestDAO()
+	svc := setupTestService()
 
 	token := "unprefixed-token-123"
 	svc.WriteCache(token, true, 300)
