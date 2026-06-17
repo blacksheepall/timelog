@@ -29,6 +29,10 @@ func (s *Service) GetAllTasks(includeSuspended bool, includeCompleted bool) ([]d
 // ListTasksByCompletionStatus returns tasks filtered by completion state.
 // status must be "completed", "pending", or "all".
 func (s *Service) ListTasksByCompletionStatus(status string) ([]domain.Task, error) {
+	if status != "all" && status != "completed" && status != "pending" {
+		return nil, fmt.Errorf("invalid status %q: want completed, pending, or all", status)
+	}
+
 	tasks, err := s.taskRepo.GetAllTasks(true, true)
 	if err != nil {
 		return nil, err
@@ -48,8 +52,6 @@ func (s *Service) ListTasksByCompletionStatus(status string) ([]domain.Task, err
 			if !task.IsCompleted {
 				filtered = append(filtered, task)
 			}
-		default:
-			return nil, fmt.Errorf("invalid status %q: want completed, pending, or all", status)
 		}
 	}
 	return filtered, nil
@@ -110,6 +112,10 @@ func (s *Service) GetTaskStats(date time.Time) (map[string]interface{}, error) {
 // CompleteTaskWithTimelog 完成任务并创建时间记录
 // 这是一个组合操作，将任务标记为完成，并可选地创建关联的时间记录
 func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, timelogData *domain.TimeLog) error {
+	if createTimelog && timelogData == nil {
+		return fmt.Errorf("timelogData is required when createTimelog is true")
+	}
+
 	return s.unitOfWork.Run(context.Background(), func(repos ports.UnitOfWorkRepositories) error {
 		// 标记任务为完成
 		if err := repos.TaskRepo.MarkTaskAsCompleted(taskID); err != nil {
@@ -117,7 +123,7 @@ func (s *Service) CompleteTaskWithTimelog(taskID int32, createTimelog bool, time
 		}
 
 		// 如果需要创建时间记录
-		if createTimelog && timelogData != nil {
+		if createTimelog {
 			timelogData.TaskID = &taskID
 			if err := repos.TimelogRepo.CreateTimeLog(timelogData); err != nil {
 				return err
