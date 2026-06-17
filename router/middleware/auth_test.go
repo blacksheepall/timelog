@@ -80,3 +80,64 @@ func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
 		t.Errorf("Expected 401 Unauthorized for unprefixed key, got %d", w.Code)
 	}
 }
+
+func TestAuthMiddlewareRejectsMissingHeader(t *testing.T) {
+	svc := setupTestService()
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/test", nil)
+
+	Auth(svc)(c)
+
+	if w.Code != 401 {
+		t.Errorf("Expected 401 for missing header, got %d", w.Code)
+	}
+}
+
+func TestAuthMiddlewareRejectsInvalidHeaderFormat(t *testing.T) {
+	svc := setupTestService()
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "token")
+
+	Auth(svc)(c)
+
+	if w.Code != 401 {
+		t.Errorf("Expected 401 for invalid header, got %d", w.Code)
+	}
+}
+
+func TestAuthMiddlewareRejectsWrongScheme(t *testing.T) {
+	svc := setupTestService()
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "Basic abc")
+
+	Auth(svc)(c)
+
+	if w.Code != 401 {
+		t.Errorf("Expected 401 for wrong scheme, got %d", w.Code)
+	}
+}
+
+func TestAuthMiddlewareWithNilStore(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/test", nil)
+	c.Request.Header.Set("Authorization", "Bearer token")
+
+	Auth(nil)(c)
+
+	if w.Code != 401 {
+		t.Errorf("Expected 401 for nil store, got %d", w.Code)
+	}
+}
