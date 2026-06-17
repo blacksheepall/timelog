@@ -45,6 +45,12 @@ func TestResolveTTL(t *testing.T) {
 			defaultTTL: 900,
 			wantErr:    "too many positional arguments",
 		},
+		{
+			name:       "rejects non-numeric ttl",
+			args:       []string{"abc"},
+			defaultTTL: 900,
+			wantErr:    "invalid ttl: strconv.Atoi: parsing \"abc\": invalid syntax",
+		},
 	}
 
 	for _, tt := range tests {
@@ -105,6 +111,12 @@ func TestRunCreateUsesDefaultTTLAndPersistsRecord(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "temp password:") {
 		t.Fatalf("expected plaintext password in output, got %q", stdout.String())
+	}
+}
+
+func TestUsage(t *testing.T) {
+	if usage() == "" {
+		t.Fatal("expected usage string")
 	}
 }
 
