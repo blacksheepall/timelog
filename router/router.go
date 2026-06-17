@@ -2,7 +2,6 @@ package router
 
 import (
 	"context"
-	"embed"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -27,7 +26,7 @@ var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
 	)
 })
 
-func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles embed.FS, deps Dependencies) *gin.Engine {
+func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles fs.FS, deps Dependencies) *gin.Engine {
 	r.Use(GinLogger)
 	r.Use(middleware.Cors(cfg))
 

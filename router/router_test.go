@@ -3,10 +3,11 @@ package router
 import (
 	"bytes"
 	"context"
-	"embed"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -17,8 +18,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:embed all:web
-var testStaticFS embed.FS
+func newTestStaticFS() fs.FS {
+	return fstest.MapFS{
+		"web/dist/index.html":     &fstest.MapFile{Data: []byte("<!DOCTYPE html><html><body>app</body></html>")},
+		"web/dist/assets/app.js":  &fstest.MapFile{Data: []byte("console.log('app')")},
+		"web/dist/assets/app.css": &fstest.MapFile{Data: []byte("body {}")},
+		"web/dist/favicon.ico":    &fstest.MapFile{Data: []byte{}},
+		"web/dist/vite.svg":       &fstest.MapFile{Data: []byte{}},
+	}
+}
 
 func newTestServiceForRouter(t *testing.T, cfg *config.Config) *service.Service {
 	t.Helper()
@@ -40,7 +48,7 @@ func TestRegisterWithStaticFiles(t *testing.T) {
 	r := gin.New()
 	deps := Dependencies{Service: newTestServiceForRouter(t, cfg)}
 
-	registered := Register(r, cfg, testutil.FakeLogger{}, testStaticFS, deps)
+	registered := Register(r, cfg, testutil.FakeLogger{}, newTestStaticFS(), deps)
 	if registered == nil {
 		t.Fatal("expected router")
 	}
