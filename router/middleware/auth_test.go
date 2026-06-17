@@ -11,18 +11,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func setupTestService() *service.Service {
+func setupTestService(t *testing.T) *service.Service {
+	t.Helper()
 	cfg := testutil.NewTestConfig()
 	dao, err := model.NewDao(cfg, testutil.FakeLogger{})
 	if err != nil {
-		panic(err)
+		t.Fatalf("NewDao: %v", err)
 	}
 	repos := adapter.NewRepositories(dao)
 	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 }
 
 func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	sessionID := "test-session-abc123"
 	svc.WriteCache("passkey_session:"+sessionID, map[string]string{"challenge": "test-challenge"}, 300)
@@ -41,7 +42,7 @@ func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {
 }
 
 func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	token := "valid-auth-token-xyz789"
 	err := svc.StoreSessionToken(token, 300)
@@ -63,7 +64,7 @@ func TestAuthMiddlewareAcceptsValidToken(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	token := "unprefixed-token-123"
 	svc.WriteCache(token, true, 300)
@@ -82,7 +83,7 @@ func TestAuthMiddlewareRejectsUnprefixedCacheKey(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsMissingHeader(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -97,7 +98,7 @@ func TestAuthMiddlewareRejectsMissingHeader(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsInvalidHeaderFormat(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
@@ -113,7 +114,7 @@ func TestAuthMiddlewareRejectsInvalidHeaderFormat(t *testing.T) {
 }
 
 func TestAuthMiddlewareRejectsWrongScheme(t *testing.T) {
-	svc := setupTestService()
+	svc := setupTestService(t)
 
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()
