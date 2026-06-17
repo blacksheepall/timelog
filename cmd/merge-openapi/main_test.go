@@ -3,17 +3,28 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
-func TestRunMergesSchemas(t *testing.T) {
+func chdirToTempDir(t *testing.T) {
+	t.Helper()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(wd)
+	})
+
 	dir := t.TempDir()
 	if err := os.Chdir(dir); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
-	defer func() {
-		_ = os.Chdir("/Users/gear/dev/timelog")
-	}()
+}
+
+func TestRunMergesSchemas(t *testing.T) {
+	chdirToTempDir(t)
 
 	if err := os.MkdirAll(filepath.Join("api", "openapi"), 0o755); err != nil {
 		t.Fatalf("mkdir api: %v", err)
@@ -60,32 +71,13 @@ paths: {}
 	if err != nil {
 		t.Fatalf("read output: %v", err)
 	}
-	if !contains(string(data), "Timelog") {
+	if !strings.Contains(string(data), "Timelog") {
 		t.Fatalf("expected Timelog schema in output")
 	}
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
-
 func TestRunMissingRestSpec(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
-	defer func() {
-		_ = os.Chdir("/Users/gear/dev/timelog")
-	}()
+	chdirToTempDir(t)
 
 	if err := os.MkdirAll(filepath.Join("gen", "openapi", "schemas"), 0o755); err != nil {
 		t.Fatalf("mkdir schemas: %v", err)
@@ -97,13 +89,7 @@ func TestRunMissingRestSpec(t *testing.T) {
 }
 
 func TestRunInvalidRestSpec(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
-	defer func() {
-		_ = os.Chdir("/Users/gear/dev/timelog")
-	}()
+	chdirToTempDir(t)
 
 	if err := os.MkdirAll(filepath.Join("api", "openapi"), 0o755); err != nil {
 		t.Fatalf("mkdir api: %v", err)
@@ -121,13 +107,7 @@ func TestRunInvalidRestSpec(t *testing.T) {
 }
 
 func TestRunInvalidSchemaJSON(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
-	defer func() {
-		_ = os.Chdir("/Users/gear/dev/timelog")
-	}()
+	chdirToTempDir(t)
 
 	if err := os.MkdirAll(filepath.Join("api", "openapi"), 0o755); err != nil {
 		t.Fatalf("mkdir api: %v", err)
