@@ -378,3 +378,73 @@ func TestMoveCategoryRejectsExceedingMaxLevel(t *testing.T) {
 		t.Fatal("expected error exceeding max level after move")
 	}
 }
+
+func TestListCategoriesDirectly(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+	_ = mustCreateCategory(t, db, "A", nil)
+
+	list, err := ListCategories(db)
+	if err != nil {
+		t.Fatalf("ListCategories: %v", err)
+	}
+	if len(list) < 1 {
+		t.Fatalf("expected at least 1 category, got %d", len(list))
+	}
+}
+
+func TestListCategoriesByLevelDirectly(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+	_ = mustCreateCategory(t, db, "LevelOne", nil)
+
+	list, err := ListCategoriesByLevel(db, 1)
+	if err != nil {
+		t.Fatalf("ListCategoriesByLevel: %v", err)
+	}
+	if len(list) < 1 {
+		t.Fatalf("expected at least 1 category, got %d", len(list))
+	}
+}
+
+func TestGetCategoriesByParentIDDirectly(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+	root := mustCreateCategory(t, db, "RootParent", nil)
+	_ = mustCreateCategory(t, db, "ChildOfRoot", root.ID)
+
+	children, err := GetCategoriesByParentID(db, root.ID)
+	if err != nil {
+		t.Fatalf("GetCategoriesByParentID: %v", err)
+	}
+	if len(children) < 1 {
+		t.Fatalf("expected at least 1 child, got %d", len(children))
+	}
+
+	roots, err := GetCategoriesByParentID(db, nil)
+	if err != nil {
+		t.Fatalf("GetCategoriesByParentID nil: %v", err)
+	}
+	if len(roots) < 1 {
+		t.Fatalf("expected at least 1 root, got %d", len(roots))
+	}
+}
+
+func TestGetCategoryTreeDirectly(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+	root := mustCreateCategory(t, db, "TreeRoot", nil)
+	_ = mustCreateCategory(t, db, "TreeChild", root.ID)
+
+	tree, err := GetCategoryTree(db)
+	if err != nil {
+		t.Fatalf("GetCategoryTree: %v", err)
+	}
+	if len(tree) < 1 {
+		t.Fatalf("expected at least 1 root node, got %d", len(tree))
+	}
+}
