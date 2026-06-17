@@ -92,6 +92,14 @@ func TestGetTasksByStatus(t *testing.T) {
 	}
 }
 
+func TestGetTasksByStatusInvalid(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := GetTasksByStatus(context.Background(), nil, TaskStatusParams{Status: "bad"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 func TestGetActiveConstraints(t *testing.T) {
 	svc := setupMCPTestServer(t)
 	if err := svc.CreateConstraint(&domain.Constraint{Description: "focus", PunishmentQuote: "punish", StartDate: time.Now(), IsActive: true}); err != nil {
@@ -238,5 +246,45 @@ func TestEvaluateConstraintMCP(t *testing.T) {
 	}
 	if res == nil {
 		t.Fatal("expected result")
+	}
+}
+
+func TestCreateTimeLogMCPInvalidCategory(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := CreateTimeLog(context.Background(), nil, CreateTimeLogParams{CategoryID: 9999})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestUpdateTimeLogMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := UpdateTimeLog(context.Background(), nil, UpdateTimeLogParams{ID: 9999})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestRecordMetricMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := RecordMetric(context.Background(), nil, RecordMetricParams{MetricName: "missing", Value: 1, Source: "test"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestGetMetricMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := GetMetric(context.Background(), nil, GetMetricParams{Name: "missing"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestEvaluateConstraintMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := EvaluateConstraintMCP(context.Background(), nil, EvaluateConstraintParams{ConstraintID: 9999})
+	if err == nil {
+		t.Fatal("expected error")
 	}
 }
