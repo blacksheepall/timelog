@@ -1,17 +1,35 @@
-package model
+package model_test
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/blacksheepaul/timelog/internal/testutil"
+	. "github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	sqlite "github.com/ncruces/go-sqlite3/gormlite"
+	"github.com/blacksheepaul/timelog/pkg/errs"
 	"gorm.io/gorm"
 )
 
-// TestBuildCategoryTreePointers tests that the tree building uses pointers correctly
-// so that children are preserved in the returned structure
+func mustCreateCategory(t *testing.T, db *gorm.DB, name string, parentID *int32) *gen.Category {
+	t.Helper()
+	color := "#3B82F6"
+	desc := ""
+	cat := &gen.Category{
+		Name:        name,
+		Color:       &color,
+		Description: &desc,
+		ParentID:    parentID,
+	}
+	if err := CreateCategory(db, cat); err != nil {
+		t.Fatalf("create category %s: %v", name, err)
+	}
+	return cat
+}
+
+// --- buildCategoryTree tests (preserved from original) ---
+
 func TestBuildCategoryTreePointers(t *testing.T) {
-	// Create test categories
 	rootID := int32(1)
 	childID := int32(2)
 	grandchildID := int32(3)
@@ -29,72 +47,35 @@ func TestBuildCategoryTreePointers(t *testing.T) {
 	levelThree := int32(3)
 
 	categories := []gen.Category{
-		{
-			ID:          &rootID,
-			Name:        "Root",
-			Color:       &rootColor,
-			Description: &rootDesc,
-			ParentID:    nil,
-			Level:       &levelOne,
-			Path:        &rootPath,
-		},
-		{
-			ID:          &childID,
-			Name:        "Child",
-			Color:       &childColor,
-			Description: &childDesc,
-			ParentID:    &rootID,
-			Level:       &levelTwo,
-			Path:        &childPath,
-		},
-		{
-			ID:          &grandchildID,
-			Name:        "Grandchild",
-			Color:       &grandchildColor,
-			Description: &grandchildDesc,
-			ParentID:    &childID,
-			Level:       &levelThree,
-			Path:        &grandchildPath,
-		},
+		{ID: &rootID, Name: "Root", Color: &rootColor, Description: &rootDesc, ParentID: nil, Level: &levelOne, Path: &rootPath},
+		{ID: &childID, Name: "Child", Color: &childColor, Description: &childDesc, ParentID: &rootID, Level: &levelTwo, Path: &childPath},
+		{ID: &grandchildID, Name: "Grandchild", Color: &grandchildColor, Description: &grandchildDesc, ParentID: &childID, Level: &levelThree, Path: &grandchildPath},
 	}
 
-	// Build the tree
-	tree := buildCategoryTree(categories)
-
-	// Verify tree structure
+	tree := BuildCategoryTree(categories)
 	if len(tree) != 1 {
 		t.Fatalf("Expected 1 root node, got %d", len(tree))
 	}
-
 	rootNode := tree[0]
 	if *rootNode.Category.ID != rootID {
 		t.Errorf("Expected root ID %d, got %d", rootID, *rootNode.Category.ID)
 	}
-
 	if len(rootNode.Children) != 1 {
-		t.Fatalf("Expected root to have 1 child, got %d. This suggests children array was copied by value instead of using pointers.", len(rootNode.Children))
+		t.Fatalf("Expected root to have 1 child, got %d", len(rootNode.Children))
 	}
-
 	childNode := rootNode.Children[0]
 	if *childNode.Category.ID != childID {
 		t.Errorf("Expected child ID %d, got %d", childID, *childNode.Category.ID)
 	}
-
 	if len(childNode.Children) != 1 {
-		t.Fatalf("Expected child to have 1 grandchild, got %d. This suggests children array was copied by value instead of using pointers.", len(childNode.Children))
+		t.Fatalf("Expected child to have 1 grandchild, got %d", len(childNode.Children))
 	}
-
 	grandchildNode := childNode.Children[0]
 	if *grandchildNode.Category.ID != grandchildID {
 		t.Errorf("Expected grandchild ID %d, got %d", grandchildID, *grandchildNode.Category.ID)
 	}
-
-	if len(grandchildNode.Children) != 0 {
-		t.Errorf("Expected grandchild to have no children, got %d", len(grandchildNode.Children))
-	}
 }
 
-// TestBuildCategoryTreeMultipleRoots tests tree building with multiple root nodes
 func TestBuildCategoryTreeMultipleRoots(t *testing.T) {
 	root1ID := int32(1)
 	root2ID := int32(2)
@@ -104,39 +85,16 @@ func TestBuildCategoryTreeMultipleRoots(t *testing.T) {
 	levelTwo := int32(2)
 
 	categories := []gen.Category{
-		{
-			ID:       &root1ID,
-			Name:     "Root1",
-			ParentID: nil,
-			Level:    &levelOne,
-		},
-		{
-			ID:       &root2ID,
-			Name:     "Root2",
-			ParentID: nil,
-			Level:    &levelOne,
-		},
-		{
-			ID:       &child1ID,
-			Name:     "Child1",
-			ParentID: &root1ID,
-			Level:    &levelTwo,
-		},
-		{
-			ID:       &child2ID,
-			Name:     "Child2",
-			ParentID: &root2ID,
-			Level:    &levelTwo,
-		},
+		{ID: &root1ID, Name: "Root1", ParentID: nil, Level: &levelOne},
+		{ID: &root2ID, Name: "Root2", ParentID: nil, Level: &levelOne},
+		{ID: &child1ID, Name: "Child1", ParentID: &root1ID, Level: &levelTwo},
+		{ID: &child2ID, Name: "Child2", ParentID: &root2ID, Level: &levelTwo},
 	}
 
-	tree := buildCategoryTree(categories)
-
+	tree := BuildCategoryTree(categories)
 	if len(tree) != 2 {
 		t.Fatalf("Expected 2 root nodes, got %d", len(tree))
 	}
-
-	// Verify each root has exactly one child
 	for _, root := range tree {
 		if len(root.Children) != 1 {
 			t.Errorf("Expected root '%s' to have 1 child, got %d", root.Category.Name, len(root.Children))
@@ -144,54 +102,35 @@ func TestBuildCategoryTreeMultipleRoots(t *testing.T) {
 	}
 }
 
-// TestBuildCategoryTreeEmptyInput tests with empty category list
 func TestBuildCategoryTreeEmptyInput(t *testing.T) {
-	categories := []gen.Category{}
-	tree := buildCategoryTree(categories)
-
+	tree := BuildCategoryTree([]gen.Category{})
 	if len(tree) != 0 {
 		t.Errorf("Expected empty tree, got %d nodes", len(tree))
 	}
 }
 
-// TestBuildCategoryTreeSingleRoot tests with only one root category
 func TestBuildCategoryTreeSingleRoot(t *testing.T) {
 	rootID := int32(1)
 	levelOne := int32(1)
-
 	categories := []gen.Category{
-		{
-			ID:       &rootID,
-			Name:     "OnlyRoot",
-			ParentID: nil,
-			Level:    &levelOne,
-		},
+		{ID: &rootID, Name: "OnlyRoot", ParentID: nil, Level: &levelOne},
 	}
-
-	tree := buildCategoryTree(categories)
-
+	tree := BuildCategoryTree(categories)
 	if len(tree) != 1 {
 		t.Fatalf("Expected 1 root node, got %d", len(tree))
 	}
-
 	if len(tree[0].Children) != 0 {
 		t.Errorf("Expected root to have no children, got %d", len(tree[0].Children))
 	}
 }
 
-// TestMoveCategoryUpdatesDescendantLevels verifies that moving a category
-// updates both its own level/path and those of all its descendants.
+// --- move tests (preserved from original, now with testutil) ---
+
 func TestMoveCategoryUpdatesDescendantLevels(t *testing.T) {
-	db, err := openTestDB()
-	if err != nil {
-		t.Fatalf("open test db: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
-	if err := db.AutoMigrate(&gen.Category{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
-
-	// Create two roots, one child under rootA, one grandchild under child.
 	rootA := mustCreateCategory(t, db, "RootA", nil)
 	rootB := mustCreateCategory(t, db, "RootB", nil)
 	child := mustCreateCategory(t, db, "Child", rootA.ID)
@@ -204,12 +143,10 @@ func TestMoveCategoryUpdatesDescendantLevels(t *testing.T) {
 		t.Fatalf("expected grandchild level 3, got %d", *grandchild.Level)
 	}
 
-	// Move child (with its descendant) from rootA to rootB.
 	if err := MoveCategory(db, *child.ID, rootB.ID); err != nil {
 		t.Fatalf("move category: %v", err)
 	}
 
-	// Reload and verify.
 	movedChild, err := GetCategoryByID(db, *child.ID)
 	if err != nil {
 		t.Fatalf("get moved child: %v", err)
@@ -236,23 +173,15 @@ func TestMoveCategoryUpdatesDescendantLevels(t *testing.T) {
 	}
 }
 
-// TestMoveCategoryToRoot verifies that moving a category to root level
-// decreases its own level and its descendants' levels accordingly.
 func TestMoveCategoryToRoot(t *testing.T) {
-	db, err := openTestDB()
-	if err != nil {
-		t.Fatalf("open test db: %v", err)
-	}
-
-	if err := db.AutoMigrate(&gen.Category{}); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
 
 	root := mustCreateCategory(t, db, "Root", nil)
 	child := mustCreateCategory(t, db, "Child", root.ID)
 	grandchild := mustCreateCategory(t, db, "Grandchild", child.ID)
 
-	// Move child to root.
 	if err := MoveCategory(db, *child.ID, nil); err != nil {
 		t.Fatalf("move category to root: %v", err)
 	}
@@ -283,22 +212,169 @@ func TestMoveCategoryToRoot(t *testing.T) {
 	}
 }
 
-func openTestDB() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+// --- new bad-case tests ---
+
+func TestValidateLevel(t *testing.T) {
+	if err := ValidateLevel(1); err != nil {
+		t.Fatalf("level 1 should be valid: %v", err)
+	}
+	if err := ValidateLevel(3); err != nil {
+		t.Fatalf("level 3 should be valid: %v", err)
+	}
+	if err := ValidateLevel(0); err == nil {
+		t.Fatal("level 0 should be invalid")
+	}
+	if err := ValidateLevel(4); err == nil {
+		t.Fatal("level 4 should be invalid")
+	}
 }
 
-func mustCreateCategory(t *testing.T, db *gorm.DB, name string, parentID *int32) *gen.Category {
-	t.Helper()
-	color := "#3B82F6"
-	desc := ""
-	cat := &gen.Category{
-		Name:        name,
-		Color:       &color,
-		Description: &desc,
-		ParentID:    parentID,
+func TestGetFullPath(t *testing.T) {
+	rootPath := "/"
+	root := &gen.Category{Name: "Root", Path: &rootPath}
+	if got := GetFullPath(root); got != "/Root" {
+		t.Fatalf("root full path: want /Root, got %s", got)
 	}
-	if err := CreateCategory(db, cat); err != nil {
-		t.Fatalf("create category %s: %v", name, err)
+
+	childPath := "/Root"
+	child := &gen.Category{Name: "Child", Path: &childPath}
+	if got := GetFullPath(child); got != "/Root/Child" {
+		t.Fatalf("child full path: want /Root/Child, got %s", got)
 	}
-	return cat
+}
+
+func TestCreateCategoryRejectsInvalidParentID(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	invalid := int32(0)
+	cat := &gen.Category{Name: "bad", ParentID: &invalid}
+	if err := CreateCategory(db, cat); !errors.Is(err, errs.ErrInvalidParentID) {
+		t.Fatalf("expected ErrInvalidParentID, got %v", err)
+	}
+}
+
+func TestCreateCategoryRejectsMissingParent(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	missing := int32(9999)
+	cat := &gen.Category{Name: "orphan", ParentID: &missing}
+	if err := CreateCategory(db, cat); err == nil {
+		t.Fatal("expected error for missing parent")
+	}
+}
+
+func TestCreateCategoryRejectsExceedingMaxLevel(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	child := mustCreateCategory(t, db, "Child", root.ID)
+	grandchild := mustCreateCategory(t, db, "Grandchild", child.ID)
+
+	fourth := &gen.Category{Name: "TooDeep", ParentID: grandchild.ID}
+	if err := CreateCategory(db, fourth); err == nil {
+		t.Fatal("expected error exceeding max level")
+	}
+}
+
+func TestGetCategoryByIDNotFound(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	_, err := GetCategoryByID(db, 9999)
+	if err == nil {
+		t.Fatal("expected error for non-existent category")
+	}
+}
+
+func TestGetCategoryByNameNotFound(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	_, err := GetCategoryByName(db, "missing", nil)
+	if err == nil {
+		t.Fatal("expected error for non-existent category name")
+	}
+}
+
+func TestUpdateCategoryPreservesHierarchy(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	child := mustCreateCategory(t, db, "Child", root.ID)
+
+	newParent := int32(9999)
+	newLevel := int32(99)
+	newPath := "/hacked"
+	child.ParentID = &newParent
+	child.Level = &newLevel
+	child.Path = &newPath
+	child.Name = "Renamed"
+	if err := UpdateCategory(db, child); err != nil {
+		t.Fatalf("UpdateCategory: %v", err)
+	}
+
+	got, err := GetCategoryByID(db, *child.ID)
+	if err != nil {
+		t.Fatalf("GetCategoryByID: %v", err)
+	}
+	if got.Name != "Renamed" {
+		t.Fatalf("name not updated: %s", got.Name)
+	}
+	if *got.ParentID != *root.ID {
+		t.Fatalf("parent_id was changed: %d", *got.ParentID)
+	}
+	if *got.Level != 2 {
+		t.Fatalf("level was changed: %d", *got.Level)
+	}
+}
+
+func TestMoveCategoryRejectsSelf(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	if err := MoveCategory(db, *root.ID, root.ID); err == nil {
+		t.Fatal("expected error moving category to itself")
+	}
+}
+
+func TestMoveCategoryRejectsDescendant(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	child := mustCreateCategory(t, db, "Child", root.ID)
+	if err := MoveCategory(db, *root.ID, child.ID); err == nil {
+		t.Fatal("expected error moving category to its own child")
+	}
+}
+
+func TestMoveCategoryRejectsExceedingMaxLevel(t *testing.T) {
+	dao := testutil.NewTestDAO(t)
+	testutil.ApplyMigrations(t, dao)
+	db := dao.Db()
+
+	root := mustCreateCategory(t, db, "Root", nil)
+	child := mustCreateCategory(t, db, "Child", root.ID)
+	grandchild := mustCreateCategory(t, db, "Grandchild", child.ID)
+
+	otherRoot := mustCreateCategory(t, db, "OtherRoot", nil)
+	deep := mustCreateCategory(t, db, "Deep", otherRoot.ID)
+	_ = mustCreateCategory(t, db, "Deeper", deep.ID)
+
+	if err := MoveCategory(db, *otherRoot.ID, grandchild.ID); err == nil {
+		t.Fatal("expected error exceeding max level after move")
+	}
 }

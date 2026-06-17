@@ -227,7 +227,7 @@ func GetCategoryTree(db *gorm.DB) ([]*CategoryNode, error) {
 		return nil, err
 	}
 
-	return buildCategoryTree(categories), nil
+	return BuildCategoryTree(categories), nil
 }
 
 // CategoryNode 分类树节点
@@ -236,8 +236,8 @@ type CategoryNode struct {
 	Children []*CategoryNode `json:"children,omitempty"`
 }
 
-// buildCategoryTree 构建分类树
-func buildCategoryTree(categories []gen.Category) []*CategoryNode {
+// BuildCategoryTree 构建分类树
+func BuildCategoryTree(categories []gen.Category) []*CategoryNode {
 	nodeMap := make(map[int32]*CategoryNode)
 	var roots []*CategoryNode
 
