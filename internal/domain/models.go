@@ -70,18 +70,18 @@ type Task struct {
 // --- Constraint ---
 
 type Constraint struct {
-	ID              int32
-	Description     string
-	EndReason       string
-	PunishmentQuote string
-	StartDate       time.Time
-	EndDate         *time.Time
-	IsActive        bool
-	MetricID        *int32
-	MetricOperator  *string
+	ID                int32
+	Description       string
+	EndReason         string
+	PunishmentQuote   string
+	StartDate         time.Time
+	EndDate           *time.Time
+	IsActive          bool
+	MetricID          *int32
+	MetricOperator    *string
 	MetricTargetValue *float64
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 // --- Metric ---

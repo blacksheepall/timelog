@@ -86,9 +86,9 @@ func toDomainCategory(g *gen.Category) *domain.Category {
 		return nil
 	}
 	d := &domain.Category{
-		Name:        g.Name,
-		CreatedAt:   g.CreatedAt,
-		UpdatedAt:   g.UpdatedAt,
+		Name:      g.Name,
+		CreatedAt: g.CreatedAt,
+		UpdatedAt: g.UpdatedAt,
 	}
 	if g.ID != nil {
 		d.ID = *g.ID
@@ -427,9 +427,9 @@ func toDomainMetricRecord(g *gen.MetricRecord) *domain.MetricRecord {
 		return nil
 	}
 	d := &domain.MetricRecord{
-		MetricID: g.MetricID,
-		Value:    g.Value,
-		Source:   "",
+		MetricID:  g.MetricID,
+		Value:     g.Value,
+		Source:    "",
 		CreatedAt: time.Time{},
 	}
 	if g.ID != nil {

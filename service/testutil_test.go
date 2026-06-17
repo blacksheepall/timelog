@@ -24,9 +24,9 @@ func newTestService(t *testing.T) (*Service, *model.Dao) {
 	return svc, dao
 }
 
-func strPtr(s string) *string    { return &s }
-func int32Ptr(v int32) *int32    { return &v }
-func boolPtr(v bool) *bool       { return &v }
+func strPtr(s string) *string       { return &s }
+func int32Ptr(v int32) *int32       { return &v }
+func boolPtr(v bool) *bool          { return &v }
 func float64Ptr(v float64) *float64 { return &v }
 
 func seedServiceConstraint(t *testing.T, svc *Service) *domain.Constraint {
