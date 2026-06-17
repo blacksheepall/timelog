@@ -30,6 +30,9 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	api := r.Group("/api")
 	setupCategoryRoutes(api, deps)
 	RegisterTimeLogRoutes(api, deps)
+	setupTaskRoutes(api, deps)
+	setupMetricRoutes(api, deps)
+	setupConstraintRoutes(api, deps)
 
 	return r, svc
 }
@@ -41,4 +44,6 @@ func seedCategory(t *testing.T, svc *service.Service) {
 	}
 }
 
-func int32Ptr(v int32) *int32 { return &v }
+func int32Ptr(v int32) *int32       { return &v }
+func strPtr(v string) *string       { return &v }
+func float64Ptr(v float64) *float64 { return &v }
