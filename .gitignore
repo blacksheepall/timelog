@@ -48,12 +48,17 @@ docs/superpowers/**
 docs/swagger*
 app.log
 mcp.log
-main
-main.*
-!cmd/**/main.go
+
+# Built binaries at repo root
+/main
+/main.linux
+/main.exe
+/main.test
+
 .DS_STORE
 web/node_modules
 web/dist
+web/package-lock.json
 .claude/settings.json
 dev.db.bk*
 
