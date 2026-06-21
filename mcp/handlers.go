@@ -56,11 +56,20 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 
 		var result []map[string]interface{}
 		for _, tl := range timeLogs {
+			categoryName := ""
+			if tl.CategoryID > 0 {
+				if cat, err := server.service.GetCategoryByID(tl.CategoryID); err == nil && cat != nil {
+					categoryName = cat.Name
+				}
+			}
+
 			entry := map[string]interface{}{
-				"id":         tl.ID,
-				"start_time": service.FormatSGDateTime(tl.StartTime),
-				"duration":   service.FormatDuration(time.Since(tl.StartTime)),
-				"remarks":    tl.Remark,
+				"id":            tl.ID,
+				"category_id":   tl.CategoryID,
+				"category_name": categoryName,
+				"start_time":    service.FormatSGDateTime(tl.StartTime),
+				"duration":      service.FormatDuration(time.Since(tl.StartTime)),
+				"remarks":       tl.Remark,
 			}
 			result = append(result, entry)
 		}
@@ -99,12 +108,21 @@ func GetTimeLogsByDateRange(ctx context.Context, req *mcp.CallToolRequest, args 
 			durationStr = service.FormatDuration(duration)
 		}
 
+		categoryName := ""
+		if tl.CategoryID > 0 {
+			if cat, err := server.service.GetCategoryByID(tl.CategoryID); err == nil && cat != nil {
+				categoryName = cat.Name
+			}
+		}
+
 		entry := map[string]interface{}{
-			"id":         tl.ID,
-			"start_time": service.FormatSGDateTime(tl.StartTime),
-			"end_time":   nil,
-			"duration":   durationStr,
-			"remarks":    tl.Remark,
+			"id":            tl.ID,
+			"category_id":   tl.CategoryID,
+			"category_name": categoryName,
+			"start_time":    service.FormatSGDateTime(tl.StartTime),
+			"end_time":      nil,
+			"duration":      durationStr,
+			"remarks":       tl.Remark,
 		}
 
 		if tl.EndTime != nil {

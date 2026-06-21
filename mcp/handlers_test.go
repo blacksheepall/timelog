@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 func setupMCPTestServer(t *testing.T) *service.Service {
@@ -42,9 +44,6 @@ func TestGetDateInfo(t *testing.T) {
 
 func TestGetTimeLogsByDateRangeActiveOnly(t *testing.T) {
 	svc := setupMCPTestServer(t)
-	if err := svc.CreateCategory(&domain.Category{Name: "work"}); err != nil {
-		t.Fatalf("create category: %v", err)
-	}
 	if _, err := svc.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{CategoryID: 1, Remark: "active"}); err != nil {
 		t.Fatalf("create timelog: %v", err)
 	}
@@ -56,15 +55,33 @@ func TestGetTimeLogsByDateRangeActiveOnly(t *testing.T) {
 	if res == nil {
 		t.Fatal("expected result")
 	}
+
+	text := res.Content[0].(*mcp.TextContent).Text
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(text), &payload); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	logs := payload["active_logs"].([]interface{})
+	if len(logs) != 1 {
+		t.Fatalf("expected 1 active log, got %d", len(logs))
+	}
+	entry := logs[0].(map[string]interface{})
+	if entry["category_id"].(float64) != 1 {
+		t.Fatalf("expected category_id 1, got %v", entry["category_id"])
+	}
+	if entry["category_name"].(string) != "工作" {
+		t.Fatalf("expected category_name 工作, got %v", entry["category_name"])
+	}
 }
 
 func TestGetTimeLogsByDateRange(t *testing.T) {
 	svc := setupMCPTestServer(t)
-	if err := svc.CreateCategory(&domain.Category{Name: "work"}); err != nil {
-		t.Fatalf("create category: %v", err)
-	}
-	now := time.Now()
-	if err := svc.CreateTimeLog(&domain.TimeLog{CategoryID: 1, StartTime: now.Add(-time.Hour), EndTime: &now, Remark: "done"}); err != nil {
+	if _, err := svc.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
+		CategoryID: 1,
+		StartTime:  service.FormatSGDateTime(time.Now().Add(-time.Hour)),
+		EndTime:    service.FormatSGDateTime(time.Now()),
+		Remark:     "done",
+	}); err != nil {
 		t.Fatalf("create timelog: %v", err)
 	}
 
@@ -74,6 +91,23 @@ func TestGetTimeLogsByDateRange(t *testing.T) {
 	}
 	if res == nil {
 		t.Fatal("expected result")
+	}
+
+	text := res.Content[0].(*mcp.TextContent).Text
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(text), &payload); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	logs := payload["time_logs"].([]interface{})
+	if len(logs) != 1 {
+		t.Fatalf("expected 1 time log, got %d", len(logs))
+	}
+	entry := logs[0].(map[string]interface{})
+	if entry["category_id"].(float64) != 1 {
+		t.Fatalf("expected category_id 1, got %v", entry["category_id"])
+	}
+	if entry["category_name"].(string) != "工作" {
+		t.Fatalf("expected category_name 工作, got %v", entry["category_name"])
 	}
 }
 
