@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getAuthToken } from '@/utils/auth'
+import { clearAuthToken, getAuthToken } from '@/utils/auth'
 import type { ApiResponse } from '@/types/api'
 import type { CategoryNode } from '@/types'
 import type {
@@ -78,6 +78,14 @@ api.interceptors.response.use(
     if (isTimeout && !isCancellation && notificationHandler) {
       // Show browser notification for timeout (but not for explicit cancellations)
       notificationHandler('error', 'Request timeout - The server took too long to respond')
+    }
+
+    // Handle 401 Unauthorized globally: clear token and redirect to login
+    if (error.response?.status === 401) {
+      clearAuthToken()
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
 
     return Promise.reject(error)
