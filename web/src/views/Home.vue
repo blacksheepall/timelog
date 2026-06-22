@@ -143,7 +143,7 @@
 <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
   import { ClockIcon, PlayIcon, StopIcon, TagIcon } from '@heroicons/vue/24/outline'
-  import { timelogAPI, categoryAPI } from '@/api'
+  import { timelogAPI, categoryAPI, configAPI } from '@/api'
   import { formatDateTime, calculateDuration } from '@/utils/date'
   import { parseISO } from 'date-fns'
   import type { TimeLog, Category } from '@/types'
@@ -152,21 +152,31 @@
   const recentLogs = ref<TimeLog[]>([])
   const todayLogs = ref<TimeLog[]>([])
   const categories = ref<Category[]>([])
+  const timezone = ref('Asia/Singapore')
 
   const getCategory = (categoryId: number): Category | undefined => {
     return categories.value.find(c => c.id === categoryId)
   }
 
-  // 获取今天（SGT 时区）的开始和结束时间（UTC Date）
+  // 获取指定时区下今天的开始和结束时间（UTC Date）
+  const getTimezoneOffsetMs = (tz: string, date: Date): number => {
+    const utcString = date.toLocaleString('en-US', { timeZone: 'UTC' })
+    const tzString = date.toLocaleString('en-US', { timeZone: tz })
+    return new Date(tzString).getTime() - new Date(utcString).getTime()
+  }
+
   const getTodayBounds = () => {
     const now = new Date()
-    const sgtOffsetMs = 8 * 60 * 60 * 1000
-    const sgtNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + sgtOffsetMs)
-    const sgtDateStr = sgtNow.toISOString().split('T')[0]
-    return {
-      start: parseISO(`${sgtDateStr}T00:00:00+08:00`),
-      end: parseISO(`${sgtDateStr}T23:59:59.999+08:00`),
-    }
+    const offsetMs = getTimezoneOffsetMs(timezone.value, now)
+    const tzNow = new Date(now.getTime() + offsetMs)
+    const tzDateStr = tzNow.toISOString().split('T')[0]
+
+    const start = new Date(`${tzDateStr}T00:00:00.000Z`)
+    start.setTime(start.getTime() - offsetMs)
+    const end = new Date(`${tzDateStr}T23:59:59.999Z`)
+    end.setTime(end.getTime() - offsetMs)
+
+    return { start, end }
   }
 
   // 今日统计数据
@@ -316,7 +326,17 @@
   }
 
   onMounted(() => {
-    loadRecentLogs()
-    loadCategories()
+    configAPI
+      .getTimezone()
+      .then(response => {
+        if (response.data?.timezone) {
+          timezone.value = response.data.timezone
+        }
+      })
+      .catch(err => console.error('Error loading timezone:', err))
+      .finally(() => {
+        loadRecentLogs()
+        loadCategories()
+      })
   })
 </script>

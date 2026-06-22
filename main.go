@@ -12,6 +12,7 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	log "github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/app"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 	"github.com/blacksheepaul/timelog/router"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,11 @@ var staticFiles embed.FS
 
 func main() {
 	cfg := config.GetConfig("config.yml")
+
+	if err := timeutil.SetTimezone(cfg.App.Timezone); err != nil {
+		panic("Failed to set timezone: " + err.Error())
+	}
+
 	logger := log.SetZapLogger(*cfg)
 
 	application, err := app.New(cfg, logger, nil)

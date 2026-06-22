@@ -1,4 +1,6 @@
 dev_mode: false
+app:
+  timezone: 'Asia/Singapore' # Application timezone for date boundaries and display
 database:
   host: ./dev.db
 server:

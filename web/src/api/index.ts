@@ -236,6 +236,11 @@ export const metricAPI = {
     api.delete(`/metrics/${id}`).then(res => res.data),
 }
 
+export const configAPI = {
+  getTimezone: (): Promise<ApiResponse<{ timezone: string }>> =>
+    api.get('/timezone').then(res => res.data),
+}
+
 export const passkeyAPI = {
   registerBegin: (
     tempPassword: string,

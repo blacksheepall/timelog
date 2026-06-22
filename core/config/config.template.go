@@ -1,7 +1,10 @@
 package config
 
 type Config struct {
-	DevMode  bool `yaml:"dev_mode" env-default:"false"`
+	DevMode bool `yaml:"dev_mode" env-default:"false"`
+	App     struct {
+		Timezone string `yaml:"timezone" env-default:"Asia/Singapore"`
+	} `yaml:"app"`
 	Database struct {
 		Host string `yaml:"host"`
 	} `yaml:"database"`

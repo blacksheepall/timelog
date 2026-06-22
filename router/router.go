@@ -54,6 +54,11 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles fs
 	// 注册通用鉴权路由
 	setupAuthRoutes(api, cfg, deps)
 
+	// 公开时区配置，供前端计算日期边界
+	api.GET("/timezone", func(c *gin.Context) {
+		c.JSON(http.StatusOK, SuccessResponse(map[string]string{"timezone": cfg.App.Timezone}, "Timezone retrieved"))
+	})
+
 	// 注册 Passkey 路由（仅当 passkey 功能启用时）
 	if cfg.Passkey.Enabled {
 		setupPasskeyRoutes(api, protected, cfg, deps)

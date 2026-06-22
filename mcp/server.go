@@ -10,6 +10,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/app"
+	"github.com/blacksheepaul/timelog/pkg/timeutil"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -103,6 +104,10 @@ var server *TimelogMCPServer
 func NewTimelogMCPServer() *TimelogMCPServer {
 	configPath := config.ResolveConfigPath("config.yml")
 	cfg := config.GetConfig(configPath)
+
+	if err := timeutil.SetTimezone(cfg.App.Timezone); err != nil {
+		panic("Failed to set timezone: " + err.Error())
+	}
 
 	InitMCPLogger(cfg)
 	LogMCPDebug("MCP server initializing", map[string]interface{}{
