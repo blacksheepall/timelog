@@ -411,3 +411,52 @@ func TestUpdateTaskMCPNotFound(t *testing.T) {
 		t.Fatal("expected error for missing task")
 	}
 }
+
+func TestMarkTaskCompletedMCP(t *testing.T) {
+	svc := setupMCPTestServer(t)
+	if err := svc.CreateTask(&domain.Task{Title: "todo", CategoryID: 1}); err != nil {
+		t.Fatalf("CreateTask: %v", err)
+	}
+
+	res, _, err := MarkTaskCompleted(context.Background(), nil, MarkTaskParams{ID: 1})
+	if err != nil {
+		t.Fatalf("MarkTaskCompleted: %v", err)
+	}
+	if res == nil {
+		t.Fatal("expected result")
+	}
+}
+
+func TestMarkTaskIncompleteMCP(t *testing.T) {
+	svc := setupMCPTestServer(t)
+	if err := svc.CreateTask(&domain.Task{Title: "todo", CategoryID: 1}); err != nil {
+		t.Fatalf("CreateTask: %v", err)
+	}
+	if err := svc.MarkTaskAsCompleted(1); err != nil {
+		t.Fatalf("MarkTaskAsCompleted: %v", err)
+	}
+
+	res, _, err := MarkTaskIncomplete(context.Background(), nil, MarkTaskParams{ID: 1})
+	if err != nil {
+		t.Fatalf("MarkTaskIncomplete: %v", err)
+	}
+	if res == nil {
+		t.Fatal("expected result")
+	}
+}
+
+func TestMarkTaskCompletedMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := MarkTaskCompleted(context.Background(), nil, MarkTaskParams{ID: 9999})
+	if err == nil {
+		t.Fatal("expected error for missing task")
+	}
+}
+
+func TestMarkTaskIncompleteMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := MarkTaskIncomplete(context.Background(), nil, MarkTaskParams{ID: 9999})
+	if err == nil {
+		t.Fatal("expected error for missing task")
+	}
+}

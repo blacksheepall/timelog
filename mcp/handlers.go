@@ -433,6 +433,36 @@ func CreateTask(ctx context.Context, req *mcp.CallToolRequest, args CreateTaskPa
 	return formatMCPResponse("Task created successfully", response)
 }
 
+func MarkTaskCompleted(ctx context.Context, req *mcp.CallToolRequest, args MarkTaskParams) (*mcp.CallToolResult, interface{}, error) {
+	if _, err := server.service.GetTaskByID(args.ID); err != nil {
+		return nil, nil, fmt.Errorf("failed to mark task completed: %w", err)
+	}
+	if err := server.service.MarkTaskAsCompleted(args.ID); err != nil {
+		return nil, nil, fmt.Errorf("failed to mark task completed: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"id":           args.ID,
+		"is_completed": true,
+	}
+	return formatMCPResponse("Task marked as completed", response)
+}
+
+func MarkTaskIncomplete(ctx context.Context, req *mcp.CallToolRequest, args MarkTaskParams) (*mcp.CallToolResult, interface{}, error) {
+	if _, err := server.service.GetTaskByID(args.ID); err != nil {
+		return nil, nil, fmt.Errorf("failed to mark task incomplete: %w", err)
+	}
+	if err := server.service.MarkTaskAsIncomplete(args.ID); err != nil {
+		return nil, nil, fmt.Errorf("failed to mark task incomplete: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"id":           args.ID,
+		"is_completed": false,
+	}
+	return formatMCPResponse("Task marked as incomplete", response)
+}
+
 func UpdateTask(ctx context.Context, req *mcp.CallToolRequest, args UpdateTaskParams) (*mcp.CallToolResult, interface{}, error) {
 	task, err := server.service.UpdateTaskFromMCPInput(service.UpdateTaskMCPInput{
 		ID:               args.ID,
