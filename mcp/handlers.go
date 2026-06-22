@@ -432,3 +432,29 @@ func CreateTask(ctx context.Context, req *mcp.CallToolRequest, args CreateTaskPa
 	}
 	return formatMCPResponse("Task created successfully", response)
 }
+
+func UpdateTask(ctx context.Context, req *mcp.CallToolRequest, args UpdateTaskParams) (*mcp.CallToolResult, interface{}, error) {
+	task, err := server.service.UpdateTaskFromMCPInput(service.UpdateTaskMCPInput{
+		ID:               args.ID,
+		Title:            args.Title,
+		Description:      args.Description,
+		CategoryID:       args.CategoryID,
+		DueDate:          args.DueDate,
+		EstimatedMinutes: args.EstimatedMinutes,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	response := map[string]interface{}{
+		"id":                task.ID,
+		"title":             task.Title,
+		"description":       task.Description,
+		"category_id":       task.CategoryID,
+		"due_date":          service.FormatSGDate(task.DueDate),
+		"estimated_minutes": task.EstimatedMinutes,
+		"is_completed":      task.IsCompleted,
+		"updated_at":        service.FormatSGDateTime(task.UpdatedAt),
+	}
+	return formatMCPResponse("Task updated successfully", response)
+}

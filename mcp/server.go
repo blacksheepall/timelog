@@ -84,6 +84,15 @@ type CreateTaskParams struct {
 	EstimatedMinutes int32  `json:"estimated_minutes,omitempty" jsonschema:"Estimated duration in minutes,optional"`
 }
 
+type UpdateTaskParams struct {
+	ID               int32   `json:"id" jsonschema:"Task ID,required"`
+	Title            *string `json:"title,omitempty" jsonschema:"New title,optional"`
+	Description      *string `json:"description,omitempty" jsonschema:"New description,optional"`
+	CategoryID       *int32  `json:"category_id,omitempty" jsonschema:"New category ID,optional"`
+	DueDate          *string `json:"due_date,omitempty" jsonschema:"New due date in YYYY-MM-DD format,optional"`
+	EstimatedMinutes *int32  `json:"estimated_minutes,omitempty" jsonschema:"New estimated duration in minutes,optional"`
+}
+
 var server *TimelogMCPServer
 
 // NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
@@ -186,6 +195,11 @@ func main() {
 		Name:        "create_task",
 		Description: "Create a new task",
 	}, CreateTask)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "update_task",
+		Description: "Update an existing task's metadata (title, description, category, due date, estimate). Does not change completion status.",
+	}, UpdateTask)
 
 	transportMode := server.config.MCP.Transport
 	switch transportMode {

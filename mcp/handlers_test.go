@@ -371,3 +371,43 @@ func TestCreateTaskMCPMissingCategory(t *testing.T) {
 		t.Fatal("expected error for missing category")
 	}
 }
+
+func TestUpdateTaskMCP(t *testing.T) {
+	svc := setupMCPTestServer(t)
+	if err := svc.CreateTask(&domain.Task{Title: "orig", CategoryID: 1}); err != nil {
+		t.Fatalf("CreateTask: %v", err)
+	}
+
+	newTitle := "updated"
+	res, _, err := UpdateTask(context.Background(), nil, UpdateTaskParams{
+		ID:    1,
+		Title: &newTitle,
+	})
+	if err != nil {
+		t.Fatalf("UpdateTask: %v", err)
+	}
+	if res == nil {
+		t.Fatal("expected result")
+	}
+
+	text := res.Content[0].(*mcp.TextContent).Text
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(text), &payload); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if payload["title"].(string) != "updated" {
+		t.Fatalf("expected title updated, got %v", payload["title"])
+	}
+}
+
+func TestUpdateTaskMCPNotFound(t *testing.T) {
+	setupMCPTestServer(t)
+	newTitle := "updated"
+	_, _, err := UpdateTask(context.Background(), nil, UpdateTaskParams{
+		ID:    9999,
+		Title: &newTitle,
+	})
+	if err == nil {
+		t.Fatal("expected error for missing task")
+	}
+}
