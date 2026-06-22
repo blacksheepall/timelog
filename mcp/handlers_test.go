@@ -325,3 +325,49 @@ func TestEvaluateConstraintMCPNotFound(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestCreateTaskMCP(t *testing.T) {
+	setupMCPTestServer(t)
+
+	res, _, err := CreateTask(context.Background(), nil, CreateTaskParams{
+		Title:            "New task",
+		Description:      "A test task",
+		CategoryID:       1,
+		DueDate:          service.TodaySGDateString(),
+		EstimatedMinutes: 30,
+	})
+	if err != nil {
+		t.Fatalf("CreateTask: %v", err)
+	}
+	if res == nil {
+		t.Fatal("expected result")
+	}
+
+	text := res.Content[0].(*mcp.TextContent).Text
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(text), &payload); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if payload["title"].(string) != "New task" {
+		t.Fatalf("expected title New task, got %v", payload["title"])
+	}
+	if payload["category_id"].(float64) != 1 {
+		t.Fatalf("expected category_id 1, got %v", payload["category_id"])
+	}
+}
+
+func TestCreateTaskMCPMissingTitle(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := CreateTask(context.Background(), nil, CreateTaskParams{CategoryID: 1})
+	if err == nil {
+		t.Fatal("expected error for missing title")
+	}
+}
+
+func TestCreateTaskMCPMissingCategory(t *testing.T) {
+	setupMCPTestServer(t)
+	_, _, err := CreateTask(context.Background(), nil, CreateTaskParams{Title: "No category"})
+	if err == nil {
+		t.Fatal("expected error for missing category")
+	}
+}

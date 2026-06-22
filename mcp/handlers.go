@@ -407,3 +407,28 @@ func EvaluateConstraintMCP(ctx context.Context, req *mcp.CallToolRequest, args E
 	}
 	return formatMCPResponse("Constraint evaluated successfully", response)
 }
+
+func CreateTask(ctx context.Context, req *mcp.CallToolRequest, args CreateTaskParams) (*mcp.CallToolResult, interface{}, error) {
+	task, err := server.service.CreateTaskFromMCPInput(service.CreateTaskMCPInput{
+		Title:            args.Title,
+		Description:      args.Description,
+		CategoryID:       args.CategoryID,
+		DueDate:          args.DueDate,
+		EstimatedMinutes: args.EstimatedMinutes,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	response := map[string]interface{}{
+		"id":                task.ID,
+		"title":             task.Title,
+		"description":       task.Description,
+		"category_id":       task.CategoryID,
+		"due_date":          service.FormatSGDate(task.DueDate),
+		"estimated_minutes": task.EstimatedMinutes,
+		"is_completed":      task.IsCompleted,
+		"created_at":        service.FormatSGDateTime(task.CreatedAt),
+	}
+	return formatMCPResponse("Task created successfully", response)
+}

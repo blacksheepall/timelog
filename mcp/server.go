@@ -76,6 +76,14 @@ type EvaluateConstraintParams struct {
 	ConstraintID int32 `json:"constraint_id" jsonschema:"Constraint ID,required"`
 }
 
+type CreateTaskParams struct {
+	Title            string `json:"title" jsonschema:"Task title,required"`
+	Description      string `json:"description,omitempty" jsonschema:"Task description,optional"`
+	CategoryID       int32  `json:"category_id" jsonschema:"Associated category ID,required"`
+	DueDate          string `json:"due_date,omitempty" jsonschema:"Due date in YYYY-MM-DD format,optional"`
+	EstimatedMinutes int32  `json:"estimated_minutes,omitempty" jsonschema:"Estimated duration in minutes,optional"`
+}
+
 var server *TimelogMCPServer
 
 // NewTimelogMCPServer creates and initializes a new TimelogMCPServer instance
@@ -173,6 +181,11 @@ func main() {
 		Name:        "evaluate_constraint",
 		Description: "Evaluate whether a constraint's metric rule is currently met",
 	}, EvaluateConstraintMCP)
+
+	mcp.AddTool(mcpServer, &mcp.Tool{
+		Name:        "create_task",
+		Description: "Create a new task",
+	}, CreateTask)
 
 	transportMode := server.config.MCP.Transport
 	switch transportMode {
