@@ -20,8 +20,10 @@
             <PlayIcon class="h-8 w-8 text-success" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-text-secondary">Active Sessions</p>
-            <p class="text-2xl font-semibold text-text-primary">{{ todayStats.activeSessions }}</p>
+            <p class="text-sm font-medium text-text-secondary">Active Now</p>
+            <p class="text-2xl font-semibold text-text-primary">
+              {{ todayStats.hasActiveSession ? 'Yes' : 'No' }}
+            </p>
           </div>
         </div>
       </div>
@@ -155,16 +157,37 @@
     return categories.value.find(c => c.id === categoryId)
   }
 
+  // 获取今天（SGT 时区）的开始和结束时间（UTC Date）
+  const getTodayBounds = () => {
+    const now = new Date()
+    const sgtOffsetMs = 8 * 60 * 60 * 1000
+    const sgtNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + sgtOffsetMs)
+    const sgtDateStr = sgtNow.toISOString().split('T')[0]
+    return {
+      start: parseISO(`${sgtDateStr}T00:00:00+08:00`),
+      end: parseISO(`${sgtDateStr}T23:59:59.999+08:00`),
+    }
+  }
+
   // 今日统计数据
   const todayStats = computed(() => {
-    const activeSessions = todayLogs.value.filter(log => !log.end_time).length
+    const hasActiveSession = todayLogs.value.some(log => !log.end_time)
     const categoriesUsed = new Set(todayLogs.value.map(log => log.category_id)).size
 
-    // 计算总时间（包括ongoing记录）
+    // 计算今天范围内的总时间（包括跨天记录，只截取落在今天的部分）
+    const { start: todayStart, end: todayEnd } = getTodayBounds()
+    const now = new Date()
+
     const totalMinutes = todayLogs.value.reduce((total, log) => {
       const start = parseISO(log.start_time)
-      const end = log.end_time ? parseISO(log.end_time) : new Date()
-      return total + (end.getTime() - start.getTime()) / (1000 * 60)
+      const end = log.end_time ? parseISO(log.end_time) : now
+
+      const actualStart = start < todayStart ? todayStart : start
+      const actualEnd = end > todayEnd ? todayEnd : end
+
+      if (actualStart >= actualEnd) return total
+
+      return total + (actualEnd.getTime() - actualStart.getTime()) / (1000 * 60)
     }, 0)
 
     const totalTime =
@@ -174,7 +197,7 @@
 
     return {
       count: todayLogs.value.length,
-      activeSessions,
+      hasActiveSession,
       totalTime,
       categoriesUsed,
     }
@@ -184,11 +207,8 @@
   const categoryStats = computed(() => {
     const stats: Record<number, { category: Category; minutes: number }> = {}
 
-    // 获取今天的开始和结束时间（UTC）
-    const today = new Date()
-    const todayLocalStr = today.toISOString().split('T')[0] // YYYY-MM-DD 本地日期
-    const todayStart = parseISO(todayLocalStr + 'T00:00:00Z') // UTC开始时间
-    const todayEnd = parseISO(todayLocalStr + 'T23:59:59.999Z') // UTC结束时间
+    // 获取今天（SGT）的开始和结束时间（UTC）
+    const { start: todayStart, end: todayEnd } = getTodayBounds()
 
     // 计算每个分类的总时长
     todayLogs.value.forEach(log => {
@@ -258,13 +278,8 @@
 
   const loadTodayLogs = async () => {
     try {
-      // 获取今天的开始时间和结束时间（UTC）
-      const today = new Date()
-      const todayLocalStr = today.toISOString().split('T')[0] // YYYY-MM-DD 本地日期
-
-      // 创建今天的开始时间（本地时间00:00:00）
-      const todayStart = new Date(todayLocalStr + 'T00:00:00')
-      const todayEnd = new Date(todayLocalStr + 'T23:59:59.999')
+      // 获取今天（SGT）的开始时间和结束时间（UTC）
+      const { start: todayStart, end: todayEnd } = getTodayBounds()
 
       // 转换为ISO字符串用于比较
       const todayStartIso = todayStart.toISOString()
