@@ -22,8 +22,8 @@ func setupMCPTestServer(t *testing.T) *service.Service {
 		t.Fatalf("NewDao: %v", err)
 	}
 	testutil.ApplyMigrations(t, dao)
-	repos := adapter.NewRepositories(dao)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 
 	oldServer := server
 	t.Cleanup(func() { server = oldServer })
@@ -44,7 +44,7 @@ func TestGetDateInfo(t *testing.T) {
 
 func TestGetTimeLogsByDateRangeActiveOnly(t *testing.T) {
 	svc := setupMCPTestServer(t)
-	if _, err := svc.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{CategoryID: 1, Remark: "active"}); err != nil {
+	if _, err := svc.CreateTimeLogFromMCPInput(context.Background(), service.CreateTimeLogMCPInput{CategoryID: 1, Remark: "active"}); err != nil {
 		t.Fatalf("create timelog: %v", err)
 	}
 
@@ -76,7 +76,7 @@ func TestGetTimeLogsByDateRangeActiveOnly(t *testing.T) {
 
 func TestGetTimeLogsByDateRange(t *testing.T) {
 	svc := setupMCPTestServer(t)
-	if _, err := svc.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
+	if _, err := svc.CreateTimeLogFromMCPInput(context.Background(), service.CreateTimeLogMCPInput{
 		CategoryID: 1,
 		StartTime:  service.FormatSGDateTime(time.Now().Add(-time.Hour)),
 		EndTime:    service.FormatSGDateTime(time.Now()),
@@ -187,7 +187,7 @@ func TestUpdateTimeLogMCP(t *testing.T) {
 	if err := svc.CreateCategory(&domain.Category{Name: "work"}); err != nil {
 		t.Fatalf("create category: %v", err)
 	}
-	log, err := svc.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{CategoryID: 1, Remark: "orig"})
+	log, err := svc.CreateTimeLogFromMCPInput(context.Background(), service.CreateTimeLogMCPInput{CategoryID: 1, Remark: "orig"})
 	if err != nil {
 		t.Fatalf("create timelog: %v", err)
 	}

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -30,7 +31,7 @@ func TestCreateTimelogHandlerInvalidCategory(t *testing.T) {
 func TestUpdateTimelogHandlerInvalidStartTime(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedCategory(t, svc)
-	if err := svc.CreateTimeLog(&domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
@@ -49,7 +50,7 @@ func TestUpdateTimelogHandlerInvalidStartTime(t *testing.T) {
 func TestUpdateTimelogHandlerInvalidEndTime(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedCategory(t, svc)
-	if err := svc.CreateTimeLog(&domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 
@@ -68,7 +69,7 @@ func TestUpdateTimelogHandlerInvalidEndTime(t *testing.T) {
 func TestUpdateTimelogHandlerInvalidCategory(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedCategory(t, svc)
-	if err := svc.CreateTimeLog(&domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{CategoryID: 1, StartTime: time.Now().UTC()}); err != nil {
 		t.Fatalf("seed: %v", err)
 	}
 

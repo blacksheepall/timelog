@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -52,7 +53,7 @@ func TestCreateTimelogHandlerBadJSON(t *testing.T) {
 func TestListTimelogsHandler(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedTimelogCategory(t, svc)
-	if err := svc.CreateTimeLog(&domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
 		t.Fatalf("seed timelog: %v", err)
 	}
 
@@ -68,7 +69,7 @@ func TestListTimelogsHandler(t *testing.T) {
 func TestListTimelogsHandlerWithOptions(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedTimelogCategory(t, svc)
-	if err := svc.CreateTimeLog(&domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
 		t.Fatalf("seed timelog: %v", err)
 	}
 
@@ -85,7 +86,7 @@ func TestGetTimelogHandler(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedTimelogCategory(t, svc)
 	tl := &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}
-	if err := svc.CreateTimeLog(tl); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), tl); err != nil {
 		t.Fatalf("seed timelog: %v", err)
 	}
 
@@ -114,7 +115,7 @@ func TestUpdateTimelogHandler(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedTimelogCategory(t, svc)
 	tl := &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}
-	if err := svc.CreateTimeLog(tl); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), tl); err != nil {
 		t.Fatalf("seed timelog: %v", err)
 	}
 
@@ -149,7 +150,7 @@ func TestDeleteTimelogHandler(t *testing.T) {
 	r, svc := setupTestRouter(t)
 	seedTimelogCategory(t, svc)
 	tl := &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}
-	if err := svc.CreateTimeLog(tl); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), tl); err != nil {
 		t.Fatalf("seed timelog: %v", err)
 	}
 

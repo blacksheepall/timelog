@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/blacksheepaul/timelog/core/audit"
 	"github.com/blacksheepaul/timelog/core/timeutil"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -256,7 +257,8 @@ func ListCategories(ctx context.Context, req *mcp.CallToolRequest, args Category
 }
 
 func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	createdLog, err := server.service.CreateTimeLogFromMCPInput(service.CreateTimeLogMCPInput{
+	aiCtx := audit.WithSource(ctx, audit.SourceAI)
+	createdLog, err := server.service.CreateTimeLogFromMCPInput(aiCtx, service.CreateTimeLogMCPInput{
 		CategoryID: args.CategoryID,
 		StartTime:  args.StartTime,
 		EndTime:    args.EndTime,
@@ -284,7 +286,8 @@ func CreateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args CreateTim
 }
 
 func UpdateTimeLog(ctx context.Context, req *mcp.CallToolRequest, args UpdateTimeLogParams) (*mcp.CallToolResult, interface{}, error) {
-	updatedLog, err := server.service.UpdateTimeLogFromMCPInput(service.UpdateTimeLogMCPInput{
+	aiCtx := audit.WithSource(ctx, audit.SourceAI)
+	updatedLog, err := server.service.UpdateTimeLogFromMCPInput(aiCtx, service.UpdateTimeLogMCPInput{
 		ID:         args.ID,
 		CategoryID: args.CategoryID,
 		StartTime:  args.StartTime,

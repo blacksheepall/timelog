@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/blacksheepaul/timelog/core/audit"
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/internal/domain"
@@ -31,7 +32,8 @@ func createTimeLogHandler(deps Dependencies) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
 		}
-		if err := deps.Service.CreateTimeLog(tl); err != nil {
+		ctx := audit.WithSource(c.Request.Context(), audit.SourceHuman)
+		if err := deps.Service.CreateTimeLog(ctx, tl); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
@@ -118,7 +120,8 @@ func updateTimeLogHandler(deps Dependencies) gin.HandlerFunc {
 			return
 		}
 		existing.ID = id
-		if err := deps.Service.UpdateTimeLog(existing); err != nil {
+		ctx := audit.WithSource(c.Request.Context(), audit.SourceHuman)
+		if err := deps.Service.UpdateTimeLog(ctx, existing); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
@@ -141,7 +144,8 @@ func deleteTimeLogHandler(deps Dependencies) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, ErrorResponse(http.StatusBadRequest, err.Error()))
 			return
 		}
-		if err := deps.Service.DeleteTimeLog(id); err != nil {
+		ctx := audit.WithSource(c.Request.Context(), audit.SourceHuman)
+		if err := deps.Service.DeleteTimeLog(ctx, id); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 			return
 		}
