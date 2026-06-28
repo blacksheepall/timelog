@@ -26,7 +26,7 @@ func seedCategory(t *testing.T, dao *model.Dao) {
 }
 
 func TestNewRepositories(t *testing.T) {
-	repos := NewRepositories(setupTestDao(t))
+	repos := NewRepositories(setupTestDao(t), testutil.FakeLogger{})
 	if repos == nil {
 		t.Fatal("expected non-nil repositories")
 	}

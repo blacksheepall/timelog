@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/model"
 )
@@ -19,6 +20,7 @@ type Repositories struct {
 	*passkeyCredentialRepo
 	*tempPasswordRepo
 	*sqliteUnitOfWork
+	*auditRepo
 }
 
 var (
@@ -32,10 +34,11 @@ var (
 	_ ports.CacheStore                  = (*Repositories)(nil)
 	_ ports.SessionTokenStore           = (*Repositories)(nil)
 	_ ports.UnitOfWork                  = (*Repositories)(nil)
+	_ ports.AuditLogger                 = (*Repositories)(nil)
 )
 
 // NewRepositories creates all repository adapters backed by dao.
-func NewRepositories(dao *model.Dao) *Repositories {
+func NewRepositories(dao *model.Dao, l logger.Logger) *Repositories {
 	return &Repositories{
 		cacheStore:            newCacheStore(dao),
 		timelogRepo:           newTimelogRepo(dao),
@@ -46,5 +49,6 @@ func NewRepositories(dao *model.Dao) *Repositories {
 		passkeyCredentialRepo: newPasskeyCredentialRepo(dao),
 		tempPasswordRepo:      newTempPasswordRepo(dao),
 		sqliteUnitOfWork:      newUnitOfWork(dao),
+		auditRepo:             newAuditRepo(dao, l),
 	}
 }

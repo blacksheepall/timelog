@@ -122,3 +122,8 @@ type UnitOfWorkRepositories struct {
 type UnitOfWork interface {
 	Run(ctx context.Context, fn func(repos UnitOfWorkRepositories) error) error
 }
+
+// AuditLogger records auditable changes to entities.
+type AuditLogger interface {
+	Log(ctx context.Context, action, entityType string, entityID int32, payload map[string]any) error
+}
