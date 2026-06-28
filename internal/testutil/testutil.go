@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -28,6 +29,7 @@ func (FakeLogger) Error(...interface{})          {}
 func (FakeLogger) Errorw(string, ...interface{}) {}
 func (FakeLogger) Fatal(...interface{})          {}
 func (FakeLogger) Fatalw(string, ...interface{}) {}
+func (FakeLogger) WithContext(context.Context) logger.Logger { return FakeLogger{} }
 
 // NewTestConfig returns a test config using an in-memory SQLite database.
 func NewTestConfig() *config.Config {

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { clearAuthToken, getAuthToken } from '@/utils/auth'
+import { generateRequestID, getLastRequestID, setLastRequestID } from '@/utils/request-id'
 import type { ApiResponse } from '@/types/api'
 import type { CategoryNode } from '@/types'
 import type {
@@ -50,6 +51,12 @@ api.interceptors.request.use(config => {
     config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  const reqID = generateRequestID()
+  setLastRequestID(reqID)
+  config.headers = config.headers || {}
+  config.headers['X-Request-ID'] = reqID
+
   return config
 })
 
@@ -63,9 +70,19 @@ export const setNotificationHandler = (
 }
 
 api.interceptors.response.use(
-  response => response,
+  response => {
+    const reqID = response.headers?.['x-request-id']
+    if (reqID) {
+      setLastRequestID(reqID as string)
+    }
+    return response
+  },
   error => {
-    console.error('API Error:', error)
+    const reqID =
+      error.response?.headers?.['x-request-id'] ||
+      error.config?.headers?.['X-Request-ID'] ||
+      getLastRequestID()
+    console.error(`API Error (request_id: ${reqID}):`, error)
 
     // Check if the error is a timeout or cancellation error
     // These can have various code/message combinations depending on the scenario

@@ -10,13 +10,16 @@ import (
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
+	"github.com/blacksheepaul/timelog/core/requestid"
 	"github.com/blacksheepaul/timelog/router/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
-	return fmt.Sprintf(`{"time":"%s","client":"%s","method":"%s","path":"%s","latency":"%s","status":%d,"emsg":"%s"}`+"\n",
+	reqID := requestid.FromContext(p.Request.Context())
+	return fmt.Sprintf(`{"time":"%s","request_id":"%s","client":"%s","method":"%s","path":"%s","latency":"%s","status":%d,"emsg":"%s"}`+"\n",
 		p.TimeStamp.Format(time.DateTime),
+		reqID,
 		p.ClientIP,
 		p.Method,
 		p.Path,
@@ -27,6 +30,7 @@ var GinLogger = gin.LoggerWithFormatter(func(p gin.LogFormatterParams) string {
 })
 
 func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles fs.FS, deps Dependencies) *gin.Engine {
+	r.Use(middleware.RequestID())
 	r.Use(GinLogger)
 	r.Use(middleware.Cors(cfg))
 

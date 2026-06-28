@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -173,3 +174,4 @@ func (l FakeLogger) Fatal(fields ...interface{}) {
 func (l FakeLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 	fmt.Println(append([]interface{}{msg}, keysAndValues...)...)
 }
+func (l FakeLogger) WithContext(context.Context) logger.Logger { return l }

@@ -1,12 +1,14 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/blacksheepaul/timelog/core/config"
+	"github.com/blacksheepaul/timelog/core/requestid"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -29,6 +31,10 @@ type Logger interface {
 	Errorw(msg string, keysAndValues ...interface{})
 	Fatal(fields ...interface{})
 	Fatalw(msg string, keysAndValues ...interface{})
+	// WithContext returns a logger that embeds the request/trace ID from the
+	// context (if any). Use this in request handlers so downstream logs can be
+	// correlated with the upstream request ID.
+	WithContext(ctx context.Context) Logger
 }
 
 var ilogger Logger
@@ -85,7 +91,20 @@ func SetZapLogger(cfg config.Config) Logger {
 		Sugar()
 	defer logger.Sync()
 
-	ilogger = logger
+	ilogger = &zapLogger{logger}
 
 	return ilogger
+}
+
+// zapLogger wraps zap.SugaredLogger and implements the Logger interface,
+// including context-aware request ID injection.
+type zapLogger struct {
+	*zap.SugaredLogger
+}
+
+func (z *zapLogger) WithContext(ctx context.Context) Logger {
+	if reqID := requestid.FromContext(ctx); reqID != "" {
+		return &zapLogger{z.SugaredLogger.With("request_id", reqID)}
+	}
+	return z
 }
