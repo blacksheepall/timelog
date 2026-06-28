@@ -81,8 +81,8 @@ func setupCommandTestEnv(t *testing.T) (*service.Service, *model.Dao) {
 
 	dao := testutil.NewTestDAO(t)
 	testutil.ApplyMigrations(t, dao)
-	repos := adapter.NewRepositories(dao)
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, testCfg, nil)
+	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, testCfg, nil)
 
 	if err := dao.Db().AutoMigrate(&model.TempPassword{}); err != nil {
 		t.Fatalf("auto migrate temp_passwords: %v", err)

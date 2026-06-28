@@ -35,8 +35,8 @@ func newTestServiceForRouter(t *testing.T, cfg *config.Config) *service.Service 
 		t.Fatalf("NewDao: %v", err)
 	}
 	testutil.ApplyMigrations(t, dao)
-	repos := adapter.NewRepositories(dao)
-	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
+	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
 }
 
 func TestRegisterWithStaticFiles(t *testing.T) {

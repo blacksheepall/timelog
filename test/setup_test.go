@@ -27,8 +27,8 @@ func TestMain(m *testing.M) {
 	cfg := loadTestConfig()
 	gin.SetMode(gin.DebugMode)
 	testDAO = mustNewTestDAO(cfg, FakeLogger{})
-	repos := adapter.NewRepositories(testDAO)
-	testService = service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
+	repos := adapter.NewRepositories(testDAO, FakeLogger{})
+	testService = service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, FakeLogger{}, cfg, nil)
 
 	if cfg.Test.Flush {
 		flushDb(testDAO)
