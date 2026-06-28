@@ -25,7 +25,7 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 		return nil, fmt.Errorf("initialize database: %w", err)
 	}
 
-	repos := adapter.NewRepositories(dao)
+	repos := adapter.NewRepositories(dao, log)
 	svc := service.NewService(
 		repos, // timelogRepo
 		repos, // categoryRepo
@@ -36,6 +36,7 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 		repos, // tempPasswordRepo
 		repos, // cacheStore
 		repos, // unitOfWork
+		repos, // auditLogger
 		log,
 		cfg,
 		webAuthn,
