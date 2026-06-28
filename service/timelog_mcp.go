@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -24,7 +25,7 @@ type UpdateTimeLogMCPInput struct {
 	Remark     string
 }
 
-func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*domain.TimeLog, error) {
+func (s *Service) CreateTimeLogFromMCPInput(ctx context.Context, input CreateTimeLogMCPInput) (*domain.TimeLog, error) {
 	if _, err := s.GetCategoryByID(input.CategoryID); err != nil {
 		return nil, fmt.Errorf("category not found: %w", err)
 	}
@@ -60,13 +61,13 @@ func (s *Service) CreateTimeLogFromMCPInput(input CreateTimeLogMCPInput) (*domai
 		tl.Remark = input.Remark
 	}
 
-	if err := s.CreateTimeLog(tl); err != nil {
+	if err := s.CreateTimeLog(ctx, tl); err != nil {
 		return nil, fmt.Errorf("failed to create time log: %w", err)
 	}
 	return s.GetTimeLogByID(tl.ID)
 }
 
-func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*domain.TimeLog, error) {
+func (s *Service) UpdateTimeLogFromMCPInput(ctx context.Context, input UpdateTimeLogMCPInput) (*domain.TimeLog, error) {
 	tl, err := s.GetTimeLogByID(input.ID)
 	if err != nil {
 		return nil, fmt.Errorf("time log not found: %w", err)
@@ -103,7 +104,7 @@ func (s *Service) UpdateTimeLogFromMCPInput(input UpdateTimeLogMCPInput) (*domai
 		tl.Remark = input.Remark
 	}
 
-	if err := s.UpdateTimeLog(tl); err != nil {
+	if err := s.UpdateTimeLog(ctx, tl); err != nil {
 		return nil, fmt.Errorf("failed to update time log: %w", err)
 	}
 	return s.GetTimeLogByID(input.ID)

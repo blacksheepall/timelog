@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
 		Remark:     "mcp create",
 	}
 
-	created, err := svc.CreateTimeLogFromMCPInput(input)
+	created, err := svc.CreateTimeLogFromMCPInput(context.Background(), input)
 	if err != nil {
 		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
 	}
@@ -39,7 +40,7 @@ func TestCreateTimeLogFromMCPInputDefaults(t *testing.T) {
 	svc, dao := newTestService(t)
 	testutil.SeedTestCategory(t, dao)
 
-	created, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1})
+	created, err := svc.CreateTimeLogFromMCPInput(context.Background(), CreateTimeLogMCPInput{CategoryID: 1})
 	if err != nil {
 		t.Fatalf("CreateTimeLogFromMCPInput: %v", err)
 	}
@@ -50,7 +51,7 @@ func TestCreateTimeLogFromMCPInputDefaults(t *testing.T) {
 
 func TestCreateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
 	svc, _ := newTestService(t)
-	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 999}); err == nil {
+	if _, err := svc.CreateTimeLogFromMCPInput(context.Background(), CreateTimeLogMCPInput{CategoryID: 999}); err == nil {
 		t.Fatal("expected error for invalid category")
 	}
 }
@@ -58,7 +59,7 @@ func TestCreateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
 func TestCreateTimeLogFromMCPInputInvalidStartTime(t *testing.T) {
 	svc, dao := newTestService(t)
 	testutil.SeedTestCategory(t, dao)
-	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1, StartTime: "bad"}); err == nil {
+	if _, err := svc.CreateTimeLogFromMCPInput(context.Background(), CreateTimeLogMCPInput{CategoryID: 1, StartTime: "bad"}); err == nil {
 		t.Fatal("expected error for invalid start time")
 	}
 }
@@ -81,7 +82,7 @@ func TestUpdateTimeLogFromMCPInputPartialRemark(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 
-	updated, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{
+	updated, err := svc.UpdateTimeLogFromMCPInput(context.Background(), UpdateTimeLogMCPInput{
 		ID:     *seed.ID,
 		Remark: "after",
 	})
@@ -103,7 +104,7 @@ func TestUpdateTimeLogFromMCPInputInvalidCategory(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 
-	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, CategoryID: 9999}); err == nil {
+	if _, err := svc.UpdateTimeLogFromMCPInput(context.Background(), UpdateTimeLogMCPInput{ID: *seed.ID, CategoryID: 9999}); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -118,7 +119,7 @@ func TestUpdateTimeLogFromMCPInputInvalidStartTime(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 
-	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, StartTime: "bad"}); err == nil {
+	if _, err := svc.UpdateTimeLogFromMCPInput(context.Background(), UpdateTimeLogMCPInput{ID: *seed.ID, StartTime: "bad"}); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -133,7 +134,7 @@ func TestUpdateTimeLogFromMCPInputInvalidEndTime(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 
-	if _, err := svc.UpdateTimeLogFromMCPInput(UpdateTimeLogMCPInput{ID: *seed.ID, EndTime: "bad"}); err == nil {
+	if _, err := svc.UpdateTimeLogFromMCPInput(context.Background(), UpdateTimeLogMCPInput{ID: *seed.ID, EndTime: "bad"}); err == nil {
 		t.Fatal("expected error")
 	}
 }
@@ -141,7 +142,7 @@ func TestUpdateTimeLogFromMCPInputInvalidEndTime(t *testing.T) {
 func TestCreateTimeLogFromMCPInputInvalidEndTime(t *testing.T) {
 	svc, dao := newTestService(t)
 	testutil.SeedTestCategory(t, dao)
-	if _, err := svc.CreateTimeLogFromMCPInput(CreateTimeLogMCPInput{CategoryID: 1, EndTime: "bad"}); err == nil {
+	if _, err := svc.CreateTimeLogFromMCPInput(context.Background(), CreateTimeLogMCPInput{CategoryID: 1, EndTime: "bad"}); err == nil {
 		t.Fatal("expected error")
 	}
 }

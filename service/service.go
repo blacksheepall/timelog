@@ -18,6 +18,7 @@ type Service struct {
 	tempPasswordRepo ports.TempPasswordRepository
 	cache            ports.CacheStore
 	unitOfWork       ports.UnitOfWork
+	auditLogger      ports.AuditLogger
 	log              logger.Logger
 	webAuthn         *webauthn.WebAuthn
 	cfg              *config.Config
@@ -34,6 +35,7 @@ func NewService(
 	tempPasswordRepo ports.TempPasswordRepository,
 	cache ports.CacheStore,
 	unitOfWork ports.UnitOfWork,
+	auditLogger ports.AuditLogger,
 	log logger.Logger,
 	cfg *config.Config,
 	webAuthn *webauthn.WebAuthn,
@@ -48,10 +50,17 @@ func NewService(
 		tempPasswordRepo: tempPasswordRepo,
 		cache:            cache,
 		unitOfWork:       unitOfWork,
+		auditLogger:      auditLogger,
 		log:              log,
 		webAuthn:         webAuthn,
 		cfg:              cfg,
 	}
+}
+
+// AuditLogger returns the configured audit logger for callers that need to
+// record ad-hoc auditable events. It may be nil.
+func (s *Service) AuditLogger() ports.AuditLogger {
+	return s.auditLogger
 }
 
 // GetCache implements ports.SessionTokenStore so Service can be passed to auth middleware.

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -55,7 +56,7 @@ func TestTimelogCRUD(t *testing.T) {
 	testutil.SeedTestCategory(t, dao)
 
 	tl := &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}
-	if err := svc.CreateTimeLog(tl); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), tl); err != nil {
 		t.Fatalf("CreateTimeLog: %v", err)
 	}
 
@@ -81,11 +82,11 @@ func TestTimelogCRUD(t *testing.T) {
 
 	endTime := time.Now().UTC()
 	tl.EndTime = &endTime
-	if err := svc.UpdateTimeLog(tl); err != nil {
+	if err := svc.UpdateTimeLog(context.Background(), tl); err != nil {
 		t.Fatalf("UpdateTimeLog: %v", err)
 	}
 
-	if err := svc.DeleteTimeLog(tl.ID); err != nil {
+	if err := svc.DeleteTimeLog(context.Background(), tl.ID); err != nil {
 		t.Fatalf("DeleteTimeLog: %v", err)
 	}
 }
@@ -224,7 +225,7 @@ func TestListActiveTimeLogs(t *testing.T) {
 	svc, dao := newTestService(t)
 	testutil.SeedTestCategory(t, dao)
 
-	if err := svc.CreateTimeLog(&domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
+	if err := svc.CreateTimeLog(context.Background(), &domain.TimeLog{StartTime: time.Now().UTC(), CategoryID: 1}); err != nil {
 		t.Fatalf("CreateTimeLog: %v", err)
 	}
 
