@@ -40,8 +40,8 @@ func TestUpdateTimeLogNotFound(t *testing.T) {
 
 func TestDeleteTimeLogNotFound(t *testing.T) {
 	svc, _ := newTestService(t)
-	if err := svc.DeleteTimeLog(context.Background(), 9999); err != nil {
-		t.Fatalf("expected no error deleting non-existent timelog, got %v", err)
+	if err := svc.DeleteTimeLog(context.Background(), 9999); err == nil {
+		t.Fatal("expected error deleting non-existent timelog")
 	}
 }
 

@@ -15,7 +15,9 @@ func (s *Service) CreateTimeLog(ctx context.Context, tl *domain.TimeLog) error {
 	if err := s.timelogRepo.CreateTimeLog(tl); err != nil {
 		return err
 	}
-	s.logAudit(ctx, audit.ActionCreate, audit.EntityTimeLog, tl.ID, timelogPayload(tl))
+	s.logAudit(ctx, audit.ActionCreate, audit.EntityTimeLog, tl.ID, map[string]any{
+		"after": timelogPayload(tl),
+	})
 	return nil
 }
 
@@ -42,22 +44,32 @@ func (s *Service) ListTimeLogsByLocalDateRange(startDate, endDate string) ([]dom
 
 // UpdateTimeLog 更新一条时间日志
 func (s *Service) UpdateTimeLog(ctx context.Context, tl *domain.TimeLog) error {
-	if _, err := s.timelogRepo.GetTimeLogByID(tl.ID); err != nil {
+	before, err := s.timelogRepo.GetTimeLogByID(tl.ID)
+	if err != nil {
 		return fmt.Errorf("time log not found: %w", err)
 	}
 	if err := s.timelogRepo.UpdateTimeLog(tl); err != nil {
 		return err
 	}
-	s.logAudit(ctx, audit.ActionUpdate, audit.EntityTimeLog, tl.ID, timelogPayload(tl))
+	s.logAudit(ctx, audit.ActionUpdate, audit.EntityTimeLog, tl.ID, map[string]any{
+		"before": timelogPayload(before),
+		"after":  timelogPayload(tl),
+	})
 	return nil
 }
 
 // DeleteTimeLog 删除一条时间日志
 func (s *Service) DeleteTimeLog(ctx context.Context, id int32) error {
+	before, err := s.timelogRepo.GetTimeLogByID(id)
+	if err != nil {
+		return fmt.Errorf("time log not found: %w", err)
+	}
 	if err := s.timelogRepo.DeleteTimeLog(id); err != nil {
 		return err
 	}
-	s.logAudit(ctx, audit.ActionDelete, audit.EntityTimeLog, id, nil)
+	s.logAudit(ctx, audit.ActionDelete, audit.EntityTimeLog, id, map[string]any{
+		"before": timelogPayload(before),
+	})
 	return nil
 }
 
