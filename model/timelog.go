@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/pkg/errs"
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/errs"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 	"gorm.io/gorm"
 )
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )

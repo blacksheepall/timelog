@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 )
 
 func TestFormatSGDateTime(t *testing.T) {

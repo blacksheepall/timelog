@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/blacksheepaul/timelog/internal/ports"
-	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/blacksheepaul/timelog/core/errs"
 	"github.com/gin-gonic/gin"
 )
 

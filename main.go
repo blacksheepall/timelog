@@ -12,7 +12,7 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	log "github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/app"
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 	"github.com/blacksheepaul/timelog/router"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"

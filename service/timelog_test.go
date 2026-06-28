@@ -7,7 +7,7 @@ import (
 
 	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/testutil"
-	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/blacksheepaul/timelog/core/errs"
 )
 
 func TestCreateTimeLogRejectsOngoingConflict(t *testing.T) {

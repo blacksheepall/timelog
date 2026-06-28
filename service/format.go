@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 )
 
 func sgt() *time.Location {

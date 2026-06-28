@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/pkg/errs"
+	"github.com/blacksheepaul/timelog/core/errs"
 	"gorm.io/gorm"
 )
 

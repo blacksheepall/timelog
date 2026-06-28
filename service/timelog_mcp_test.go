@@ -7,7 +7,7 @@ import (
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/pkg/timeutil"
+	"github.com/blacksheepaul/timelog/core/timeutil"
 )
 
 func TestCreateTimeLogFromMCPInputSetsUserAndParsesSGT(t *testing.T) {
