@@ -108,6 +108,15 @@ type MetricRecord struct {
 	CreatedAt  time.Time
 }
 
+// MetricDataPoint represents a single external measurement ready to be
+// recorded against a named metric.
+type MetricDataPoint struct {
+	MetricName string
+	Value      float64
+	RecordedAt time.Time
+	Source     string
+}
+
 // --- Passkey / Auth ---
 
 type PasskeyCredential struct {

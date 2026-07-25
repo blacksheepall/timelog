@@ -127,3 +127,10 @@ type UnitOfWork interface {
 type AuditLogger interface {
 	Log(ctx context.Context, action, entityType string, entityID int32, payload map[string]any) error
 }
+
+// DataSource fetches measurements from an external system and converts them
+// into domain-neutral MetricDataPoint values.
+type DataSource interface {
+	Name() string
+	Fetch(ctx context.Context) ([]domain.MetricDataPoint, error)
+}
