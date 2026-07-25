@@ -8,6 +8,7 @@
 *.so
 *.dylib
 mcp/timelog-mcp-server
+bin/*
 
 # Test binary, built with `go test -c`
 *.test
@@ -64,7 +65,8 @@ dev.db.bk*
 
 # gorm gen generated files (re-generate with `make gen-model`)
 model/gen/
+
 .vscode
 .worktrees/
-bin/*
 .local/
+docs/superpowers
