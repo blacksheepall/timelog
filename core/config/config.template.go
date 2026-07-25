@@ -44,7 +44,15 @@ type Config struct {
 		ListenAddr string `yaml:"listen_addr" env:"MCP_LISTEN_ADDR" env-default:":8080"`
 		Token      string `yaml:"token" env:"MCP_TOKEN" env-default:""`
 	} `yaml:"mcp"`
+	Datasources []DatasourceConfig `yaml:"datasources"`
 	Test struct {
 		Flush bool `yaml:"flush" env-default:"false"`
 	} `yaml:"test"`
+}
+
+type DatasourceConfig struct {
+	Name    string                 `yaml:"name"`
+	Type    string                 `yaml:"type"`
+	Enabled bool                   `yaml:"enabled" env-default:"true"`
+	Config  map[string]interface{} `yaml:"config"`
 }

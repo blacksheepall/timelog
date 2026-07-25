@@ -21,6 +21,52 @@ func TestResolveConfigPathDefault(t *testing.T) {
 	}
 }
 
+func TestDatasourceConfig(t *testing.T) {
+	ResetConfig()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.yml")
+	content := `
+dev_mode: false
+server:
+  port: 8080
+database:
+  host: ":memory:"
+log:
+  level: info
+datasources:
+  - name: maimemo
+    type: maimemo
+    enabled: true
+    config:
+      token: "abc"
+      endpoint: "https://open.maimemo.com"
+  - name: disabled
+    type: noop
+    enabled: false
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	t.Setenv("TIMELOG_CONFIG_PATH", path)
+
+	cfg := GetConfig(path)
+	if len(cfg.Datasources) != 2 {
+		t.Fatalf("expected 2 datasources, got %d", len(cfg.Datasources))
+	}
+	ds := cfg.Datasources[0]
+	if ds.Name != "maimemo" || ds.Type != "maimemo" || !ds.Enabled {
+		t.Fatalf("unexpected first datasource: %+v", ds)
+	}
+	if ds.Config["token"] != "abc" || ds.Config["endpoint"] != "https://open.maimemo.com" {
+		t.Fatalf("unexpected first datasource config: %+v", ds.Config)
+	}
+	if cfg.Datasources[1].Enabled {
+		t.Fatalf("expected second datasource to be disabled")
+	}
+
+	ResetConfig()
+}
+
 func TestGetConfigAndReset(t *testing.T) {
 	ResetConfig()
 	dir := t.TempDir()

@@ -31,6 +31,13 @@ passkey:
     ttl: 900
 test:
   flush: false
+datasources:
+  - name: maimemo
+    type: maimemo
+    enabled: true
+    config:
+      token: ""                     # Authorization: Bearer <token>
+      endpoint: "https://open.maimemo.com"
 mcp:
   enabled: false
   level: 'debug'
