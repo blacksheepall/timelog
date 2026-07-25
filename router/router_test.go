@@ -36,7 +36,7 @@ func newTestServiceForRouter(t *testing.T, cfg *config.Config) *service.Service 
 	}
 	testutil.ApplyMigrations(t, dao)
 	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
-	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, nil, testutil.FakeLogger{}, cfg, nil)
 }
 
 func TestRegisterWithStaticFiles(t *testing.T) {

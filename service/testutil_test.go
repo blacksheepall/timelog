@@ -20,7 +20,7 @@ func newTestService(t *testing.T) (*Service, *model.Dao) {
 	testutil.ApplyMigrations(t, dao)
 	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
 	cfg := testutil.NewTestConfig()
-	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	svc := NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, nil, testutil.FakeLogger{}, cfg, nil)
 	return svc, dao
 }
 

@@ -23,7 +23,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	testutil.ApplyMigrations(t, dao)
 
 	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, nil, testutil.FakeLogger{}, cfg, nil)
 	deps := Dependencies{Service: svc}
 
 	r := gin.New()

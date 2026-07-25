@@ -19,7 +19,7 @@ func setupTestService(t *testing.T) *service.Service {
 		t.Fatalf("NewDao: %v", err)
 	}
 	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
-	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, testutil.FakeLogger{}, cfg, nil)
+	return service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, nil, testutil.FakeLogger{}, cfg, nil)
 }
 
 func TestAuthMiddlewareRejectsPasskeySession(t *testing.T) {

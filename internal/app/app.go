@@ -37,6 +37,7 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 		repos, // cacheStore
 		repos, // unitOfWork
 		repos, // auditLogger
+		nil,   // dataSourceRegistry
 		log,
 		cfg,
 		webAuthn,
