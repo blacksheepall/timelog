@@ -2,6 +2,7 @@ package datasource
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/internal/adapter/datasource/maimemo"
@@ -13,7 +14,8 @@ type Registry struct {
 	sources map[string]ports.DataSource
 }
 
-// NewRegistry builds a registry from config. Disabled or unknown types are skipped.
+// NewRegistry builds a registry from config. Disabled sources are skipped and
+// unknown types return an error.
 func NewRegistry(cfgs []config.DatasourceConfig) (*Registry, error) {
 	sources := make(map[string]ports.DataSource)
 	for _, cfg := range cfgs {
@@ -22,6 +24,9 @@ func NewRegistry(cfgs []config.DatasourceConfig) (*Registry, error) {
 		}
 		if cfg.Name == "" {
 			return nil, fmt.Errorf("datasource config is missing name")
+		}
+		if _, exists := sources[cfg.Name]; exists {
+			return nil, fmt.Errorf("duplicate datasource name %q", cfg.Name)
 		}
 
 		var source ports.DataSource
@@ -51,11 +56,12 @@ func (r *Registry) Get(name string) (ports.DataSource, error) {
 	return s, nil
 }
 
-// Names returns the names of all registered datasources.
+// Names returns the names of all registered datasources in sorted order.
 func (r *Registry) Names() []string {
 	names := make([]string, 0, len(r.sources))
 	for name := range r.sources {
 		names = append(names, name)
 	}
+	sort.Strings(names)
 	return names
 }

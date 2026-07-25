@@ -52,3 +52,22 @@ func TestRegistry_UnknownType(t *testing.T) {
 		t.Fatal("expected error for unknown datasource type")
 	}
 }
+
+func TestRegistry_EmptyName(t *testing.T) {
+	_, err := NewRegistry([]config.DatasourceConfig{
+		{Name: "", Type: "maimemo", Enabled: true, Config: map[string]interface{}{"token": "test-token"}},
+	})
+	if err == nil {
+		t.Fatal("expected error for empty datasource name")
+	}
+}
+
+func TestRegistry_DuplicateName(t *testing.T) {
+	_, err := NewRegistry([]config.DatasourceConfig{
+		{Name: "dup", Type: "maimemo", Enabled: true, Config: map[string]interface{}{"token": "test-token"}},
+		{Name: "dup", Type: "maimemo", Enabled: true, Config: map[string]interface{}{"token": "test-token"}},
+	})
+	if err == nil {
+		t.Fatal("expected error for duplicate datasource name")
+	}
+}
