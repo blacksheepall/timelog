@@ -1,15 +1,43 @@
 package router
 
 import (
+	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/blacksheepaul/timelog/internal/adapter"
 	"github.com/blacksheepaul/timelog/internal/domain"
+	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
+
+type routerFakeDataSource struct {
+	name   string
+	points []domain.MetricDataPoint
+}
+
+func (f *routerFakeDataSource) Name() string { return f.name }
+func (f *routerFakeDataSource) Fetch(ctx context.Context) ([]domain.MetricDataPoint, error) {
+	return f.points, nil
+}
+
+type routerFakeRegistry struct{}
+
+func (r *routerFakeRegistry) Get(name string) (ports.DataSource, error) {
+	if name == "maimemo" {
+		return &routerFakeDataSource{
+			name: "maimemo",
+			points: []domain.MetricDataPoint{
+				{MetricName: "今日已背单词", Value: 120, RecordedAt: time.Now().UTC(), Source: "maimemo"},
+			},
+		}, nil
+	}
+	return nil, fmt.Errorf("datasource %q not found", name)
+}
 
 func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	t.Helper()
@@ -23,7 +51,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	testutil.ApplyMigrations(t, dao)
 
 	repos := adapter.NewRepositories(dao, testutil.FakeLogger{})
-	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, nil, testutil.FakeLogger{}, cfg, nil)
+	svc := service.NewService(repos, repos, repos, repos, repos, repos, repos, repos, repos, repos, &routerFakeRegistry{}, testutil.FakeLogger{}, cfg, nil)
 	deps := Dependencies{Service: svc}
 
 	r := gin.New()
@@ -33,6 +61,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	setupTaskRoutes(api, deps)
 	setupMetricRoutes(api, deps)
 	setupConstraintRoutes(api, deps)
+	setupDatasourceRoutes(api, deps)
 
 	return r, svc
 }
