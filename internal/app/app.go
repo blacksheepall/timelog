@@ -6,6 +6,7 @@ import (
 	"github.com/blacksheepaul/timelog/core/config"
 	"github.com/blacksheepaul/timelog/core/logger"
 	"github.com/blacksheepaul/timelog/internal/adapter"
+	"github.com/blacksheepaul/timelog/internal/adapter/datasource"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/service"
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -26,6 +27,16 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 	}
 
 	repos := adapter.NewRepositories(dao, log)
+
+	var dataSourceRegistry *datasource.Registry
+	if len(cfg.Datasources) > 0 {
+		var err error
+		dataSourceRegistry, err = datasource.NewRegistry(cfg.Datasources)
+		if err != nil {
+			return nil, fmt.Errorf("initialize datasources: %w", err)
+		}
+	}
+
 	svc := service.NewService(
 		repos, // timelogRepo
 		repos, // categoryRepo
@@ -37,7 +48,7 @@ func New(cfg *config.Config, log logger.Logger, webAuthn *webauthn.WebAuthn) (*A
 		repos, // cacheStore
 		repos, // unitOfWork
 		repos, // auditLogger
-		nil,   // dataSourceRegistry
+		dataSourceRegistry,
 		log,
 		cfg,
 		webAuthn,
