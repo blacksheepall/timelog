@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/blacksheepaul/timelog/internal/domain"
+	"gorm.io/gorm"
 )
 
 // SyncMetricsResult reports how many data points were written for a datasource.
@@ -21,7 +23,7 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 	result := SyncMetricsResult{Source: sourceName}
 
 	if s.dataSourceRegistry == nil {
-		return result, fmt.Errorf("datasource registry not configured")
+		return result, fmt.Errorf("datasource %q not found (registry not configured)", sourceName)
 	}
 
 	source, err := s.dataSourceRegistry.Get(sourceName)
@@ -37,6 +39,11 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 	for _, point := range points {
 		// Ensure the metric exists before recording; create on demand.
 		if _, err := s.metricRepo.GetMetricByName(point.MetricName); err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				s.log.Error("failed to lookup metric", "name", point.MetricName, "error", err)
+				result.Failed++
+				continue
+			}
 			newMetric := &domain.Metric{
 				Name:       point.MetricName,
 				MetricType: "numeric",
@@ -49,6 +56,7 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 			}
 		}
 
+		point.Source = sourceName
 		if _, err := s.RecordMetric(RecordMetricInput{
 			MetricName: point.MetricName,
 			Value:      point.Value,
@@ -60,6 +68,10 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 			continue
 		}
 		result.Synced++
+	}
+
+	if len(points) > 0 && result.Synced == 0 {
+		return result, fmt.Errorf("all %d metric writes failed", result.Failed)
 	}
 
 	return result, nil
