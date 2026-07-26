@@ -10,6 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	// ErrDatasourceNotFound is returned when the named datasource is not registered.
+	ErrDatasourceNotFound = errors.New("datasource not found")
+	// ErrSyncAllWritesFailed is returned when every metric write failed during sync.
+	ErrSyncAllWritesFailed = errors.New("all metric writes failed")
+)
+
 // SyncMetricsResult reports how many data points were written for a datasource.
 type SyncMetricsResult struct {
 	Source string `json:"source"`
@@ -23,12 +30,12 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 	result := SyncMetricsResult{Source: sourceName}
 
 	if s.dataSourceRegistry == nil {
-		return result, fmt.Errorf("datasource %q not found (registry not configured)", sourceName)
+		return result, fmt.Errorf("%w: %q (registry not configured)", ErrDatasourceNotFound, sourceName)
 	}
 
 	source, err := s.dataSourceRegistry.Get(sourceName)
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("%w: %s", ErrDatasourceNotFound, err)
 	}
 
 	points, err := source.Fetch(ctx)
@@ -71,7 +78,7 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 	}
 
 	if len(points) > 0 && result.Synced == 0 {
-		return result, fmt.Errorf("all %d metric writes failed", result.Failed)
+		return result, fmt.Errorf("%w: %d failed", ErrSyncAllWritesFailed, result.Failed)
 	}
 
 	return result, nil

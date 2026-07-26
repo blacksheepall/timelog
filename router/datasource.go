@@ -1,9 +1,10 @@
 package router
 
 import (
+	"errors"
 	"net/http"
-	"strings"
 
+	"github.com/blacksheepaul/timelog/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,8 +23,12 @@ func syncDatasourceHandler(deps Dependencies) gin.HandlerFunc {
 		result, err := deps.Service.SyncMetrics(c.Request.Context(), name)
 		if err != nil {
 			// Distinguish "not found" from external API failures.
-			if isDatasourceNotFound(err) {
+			if errors.Is(err, service.ErrDatasourceNotFound) {
 				c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, err.Error()))
+				return
+			}
+			if errors.Is(err, service.ErrSyncAllWritesFailed) {
+				c.JSON(http.StatusInternalServerError, ErrorResponse(http.StatusInternalServerError, err.Error()))
 				return
 			}
 			c.JSON(http.StatusBadGateway, ErrorResponse(http.StatusBadGateway, err.Error()))
@@ -36,12 +41,4 @@ func syncDatasourceHandler(deps Dependencies) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, SuccessResponse(result, msg))
 	}
-}
-
-func isDatasourceNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
-	// The registry returns errors containing "not found" / "not registered".
-	return strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "not registered")
 }
