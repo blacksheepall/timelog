@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/blacksheepaul/timelog/core/errs"
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/api/mapper"
 	"github.com/blacksheepaul/timelog/internal/domain"
-	"github.com/blacksheepaul/timelog/core/errs"
 	"github.com/gin-gonic/gin"
 )
 

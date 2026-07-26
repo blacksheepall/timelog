@@ -3,9 +3,9 @@ package mapper
 import (
 	"fmt"
 
+	"github.com/blacksheepaul/timelog/core/errs"
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/domain"
-	"github.com/blacksheepaul/timelog/core/errs"
 )
 
 func CategoryToProto(c *domain.Category) *timelogv1.Category {

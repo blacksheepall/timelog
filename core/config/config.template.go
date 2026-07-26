@@ -45,7 +45,7 @@ type Config struct {
 		Token      string `yaml:"token" env:"MCP_TOKEN" env-default:""`
 	} `yaml:"mcp"`
 	Datasources []DatasourceConfig `yaml:"datasources"`
-	Test struct {
+	Test        struct {
 		Flush bool `yaml:"flush" env-default:"false"`
 	} `yaml:"test"`
 }

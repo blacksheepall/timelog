@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/core/timeutil"
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	"github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/core/timeutil"
 )
 
 func TestListTimeLogsByLocalDateRange(t *testing.T) {

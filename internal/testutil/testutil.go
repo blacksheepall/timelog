@@ -19,16 +19,16 @@ type FakeLogger struct{}
 
 var _ logger.Logger = (*FakeLogger)(nil)
 
-func (FakeLogger) Debug(...interface{})          {}
-func (FakeLogger) Debugw(string, ...interface{}) {}
-func (FakeLogger) Info(...interface{})           {}
-func (FakeLogger) Infow(string, ...interface{})  {}
-func (FakeLogger) Warn(...interface{})           {}
-func (FakeLogger) Warnw(string, ...interface{})  {}
-func (FakeLogger) Error(...interface{})          {}
-func (FakeLogger) Errorw(string, ...interface{}) {}
-func (FakeLogger) Fatal(...interface{})          {}
-func (FakeLogger) Fatalw(string, ...interface{}) {}
+func (FakeLogger) Debug(...interface{})                      {}
+func (FakeLogger) Debugw(string, ...interface{})             {}
+func (FakeLogger) Info(...interface{})                       {}
+func (FakeLogger) Infow(string, ...interface{})              {}
+func (FakeLogger) Warn(...interface{})                       {}
+func (FakeLogger) Warnw(string, ...interface{})              {}
+func (FakeLogger) Error(...interface{})                      {}
+func (FakeLogger) Errorw(string, ...interface{})             {}
+func (FakeLogger) Fatal(...interface{})                      {}
+func (FakeLogger) Fatalw(string, ...interface{})             {}
 func (FakeLogger) WithContext(context.Context) logger.Logger { return FakeLogger{} }
 
 // NewTestConfig returns a test config using an in-memory SQLite database.

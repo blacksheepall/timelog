@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
-	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/core/errs"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/internal/temppassword"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"

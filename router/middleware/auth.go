@@ -3,8 +3,8 @@ package middleware
 import (
 	"strings"
 
-	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/blacksheepaul/timelog/core/errs"
+	"github.com/blacksheepaul/timelog/internal/ports"
 	"github.com/gin-gonic/gin"
 )
 

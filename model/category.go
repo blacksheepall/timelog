@@ -3,8 +3,8 @@ package model
 import (
 	"fmt"
 
-	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/core/errs"
+	"github.com/blacksheepaul/timelog/model/gen"
 	"gorm.io/gorm"
 )
 

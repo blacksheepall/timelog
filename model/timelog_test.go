@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/core/errs"
 	"github.com/blacksheepaul/timelog/internal/testutil"
 	. "github.com/blacksheepaul/timelog/model"
 	"github.com/blacksheepaul/timelog/model/gen"
-	"github.com/blacksheepaul/timelog/core/errs"
 )
 
 func TestCreateTimeLogRejectsOngoingConflict(t *testing.T) {

@@ -3,9 +3,9 @@ package model
 import (
 	"time"
 
-	"github.com/blacksheepaul/timelog/model/gen"
 	"github.com/blacksheepaul/timelog/core/errs"
 	"github.com/blacksheepaul/timelog/core/timeutil"
+	"github.com/blacksheepaul/timelog/model/gen"
 	"gorm.io/gorm"
 )
 

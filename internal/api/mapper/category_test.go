@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blacksheepaul/timelog/core/errs"
 	timelogv1 "github.com/blacksheepaul/timelog/gen/go/timelog/v1"
 	"github.com/blacksheepaul/timelog/internal/domain"
-	"github.com/blacksheepaul/timelog/core/errs"
 )
 
 func TestCategoryFromCreateRequestRejectsInvalidParentID(t *testing.T) {

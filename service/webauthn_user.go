@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/blacksheepaul/timelog/core/errs"
+	"github.com/blacksheepaul/timelog/internal/domain"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
