@@ -36,6 +36,10 @@ func SetConfig(cfg *Config) {
 	mu.Lock()
 	defer mu.Unlock()
 	instance = cfg
+	// Ensure subsequent GetConfig calls return the injected config instead of
+	// re-reading the file. This makes SetConfig/ResetConfig safe when tests
+	// run from package directories where the default config.yml is not present.
+	once.Do(func() {})
 }
 
 // clear the injected config for testing
