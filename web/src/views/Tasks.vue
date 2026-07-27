@@ -402,7 +402,7 @@
           title: form.title.trim(),
           description: form.description.trim(),
           category_id: Number(form.category_id),
-          due_date: new Date(form.due_date + 'T12:00:00Z').toISOString(),
+          due_date: form.due_date,
           estimated_minutes: form.estimated_minutes,
         }
         await taskAPI.update(editingTask.value.id, data)
@@ -412,7 +412,7 @@
           title: form.title.trim(),
           description: form.description.trim(),
           category_id: Number(form.category_id),
-          due_date: new Date(form.due_date + 'T12:00:00Z').toISOString(),
+          due_date: form.due_date,
           estimated_minutes: form.estimated_minutes,
         }
         await taskAPI.create(data)

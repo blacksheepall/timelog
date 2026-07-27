@@ -43,6 +43,23 @@ func TestCreateTaskHandler(t *testing.T) {
 	}
 }
 
+func TestCreateTaskHandlerRejectsISODueDate(t *testing.T) {
+	r, svc := setupTestRouter(t)
+	seedTaskCategory(t, svc)
+
+	// Contract lock: due_date is date-only ("2006-01-02"); a full ISO
+	// timestamp must be rejected with 400 instead of silently accepted.
+	reqBody, _ := json.Marshal(timelogv1.CreateTaskRequest{Title: "New", CategoryId: 1, DueDate: "2026-07-27T12:00:00.000Z"})
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/tasks", bytes.NewReader(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestCreateTaskHandlerBadJSON(t *testing.T) {
 	r, _ := setupTestRouter(t)
 

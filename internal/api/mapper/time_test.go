@@ -99,6 +99,20 @@ func TestParseDate(t *testing.T) {
 	}
 }
 
+func TestParseDateRejectsTimestamp(t *testing.T) {
+	// Date fields are date-only ("2006-01-02"); a full timestamp is a
+	// client bug and must be rejected rather than silently truncated.
+	if _, err := ParseDate("2026-07-27T12:00:00.000Z"); err == nil {
+		t.Fatalf("expected error for RFC3339 timestamp")
+	}
+}
+
+func TestParseDateInvalid(t *testing.T) {
+	if _, err := ParseDate("not-a-date"); err == nil {
+		t.Fatalf("expected error for invalid date")
+	}
+}
+
 func TestParseDateEmpty(t *testing.T) {
 	got, err := ParseDate("")
 	if err != nil || !got.IsZero() {
