@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/blacksheepaul/timelog/core/config"
@@ -97,8 +98,8 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles fs
 	// SPA路由 - 对于所有未匹配的路由返回index.html
 	r.NoRoute(func(c *gin.Context) {
 		// 如果是API请求，返回404
-		if len(c.Request.URL.Path) > 4 && c.Request.URL.Path[:5] == "/api/" {
-			c.JSON(http.StatusNotFound, gin.H{"error": "API endpoint not found"})
+		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+			apiNotFound(c)
 			return
 		}
 
@@ -114,6 +115,12 @@ func Register(r *gin.Engine, cfg *config.Config, l logger.Logger, staticFiles fs
 	})
 
 	return r
+}
+
+// apiNotFound responds to unmatched /api/ routes with the standard envelope,
+// keeping the shape identical to handler-level errors.
+func apiNotFound(c *gin.Context) {
+	c.JSON(http.StatusNotFound, ErrorResponse(http.StatusNotFound, "API endpoint not found"))
 }
 
 func RunServer(ctx context.Context, r *gin.Engine, cfg *config.Config, l logger.Logger) error {
