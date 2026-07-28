@@ -186,6 +186,30 @@ make migrate env=prod
 
 `make migrate` without arguments uses the default `env=prod`. Be explicit with `env=dev` during development.
 
+## API Request/Response Convention
+
+Frontend and backend share one frozen contract, enforced on the backend by
+`router.TestEnvelopeContract` and the golden tests in `router/contract_test.go`:
+
+- **Envelope**: every `/api` response (handlers, auth middleware, NoRoute 404)
+  uses `{data, message, status}`, defined in `router/apiresponse.go` and
+  mirrored in `web/src/types/api.ts`.
+- **Success**: HTTP 200; `data` is a proto DTO (or `null` for command
+  endpoints), `message` is human-readable (defaults to `"success"`),
+  `status` is always 200.
+- **Error**: non-2xx; `data` is always `null`, `message` is human-readable
+  (the frontend displays it via `err.response?.data?.message`), and `status`
+  mirrors the HTTP status code. Status semantics: 400 bind/validation
+  failure, 401 unauthenticated (frontend clears the token and redirects to
+  /login), 404 not found, 500 server error, 502 upstream datasource failure
+  (datasource sync only).
+- **Field naming**: snake_case on the wire in both directions (Go `json` tags
+  on generated proto structs + ts-proto `snakeToCamel=false`).
+- **Request binding**: handlers bind `gen/go` proto DTOs via
+  `c.ShouldBindJSON` (failure → 400); semantic validation lives in
+  `internal/api/mapper`.
+- Keep both source files and this section in sync when changing the envelope.
+
 ## Before Committing
 
 Check according to the change type:

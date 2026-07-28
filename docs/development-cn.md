@@ -186,6 +186,26 @@ make migrate env=prod
 
 `make migrate` 不带参数会使用默认 `env=prod`。开发时请明确写 `env=dev`。
 
+## API 请求/响应约定
+
+前后端共享同一份冻结契约，后端由 `router.TestEnvelopeContract` 与
+`router/contract_test.go` 的 golden 测试强制约束：
+
+- **信封**：所有 `/api` 响应（含 handler、auth 中间件、NoRoute 404）统一为
+  `{data, message, status}`，定义在 `router/apiresponse.go`，前端镜像在
+  `web/src/types/api.ts`。
+- **成功**：HTTP 200，`data` 为 proto DTO（或 command 类接口的 `null`），
+  `message` 为人类可读文案（默认 `"success"`），`status` 恒为 200。
+- **错误**：非 2xx，`data` 恒为 `null`，`message` 为人类可读错误（前端通过
+  `err.response?.data?.message` 展示），`status` 与 HTTP 状态码一致。
+  状态码语义：400 绑定/校验失败，401 未认证（前端清 token 跳登录），
+  404 资源不存在，500 服务端错误，502 上游数据源失败（仅 datasource sync）。
+- **字段命名**：wire 上统一 snake_case（Go 生成结构体的 `json` tag +
+  ts-proto `snakeToCamel=false`），请求与响应双向一致。
+- **请求绑定**：handler 用 `c.ShouldBindJSON` 绑定 `gen/go` 的 proto DTO，
+  绑定失败返回 400；语义校验在 `internal/api/mapper`。
+- 修改信封时两侧文件与本节必须同步更新。
+
 ## 提交前检查
 
 提交前按改动类型检查：
