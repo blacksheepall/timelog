@@ -1,8 +1,12 @@
 package router
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -62,6 +66,7 @@ func setupTestRouter(t *testing.T) (*gin.Engine, *service.Service) {
 	setupMetricRoutes(api, deps)
 	setupConstraintRoutes(api, deps)
 	setupDatasourceRoutes(api, deps)
+	r.NoRoute(apiNotFound)
 
 	return r, svc
 }
@@ -76,3 +81,42 @@ func seedCategory(t *testing.T, svc *service.Service) {
 func int32Ptr(v int32) *int32       { return &v }
 func strPtr(v string) *string       { return &v }
 func float64Ptr(v float64) *float64 { return &v }
+
+// decodeApiResponse decodes the response body into the production envelope,
+// failing the test if the body is not valid ApiResponse JSON.
+func decodeApiResponse(t *testing.T, w *httptest.ResponseRecorder) ApiResponse {
+	t.Helper()
+	var resp ApiResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("response is not the ApiResponse envelope: %v (body: %s)", err, w.Body.String())
+	}
+	return resp
+}
+
+// assertEnvelope asserts the frozen req/resp contract shared with the frontend
+// (web/src/types/api.ts):
+//   - HTTP status equals wantStatus
+//   - body always carries a "data" key
+//   - envelope status mirrors the HTTP status
+//   - message is always non-empty (frontend displays it on errors)
+//   - data is null on error responses (status >= 400)
+func assertEnvelope(t *testing.T, w *httptest.ResponseRecorder, wantStatus int) ApiResponse {
+	t.Helper()
+	if w.Code != wantStatus {
+		t.Fatalf("HTTP status = %d, want %d (body: %s)", w.Code, wantStatus, w.Body.String())
+	}
+	if !bytes.Contains(w.Body.Bytes(), []byte(`"data"`)) {
+		t.Errorf("envelope must always carry a \"data\" key (body: %s)", w.Body.String())
+	}
+	resp := decodeApiResponse(t, w)
+	if resp.Status != w.Code {
+		t.Errorf("envelope status = %d, must mirror HTTP status %d", resp.Status, w.Code)
+	}
+	if resp.Message == "" {
+		t.Errorf("envelope message must be non-empty (body: %s)", w.Body.String())
+	}
+	if w.Code >= http.StatusBadRequest && resp.Data != nil {
+		t.Errorf("error envelope data must be null, got %v", resp.Data)
+	}
+	return resp
+}

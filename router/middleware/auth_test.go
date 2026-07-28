@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/blacksheepaul/timelog/internal/adapter"
@@ -140,5 +142,44 @@ func TestAuthMiddlewareWithNilStore(t *testing.T) {
 
 	if w.Code != 401 {
 		t.Errorf("Expected 401 for nil store, got %d", w.Code)
+	}
+}
+
+// TestAuthMiddleware401Envelope pins the req/resp contract for middleware-level
+// auth failures: the body must use the same {data, message, status} envelope as
+// handler-level errors (see router/apiresponse.go and web/src/types/api.ts).
+func TestAuthMiddleware401Envelope(t *testing.T) {
+	svc := setupTestService(t)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/test", nil)
+
+	Auth(svc)(c)
+
+	if w.Code != 401 {
+		t.Fatalf("Expected 401 for missing header, got %d", w.Code)
+	}
+
+	var body struct {
+		Data    interface{} `json:"data"`
+		Message string      `json:"message"`
+		Status  int         `json:"status"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("401 body is not the ApiResponse envelope: %v (body: %s)", err, w.Body.String())
+	}
+	if body.Status != 401 {
+		t.Errorf("envelope status = %d, want 401", body.Status)
+	}
+	if body.Message == "" {
+		t.Errorf("envelope message must be non-empty (body: %s)", w.Body.String())
+	}
+	if body.Data != nil {
+		t.Errorf("error envelope data must be null, got %v", body.Data)
+	}
+	if !strings.Contains(w.Body.String(), `"data"`) {
+		t.Errorf("envelope must always carry a \"data\" key (body: %s)", w.Body.String())
 	}
 }

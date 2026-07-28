@@ -12,19 +12,24 @@ func Auth(store ports.SessionTokenStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session, err := GetSessionFromHeader(c)
 		if err != nil {
-			c.AbortWithStatusJSON(401, gin.H{"msg": err.Error()})
+			c.AbortWithStatusJSON(401, authErrorResponse(err.Error()))
 			return
 		}
 
 		if !isValidUserToken(store, session) {
-			c.AbortWithStatusJSON(401, gin.H{
-				"msg": "Invalid or expired token",
-			})
+			c.AbortWithStatusJSON(401, authErrorResponse("Invalid or expired token"))
 			return
 		}
 
 		c.Next()
 	}
+}
+
+// authErrorResponse mirrors router.ApiResponse for middleware-level errors.
+// The middleware package cannot import router (import cycle); the shape is
+// pinned by TestAuthMiddleware401Envelope and router.TestEnvelopeContract.
+func authErrorResponse(message string) gin.H {
+	return gin.H{"data": nil, "message": message, "status": 401}
 }
 
 func isValidUserToken(store ports.SessionTokenStore, token string) bool {
