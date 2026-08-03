@@ -106,3 +106,43 @@ log:
 
 	ResetConfig()
 }
+
+func TestDotEnvLoadedIntoProcessEnv(t *testing.T) {
+	ResetConfig()
+	dir := t.TempDir()
+	t.Chdir(dir) // GetConfig loads ".env" from the working directory
+	t.Cleanup(func() {
+		os.Unsetenv("TIMELOG_CONFIG_PATH")
+		os.Unsetenv("MCP_TOKEN")
+	})
+
+	ymlPath := filepath.Join(dir, "custom.yml")
+	yml := `
+dev_mode: false
+server:
+  port: 8080
+database:
+  host: ":memory:"
+log:
+  level: info
+`
+	if err := os.WriteFile(ymlPath, []byte(yml), 0644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	dotenv := "TIMELOG_CONFIG_PATH=" + ymlPath + "\nMCP_TOKEN=from-dotenv\n"
+	if err := os.WriteFile(filepath.Join(dir, ".env"), []byte(dotenv), 0644); err != nil {
+		t.Fatalf("write .env: %v", err)
+	}
+
+	// The default path points at a missing file; only the .env-provided
+	// TIMELOG_CONFIG_PATH can make this load succeed.
+	cfg := GetConfig(filepath.Join(dir, "missing.yml"))
+	if cfg.Server.Port != 8080 {
+		t.Fatalf("expected config from .env-provided path, got port %d", cfg.Server.Port)
+	}
+	if got := os.Getenv("MCP_TOKEN"); got != "from-dotenv" {
+		t.Fatalf("expected .env entry injected into process env, got %q", got)
+	}
+
+	ResetConfig()
+}

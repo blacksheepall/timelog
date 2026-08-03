@@ -23,6 +23,7 @@
 ## Config And Runtime Gotchas
 - App startup hardcodes `config.yml` (`main.go`, `cmd/passkey-temp-admin/main.go`). Tests hardcode `config-test.yml` (`test/setup_test.go`). If those files are missing, startup panics.
 - Both `config.yml` and `config-test.yml` are gitignored. Copy from `config-example.yml` when needed.
+- An optional `.env` in the working directory is loaded before config resolution (`core/config/config.go`). cleanenv injects every entry into the process environment via `os.Setenv` — overwriting pre-existing vars — so `.env` is the place for variables like `TIMELOG_CONFIG_PATH` and the `MCP_*` settings (the only struct fields with `env` tags). Copy from `.env.example`.
 - Vite dev server runs on `http://localhost:5173` and proxies `/api` to `http://localhost:8080`.
 - Passkeys require HTTPS. Cert generation is available via `make gen-certs`; see `README.md` for the exact setup.
 

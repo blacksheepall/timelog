@@ -16,6 +16,20 @@ var (
 func GetConfig(config_path string) *Config {
 	once.Do(func() {
 		instance = &Config{}
+		// Load optional .env first. cleanenv parses it with godotenv and
+		// injects every entry into the process environment (os.Setenv), so
+		// variables like TIMELOG_CONFIG_PATH become visible below and
+		// callers don't need to export them. Note: .env entries overwrite
+		// pre-existing process env vars (cleanenv behavior).
+		//
+		// Read into a throwaway struct: the .env parser ignores the target
+		// struct, and reading into the real Config here would trip
+		// env-required checks before the YAML file has populated fields.
+		if _, err := os.Stat(envFilePath); err == nil {
+			if err := cleanenv.ReadConfig(envFilePath, &struct{}{}); err != nil {
+				panic(err)
+			}
+		}
 		resolvedPath := ResolveConfigPath(config_path)
 		if err := cleanenv.ReadConfig(resolvedPath, instance); err != nil {
 			panic(err)
@@ -23,6 +37,8 @@ func GetConfig(config_path string) *Config {
 	})
 	return instance
 }
+
+const envFilePath = ".env"
 
 func ResolveConfigPath(defaultPath string) string {
 	if path := os.Getenv("TIMELOG_CONFIG_PATH"); path != "" {
