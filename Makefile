@@ -82,7 +82,7 @@ fmt:
 	cd web && npx prettier --write src/ || true
 
 install-deps:
-	go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@latest
+	go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@1.4.1
 	go install gorm.io/gen/tools/gentool@latest
 	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
