@@ -15,6 +15,7 @@ import (
 	"github.com/blacksheepaul/timelog/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ilyakaznacheev/cleanenv"
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
@@ -60,17 +61,16 @@ func getTestService() *service.Service {
 }
 
 func loadTestConfig() *config.Config {
-	configPath := config.ResolveConfigPath("../config-test.yml")
-	if _, err := os.Stat(configPath); err == nil {
-		return config.GetConfig(configPath)
+	configPath := "../config-test.yml"
+	if _, err := os.Stat(configPath); err != nil {
+		panic(fmt.Sprintf("test config not found: %s", configPath))
 	}
 
-	cfg := config.GetConfig("../config-example.yml")
-	cfg.Database.Host = "./test.db"
-	cfg.Server.HTTPSEnabled = false
-	cfg.Passkey.Enabled = false
-	cfg.Log.Path = "./test.log"
-	cfg.Test.Flush = true
+	cfg := &config.Config{}
+	if err := cleanenv.ReadConfig(configPath, cfg); err != nil {
+		panic(fmt.Sprintf("failed to read test config %s: %v", configPath, err))
+	}
+	config.SetConfig(cfg)
 	return cfg
 }
 
