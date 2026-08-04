@@ -29,7 +29,6 @@ TimeLog 是一个本地优先的全栈时间记录应用：
 ```bash
 cp config-example.yml config.yml
 cp config-example.yml config-test.yml
-make gen-certs
 make install-deps
 cd web && pnpm install && cd ..
 make gen-api
@@ -40,8 +39,8 @@ make buildx
 说明：
 
 - `config.yml` 和 `config-test.yml` 被 git ignore，本地必须自己创建。
-- `config-example.yml` 默认启用 HTTPS，并引用 `certs/cert.pem` / `certs/key.pem`。如果沿用默认配置，需要先跑 `make gen-certs`；如果只做普通 HTTP 开发，也可以把本地 `config.yml` 的 `server.https_enabled` 改成 `false`。
-- 默认前端代理和 passkey RP origin 使用 `timelog.local`。本地开发时建议把 `timelog.local` 解析到 `127.0.0.1`，例如在 `/etc/hosts` 增加 `127.0.0.1 timelog.local`。
+- `config-example.yml` 默认以纯 HTTP 运行。生产环境若需要 HTTPS（例如启用 passkey），请在应用前部署反向代理（Nginx/Traefik等）来终止 TLS。
+- 本地开发时 Vite dev server 代理到 `http://127.0.0.1:8080`。
 - `make install-deps` 安装 Go 侧开发工具，包括 `protoc-gen-jsonschema`、`gentool` 和带 SQLite 驱动的 `migrate`。
 - Buf CLI 来自 `web/node_modules/.bin/buf`，所以新仓库需要先安装前端依赖；`make gen-api` 在缺少 Buf 时也会尝试执行 `cd web && pnpm install`。
 - `Makefile` 的 `env` 默认是 `prod`。开发库迁移请显式使用 `make migrate env=dev`，否则会操作 `prod.db`。
@@ -65,9 +64,9 @@ cd web
 pnpm run dev
 ```
 
-访问 `http://localhost:5173`。默认 Vite 代理指向 `https://timelog.local:8080`，如果代理失败，先确认 `timelog.local` 能解析到本机并且后端 HTTPS 证书已生成。
+访问 `http://localhost:5173`。默认 Vite 代理指向 `http://127.0.0.1:8080`，如果代理失败，先确认后端服务已在 `8080` 端口运行。
 
-如果开启 passkey，推荐使用完整构建后的后端 HTTPS 地址访问，例如 `https://timelog.local:8080`。Passkey 的 RP origin 必须和 `config.yml` 中的 `passkey.rp_origins` 匹配。
+如果开启 passkey，请确保浏览器访问的 origin 属于 `passkey.rp_origins`。生产环境通过反向代理提供 HTTPS 时，将 `passkey.rp_origins` 设为对应的公共 HTTPS origin；本地 Vite 开发可使用 `http://localhost:5173`（localhost 也是 secure context）。
 
 ### 构建
 
@@ -273,12 +272,6 @@ make buildx
 
 ### Passkey 本地不可用
 
-Passkey 需要 HTTPS secure context。先生成证书：
+Passkey 需要 secure context。本地开发时 `http://localhost:5173` 和 `http://localhost:8080` 均属于 secure context，请把对应 origin 加入 `passkey.rp_origins`。
 
-```bash
-make gen-certs
-```
-
-然后按 README 更新 `config.yml`，并在浏览器里接受本地自签证书。
-
-默认 passkey 配置使用 `timelog.local`，因此还需要确保它解析到本机，并通过 `https://timelog.local:8080` 这类匹配 RP origin 的地址访问应用。
+生产环境则必须通过反向代理提供 HTTPS，并把公共 HTTPS origin 加入 `passkey.rp_origins`。后端本身保持 HTTP 即可。

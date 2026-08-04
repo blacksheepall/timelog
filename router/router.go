@@ -134,13 +134,7 @@ func RunServer(ctx context.Context, r *gin.Engine, cfg *config.Config, l logger.
 
 	errCh := make(chan error, 1)
 	go func() {
-		var err error
-		if cfg.Server.HTTPSEnabled {
-			err = srv.ListenAndServeTLS(cfg.Server.CertFile, cfg.Server.KeyFile)
-		} else {
-			err = srv.ListenAndServe()
-		}
-		errCh <- err
+		errCh <- srv.ListenAndServe()
 	}()
 
 	select {

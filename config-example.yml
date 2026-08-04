@@ -8,9 +8,6 @@ server:
   port: 8080
   allow_origins:
     - '*'
-  https_enabled: true
-  cert_file: ./certs/cert.pem
-  key_file: ./certs/key.pem
 log:
   level: debug
   path: ./app.log
@@ -23,9 +20,11 @@ passkey:
   enabled: false
   rp_id: 'timelog.local'
   rp_name: 'TimeLog'
-  rp_origins:
-    - 'https://timelog.local:5173'
-    - 'https://timelog.local:8080'
+  # RP origins must match the origin the browser sees. When running behind a
+  # reverse proxy that terminates TLS, list the public HTTPS origin(s) here
+  # (e.g. 'https://timelog.example.com'). For local Vite development on
+  # localhost, 'http://localhost:5173' is also a valid secure context.
+  rp_origins: []
   token_ttl: 86400
   temp_password:
     ttl: 900

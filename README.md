@@ -48,29 +48,11 @@ The Buf CLI is installed through the frontend dev dependencies, so run `cd web &
 
 ## Passkey Setup
 
-Passkey authentication requires HTTPS. Follow the certificate setup below, then generate a one-time temp password to bind a device in the UI.
+Passkey authentication requires a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts). In production this means the application must be served over HTTPS. The project itself no longer terminates TLS; instead, run it behind a reverse proxy such as Nginx or Traefik that handles HTTPS and forwards plain HTTP to the backend.
 
-### Certificate Setup (Required for Passkey)
+When passkey is enabled, set `passkey.rp_origins` in `config.yml` to the public HTTPS origin(s) that users see in their browser (for example, `https://timelog.example.com`). The backend can remain on HTTP as long as the browser-facing origin is HTTPS.
 
-Since Passkey authentication requires a secure context (HTTPS), generate a self-signed certificate:
-
-```bash
-make gen-certs
-```
-
-This creates `certs/cert.pem` and `certs/key.pem` in the project root.
-The default passkey config uses `timelog.local`; for local testing, make sure it resolves to `127.0.0.1` (for example, add `127.0.0.1 timelog.local` to `/etc/hosts`).
-
-Update your `config.yml`:
-
-```yaml
-server:
-  https_enabled: true
-  cert_file: ./certs/cert.pem
-  key_file: ./certs/key.pem
-```
-
-**Note:** For local development, you may need to accept the self-signed certificate warning in your browser. With the default passkey config, access the application at `https://timelog.local:8080` (or update `passkey.rp_origins` if you use a different origin).
+For local development, `http://localhost:5173` (Vite dev server) and `http://localhost:8080` are also secure contexts, so you can test passkeys without a reverse proxy by adding the matching origin to `passkey.rp_origins`.
 
 ### Generate temp password for the current app instance
 
@@ -97,11 +79,11 @@ If your config file is not at the project root, set `TIMELOG_CONFIG_PATH` before
 
 ### Bind device
 
-Open `https://timelog.local:8080/passkey/register` and use the temp password to create a passkey.
+Open `/passkey/register` on your public HTTPS origin and use the temp password to create a passkey.
 
 ### Login
 
-Open `https://timelog.local:8080/login` and complete the passkey prompt.
+Open `/login` on your public HTTPS origin and complete the passkey prompt.
 
 ## Migrate
 

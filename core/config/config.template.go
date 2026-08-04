@@ -12,9 +12,6 @@ type Config struct {
 		Addr         string   `yaml:"addr" env-default:""`
 		Port         int      `yaml:"port" env-required:"true"`
 		AllowOrigins []string `yaml:"allow_origins"`
-		HTTPSEnabled bool     `yaml:"https_enabled" env-default:"false"`
-		CertFile     string   `yaml:"cert_file" env-default:"./certs/cert.pem"`
-		KeyFile      string   `yaml:"key_file" env-default:"./certs/key.pem"`
 	} `yaml:"server"`
 	Log struct {
 		Level    string `yaml:"level" env-default:"info"`

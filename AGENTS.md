@@ -25,7 +25,7 @@
 - Both `config.yml` and `config-test.yml` are gitignored. Copy from `config-example.yml` when needed.
 - An optional `.env` in the working directory is loaded before config resolution (`core/config/config.go`). cleanenv injects every entry into the process environment via `os.Setenv` — overwriting pre-existing vars — so `.env` is the place for variables like `TIMELOG_CONFIG_PATH` and the `MCP_*` settings (the only struct fields with `env` tags). Copy from `.env.example`.
 - Vite dev server runs on `http://localhost:5173` and proxies `/api` to `http://localhost:8080`.
-- Passkeys require HTTPS. Cert generation is available via `make gen-certs`; see `README.md` for the exact setup.
+- Passkeys require a secure context. In production this means serving the app behind a reverse proxy that terminates HTTPS; the backend itself runs plain HTTP. For local development, `localhost` origins are also secure contexts. See `README.md` for passkey setup.
 
 ## Verified Code Boundaries
 - HTTP wiring lives in `router/`; `router/router.go` registers route groups, optional auth, API docs, and SPA fallback.

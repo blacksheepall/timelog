@@ -30,6 +30,8 @@ cp config-example.yml /var/www/timelog/config.yml
 # Edit config file
 ```
 
+The application runs plain HTTP. If you need HTTPS (for example, to enable passkeys), place a reverse proxy such as Nginx or Traefik in front of it to terminate TLS and forward HTTP to the application port.
+
 2. Create systemd service at `/etc/systemd/system/timelog.service`.
 
 ```ini

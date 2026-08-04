@@ -78,7 +78,10 @@
           <li>完成后即可使用 Passkey 登录，无需再输入密码。</li>
         </ul>
         <div class="mt-10 rounded-2xl border border-white/10 bg-bg-surface/5 p-4">
-          <p class="text-sm text-text-secondary">需要在 HTTPS 或 localhost 环境中操作 WebAuthn。</p>
+          <p class="text-sm text-text-secondary">
+            需要在安全上下文中操作 WebAuthn：生产环境通过 HTTPS（可由反向代理提供）或 localhost
+            访问。
+          </p>
           <router-link
             to="/login"
             class="mt-3 inline-flex text-sm font-semibold text-white underline underline-offset-4"

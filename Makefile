@@ -88,28 +88,6 @@ install-deps:
 	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	cd web && pnpm install
 
-# Generate self-signed certificates for local HTTPS testing
-gen-certs:
-	@echo "Generating self-signed certificates for local HTTPS testing..."
-	@mkdir -p certs
-	@openssl req -x509 -newkey rsa:4096 \
-		-keyout certs/key.pem \
-		-out certs/cert.pem \
-		-days 365 \
-		-nodes \
-		-subj "/CN=timelog.local" \
-		-addext "subjectAltName=DNS:timelog.local,DNS:localhost,IP:127.0.0.1" \
-		2>/dev/null || \
-	openssl req -x509 -newkey rsa:4096 \
-		-keyout certs/key.pem \
-		-out certs/cert.pem \
-		-days 365 \
-		-nodes \
-		-subj "/CN=timelog.local"
-	@echo "Certificates generated in ./certs/"
-	@echo "  - certs/cert.pem"
-	@echo "  - certs/key.pem"
-
 # Swagger docs target removed; API docs are generated via make gen-api (OpenAPI + Redoc).
 
 gen-model:

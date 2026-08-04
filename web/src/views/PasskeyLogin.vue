@@ -20,7 +20,7 @@
         <div
           class="mt-8 rounded-2xl border border-default bg-bg-elevated p-4 text-xs text-text-secondary"
         >
-          WebAuthn 需要 HTTPS 或 localhost 环境。
+          WebAuthn 需要安全上下文：生产环境通过 HTTPS（可由反向代理提供）或 localhost 访问。
         </div>
       </aside>
 

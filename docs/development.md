@@ -29,7 +29,6 @@ Recommended setup:
 ```bash
 cp config-example.yml config.yml
 cp config-example.yml config-test.yml
-make gen-certs
 make install-deps
 cd web && pnpm install && cd ..
 make gen-api
@@ -40,8 +39,8 @@ make buildx
 Notes:
 
 - `config.yml` and `config-test.yml` are gitignored and must be created locally.
-- `config-example.yml` enables HTTPS by default and references `certs/cert.pem` / `certs/key.pem`. If you keep the default config, run `make gen-certs` first; for plain HTTP development, you can set `server.https_enabled` to `false` in your local `config.yml`.
-- The default frontend proxy and passkey RP origins use `timelog.local`. For local development, make sure `timelog.local` resolves to `127.0.0.1`, for example by adding `127.0.0.1 timelog.local` to `/etc/hosts`.
+- `config-example.yml` now runs plain HTTP by default. If you need HTTPS in production (for example, to enable passkeys), place the application behind a reverse proxy such as Nginx or Traefik that terminates TLS.
+- The Vite dev server proxies `/api` to `http://127.0.0.1:8080`.
 - `make install-deps` installs Go-side development tools, including `protoc-gen-jsonschema`, `gentool`, and `migrate` with the SQLite driver.
 - The Buf CLI comes from `web/node_modules/.bin/buf`, so a fresh checkout needs frontend dependencies installed first. `make gen-api` also tries to run `cd web && pnpm install` when Buf is missing.
 - `Makefile` defaults `env` to `prod`. Use `make migrate env=dev` explicitly for the development database; otherwise migration targets operate on `prod.db`.
@@ -65,9 +64,9 @@ cd web
 pnpm run dev
 ```
 
-Open `http://localhost:5173`. The default Vite proxy targets `https://timelog.local:8080`; if proxying fails, first confirm that `timelog.local` resolves to your machine and that the backend HTTPS certificate has been generated.
+Open `http://localhost:5173`. The default Vite proxy targets `http://127.0.0.1:8080`; if proxying fails, first confirm the backend is running on port `8080`.
 
-If passkey is enabled, prefer using the full-build backend HTTPS origin, such as `https://timelog.local:8080`. The passkey RP origin must match `passkey.rp_origins` in `config.yml`.
+If passkey is enabled, make sure the origin you visit is listed in `passkey.rp_origins`. In production, use the public HTTPS origin provided by your reverse proxy. For local Vite development you can use `http://localhost:5173`, since `localhost` is also treated as a secure context.
 
 ### Builds
 
@@ -277,12 +276,6 @@ make buildx
 
 ### Passkey Does Not Work Locally
 
-Passkeys require an HTTPS secure context. Generate certificates first:
+Passkeys require a secure context. For local development, both `http://localhost:5173` and `http://localhost:8080` are secure contexts, so add the origin you use to `passkey.rp_origins`.
 
-```bash
-make gen-certs
-```
-
-Then update `config.yml` according to README and accept the local self-signed certificate in the browser.
-
-The default passkey config uses `timelog.local`, so also make sure it resolves to your machine and open the app through an origin that matches the RP origins, such as `https://timelog.local:8080`.
+In production, serve the application behind a reverse proxy that provides HTTPS, and add the public HTTPS origin to `passkey.rp_origins`. The backend itself can remain on HTTP.

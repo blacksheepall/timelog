@@ -30,6 +30,8 @@ cp config-example.yml /var/www/timelog/config.yml
 # 编辑配置文件
 ```
 
+应用本身以纯 HTTP 运行。如需 HTTPS（例如启用 passkey），请在其前方部署 Nginx、Traefik 等反向代理来终止 TLS，并以 HTTP 转发到应用端口。
+
 2. 创建 systemd 服务 `/etc/systemd/system/timelog.service`：
 
 ```ini
