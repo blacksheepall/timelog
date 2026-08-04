@@ -82,9 +82,11 @@ fmt:
 	cd web && npx prettier --write src/ || true
 
 install-deps:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
 	go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@1.4.1
 	go install gorm.io/gen/tools/gentool@latest
 	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	cd web && pnpm install
 
 # Generate self-signed certificates for local HTTPS testing
 gen-certs:
@@ -117,7 +119,7 @@ gen-model:
 
 gen-api:
 	@test -x ./web/node_modules/.bin/buf || (cd web && pnpm install)
-	@PATH="$(shell go env GOROOT)/bin:./web/node_modules/.bin:$(PATH)" ./web/node_modules/.bin/buf generate
+	@PATH="$(or $(shell go env GOBIN),$(shell go env GOPATH)/bin):./web/node_modules/.bin:$(PATH)" ./web/node_modules/.bin/buf generate
 	go run ./cmd/merge-openapi
 
 check-api:
