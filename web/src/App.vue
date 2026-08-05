@@ -71,6 +71,15 @@
               >
                 指标
               </router-link>
+              <router-link
+                to="/study"
+                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
+                :class="{
+                  'text-brand font-semibold': $route.name === 'Study',
+                }"
+              >
+                学习情况
+              </router-link>
             </nav>
           </div>
 
@@ -195,6 +204,16 @@
               @click="mobileMenuOpen = false"
             >
               指标
+            </router-link>
+            <router-link
+              to="/study"
+              class="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              :class="{
+                'text-brand bg-brand-bg': $route.name === 'Study',
+              }"
+              @click="mobileMenuOpen = false"
+            >
+              学习情况
             </router-link>
             <button
               class="block w-full px-3 py-2 text-left text-base font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"

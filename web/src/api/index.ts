@@ -24,6 +24,7 @@ import type {
   Constraint,
   CreateConstraintRequest,
   UpdateConstraintRequest,
+  ConstraintEvaluation,
 } from '@/gen/api/timelog/v1/constraint'
 import type {
   Metric,
@@ -230,7 +231,7 @@ export const constraintAPI = {
   reactivate: (id: number): Promise<ApiResponse<null>> =>
     api.post(`/constraints/${id}/reactivate`).then(res => res.data),
 
-  evaluate: (id: number): Promise<ApiResponse<any>> =>
+  evaluate: (id: number): Promise<ApiResponse<ConstraintEvaluation>> =>
     api.get(`/constraints/${id}/evaluation`).then(res => res.data),
 }
 
@@ -251,6 +252,17 @@ export const metricAPI = {
 
   delete: (id: number): Promise<ApiResponse<null>> =>
     api.delete(`/metrics/${id}`).then(res => res.data),
+}
+
+export const datasourceAPI = {
+  sync: (name: string): Promise<ApiResponse<DatasourceSyncResult>> =>
+    api.post(`/datasources/${name}/sync`).then(res => res.data),
+}
+
+export interface DatasourceSyncResult {
+  source: string
+  synced: number
+  failed: number
 }
 
 export const configAPI = {
