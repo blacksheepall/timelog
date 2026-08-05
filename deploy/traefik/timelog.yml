@@ -1,0 +1,27 @@
+# Traefik dynamic configuration for timelog (file provider).
+#
+# The app runs as a plain-HTTP systemd service, so it cannot use Docker
+# labels. Drop this file into Traefik's file-provider directory.
+#
+# Before using, replace two placeholders:
+#   - CERT_RESOLVER: the certResolver name from your Traefik static config
+#   - BACKEND_URL:   where Traefik can reach the app, e.g.
+#       same host as Traefik container: http://172.17.0.1:8080
+#       another LAN host:               http://192.168.2.x:8080
+
+http:
+  routers:
+    timelog:
+      rule: "Host(`your-domain.net`)"
+      entryPoints:
+        - websecure
+      service: timelog
+      tls:
+        certResolver: le
+
+  services:
+    timelog:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.your.ip:8080"
+        passHostHeader: true
