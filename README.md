@@ -92,16 +92,19 @@ for example:
 create new migration
 
 ```bash
-migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/ init_xxx_table
+migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/sqlite init_xxx_table
 ```
 
 forward
 
 ```bash
-migrate -database "sqlite3://dev.db" --path model/migrations/ up
+migrate -database "sqlite3://dev.db" --path model/migrations/sqlite up
 # or use make target (Makefile defaults to prod; use env=dev for local development)
 make migrate env=dev
 make migrate env=prod
+
+# Postgres
+make migrate DATABASE_TYPE=postgres MIGRATE_DSN="postgres://user:pass@host/db?sslmode=disable"
 ```
 
 # Launch

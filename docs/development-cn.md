@@ -8,7 +8,7 @@ TimeLog 是一个本地优先的全栈时间记录应用：
 
 - 后端：Go，入口在 `main.go`。
 - 前端：Vue 3 + Vite，目录是 `web/`。
-- 数据库：SQLite，迁移文件在 `model/migrations/`。
+- 数据库：默认 SQLite，迁移文件在 `model/migrations/sqlite/`。Postgres 基线迁移在 `model/migrations/postgres/`。
 - API：HTTP 路由在 `router/`，业务逻辑在 `service/`，持久化在 `model/`。
 - API 合约：DTO 来源是 `api/proto/timelog/v1/`，REST 路径来源是 `api/openapi/rest.yaml`。
 - 文档：非 `prod` 构建会暴露 Redoc，路径是 `/docs/redoc.html`，旧入口 `/swagger` 会重定向过去。
@@ -168,7 +168,7 @@ make fmt
 创建迁移：
 
 ```bash
-migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/ add_xxx
+migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/sqlite add_xxx
 ```
 
 执行开发库迁移：

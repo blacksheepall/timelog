@@ -62,7 +62,7 @@ func ApplyMigrations(t *testing.T, dao *model.Dao) {
 	if !ok {
 		t.Fatal("failed to determine testutil source path")
 	}
-	migrationsDir := filepath.Join(filepath.Dir(filename), "..", "..", "model", "migrations")
+	migrationsDir := filepath.Join(filepath.Dir(filename), "..", "..", "model", "migrations", "sqlite")
 	migrationFiles, err := filepath.Glob(filepath.Join(migrationsDir, "*.up.sql"))
 	if err != nil {
 		t.Fatalf("list migrations: %v", err)

@@ -72,8 +72,19 @@ passkey-temp:
 	@go run ./cmd/passkey-temp-admin $(PASSKEY_TEMP_TTL)
 
 # Migrate target
+# Usage:
+#   make migrate                                 # SQLite (default)
+#   make migrate DATABASE_TYPE=postgres MIGRATE_DSN="postgres://user:pass@host/db?sslmode=disable"
+DATABASE_TYPE ?= sqlite
+
 migrate:
-	migrate -database "sqlite3://$(MIGRATE_DB_FILE)" --path model/migrations/ up
+ifeq ($(DATABASE_TYPE),sqlite)
+	migrate -database "sqlite3://$(MIGRATE_DB_FILE)" --path model/migrations/sqlite up
+else ifeq ($(DATABASE_TYPE),postgres)
+	migrate -database "$(MIGRATE_DSN)" --path model/migrations/postgres up
+else
+	$(error Unsupported DATABASE_TYPE: $(DATABASE_TYPE))
+endif
 
 # fmt
 fmt:
@@ -85,7 +96,7 @@ install-deps:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
 	go install github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema@1.4.1
 	go install gorm.io/gen/tools/gentool@latest
-	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	go install -tags 'sqlite3 postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	cd web && pnpm install
 
 # Swagger docs target removed; API docs are generated via make gen-api (OpenAPI + Redoc).

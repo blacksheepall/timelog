@@ -75,7 +75,7 @@ func loadTestConfig() *config.Config {
 }
 
 func flushDb(dao *model.Dao) {
-	migrationFiles, err := filepath.Glob("../model/migrations/*.up.sql")
+	migrationFiles, err := filepath.Glob("../model/migrations/sqlite/*.up.sql")
 	if err != nil {
 		panic(err)
 	}

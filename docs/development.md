@@ -8,7 +8,7 @@ TimeLog is a local-first full-stack time logging app:
 
 - Backend: Go, with `main.go` as the entry point.
 - Frontend: Vue 3 + Vite under `web/`.
-- Database: SQLite, with migrations under `model/migrations/`.
+- Database: SQLite by default, with migrations under `model/migrations/sqlite/`. A Postgres baseline is available under `model/migrations/postgres/`.
 - API: HTTP routes live in `router/`, business logic in `service/`, persistence in `model/`.
 - API contract: DTOs come from `api/proto/timelog/v1/`; REST paths come from `api/openapi/rest.yaml`.
 - Documentation: non-`prod` builds expose Redoc at `/docs/redoc.html`; the legacy `/swagger` path redirects there.
@@ -168,7 +168,7 @@ Read `web/CLAUDE.md` before frontend changes, but treat the actual code and this
 Create a migration:
 
 ```bash
-migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/ add_xxx
+migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/sqlite add_xxx
 ```
 
 Run development migrations:
