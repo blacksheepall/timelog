@@ -31,22 +31,40 @@
         <p>暂无学习数据。点击右上角「同步墨墨数据」获取。</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-        <div
-          v-for="metric in studyMetrics"
-          :key="metric.id"
-          class="border border-default rounded-lg p-4"
-        >
-          <p class="text-sm font-medium text-text-secondary">{{ metric.name }}</p>
-          <p class="mt-2">
-            <span class="text-3xl font-bold text-brand">
-              {{ formatValue(metric.current_value) }}
+      <div v-else class="p-6 space-y-6">
+        <!-- 今日完成进度条 -->
+        <div v-if="studyProgress">
+          <div class="flex justify-between items-baseline text-sm mb-2">
+            <span class="text-text-secondary">今日完成进度</span>
+            <span class="text-text-primary font-medium">
+              {{ studyProgress.finished }} / {{ studyProgress.total }}（{{ studyProgress.rate }}%）
             </span>
-            <span class="text-text-muted ml-1">{{ metric.unit }}</span>
-          </p>
-          <p v-if="metric.last_recorded_at" class="text-xs text-text-muted mt-2">
-            更新于 {{ formatDateTime(metric.last_recorded_at) }}
-          </p>
+          </div>
+          <div class="w-full bg-bg-elevated rounded-full h-2.5">
+            <div
+              class="bg-brand h-2.5 rounded-full transition-all"
+              :style="{ width: studyProgress.percent + '%' }"
+            ></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            v-for="metric in studyMetrics"
+            :key="metric.id"
+            class="border border-default rounded-lg p-4"
+          >
+            <p class="text-sm font-medium text-text-secondary">{{ metric.name }}</p>
+            <p class="mt-2">
+              <span class="text-3xl font-bold text-brand">
+                {{ formatValue(metric.current_value) }}
+              </span>
+              <span class="text-text-muted ml-1">{{ metric.unit }}</span>
+            </p>
+            <p v-if="metric.last_recorded_at" class="text-xs text-text-muted mt-2">
+              更新于 {{ formatDateTime(metric.last_recorded_at) }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -144,7 +162,14 @@
   import type { Metric, MetricRecord } from '@/gen/api/timelog/v1/metric'
 
   // 与后端 maimemo mapper 产出的指标名保持一致
-  const STUDY_METRIC_NAMES = ['今日学习单词', '今日新学单词', '今日已完成单词']
+  const STUDY_METRIC_NAMES = [
+    '今日学习单词',
+    '今日新学单词',
+    '今日已完成单词',
+    '今日学习时长',
+    '今日应背单词',
+    '今日完成率',
+  ]
 
   interface CompletionItem {
     constraint: Constraint
@@ -165,6 +190,15 @@
   const studyMetrics = computed(() =>
     metrics.value.filter(m => STUDY_METRIC_NAMES.includes(m.name))
   )
+
+  // 今日完成进度：直接取「已完成 / 应背」两个指标计算，比读「今日完成率」更稳
+  const studyProgress = computed(() => {
+    const finished = metrics.value.find(m => m.name === '今日已完成单词')?.current_value
+    const total = metrics.value.find(m => m.name === '今日应背单词')?.current_value
+    if (finished == null || total == null || total <= 0) return null
+    const rate = Math.round((finished / total) * 10000) / 100
+    return { finished, total, rate, percent: Math.min(rate, 100) }
+  })
 
   const loadData = async () => {
     loading.value = true
