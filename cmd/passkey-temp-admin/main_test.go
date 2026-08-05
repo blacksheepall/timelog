@@ -75,7 +75,7 @@ func TestResolveTTL(t *testing.T) {
 func setupCommandTestEnv(t *testing.T) (*service.Service, *model.Dao) {
 	t.Helper()
 
-	testCfg.Database.Host = ":memory:"
+	testCfg.Database.Path = ":memory:"
 	testCfg.Log.ORMLogLevel = 1
 	testCfg.Passkey.TempPassword.TTL = 900
 

@@ -34,7 +34,7 @@ func (FakeLogger) WithContext(context.Context) logger.Logger { return FakeLogger
 // NewTestConfig returns a test config using an in-memory SQLite database.
 func NewTestConfig() *config.Config {
 	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
+	cfg.Database.Path = ":memory:"
 	cfg.Log.ORMLogLevel = 1
 	return cfg
 }

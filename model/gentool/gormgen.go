@@ -5,18 +5,35 @@ import (
 
 	_ "github.com/ncruces/go-sqlite3/embed"
 	sqlite "github.com/ncruces/go-sqlite3/gormlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"gorm.io/gen"
 )
 
 func main() {
-	dbPath := os.Getenv("TIMELOG_GEN_DB_PATH")
-	if dbPath == "" {
-		panic("env TIMELOG_GEN_DB_PATH is not set")
+	dbType := os.Getenv("TIMELOG_GEN_DB_TYPE")
+	if dbType == "" {
+		dbType = "sqlite"
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbPath))
+	var dialector gorm.Dialector
+	switch dbType {
+	case "postgres":
+		dsn := os.Getenv("TIMELOG_GEN_DSN")
+		if dsn == "" {
+			panic("env TIMELOG_GEN_DSN is not set for postgres")
+		}
+		dialector = postgres.Open(dsn)
+	default:
+		dbPath := os.Getenv("TIMELOG_GEN_DB_PATH")
+		if dbPath == "" {
+			panic("env TIMELOG_GEN_DB_PATH is not set")
+		}
+		dialector = sqlite.Open(dbPath)
+	}
+
+	db, err := gorm.Open(dialector)
 	if err != nil {
 		panic(err)
 	}

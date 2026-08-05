@@ -8,7 +8,7 @@ import (
 
 func TestNewTimelogMCPServer(t *testing.T) {
 	cfg := &config.Config{}
-	cfg.Database.Host = ":memory:"
+	cfg.Database.Path = ":memory:"
 	cfg.Log.ORMLogLevel = 1
 	cfg.MCP.Enabled = false
 	cfg.Server.Port = 8080

@@ -123,7 +123,7 @@ func NewTimelogMCPServer() *TimelogMCPServer {
 	}
 
 	LogMCPDebug("Database initialized", map[string]interface{}{
-		"database_path": cfg.Database.Host,
+		"database_path": cfg.Database.Path,
 	})
 
 	return &TimelogMCPServer{

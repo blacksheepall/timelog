@@ -1,13 +1,13 @@
 package config
 
+import "fmt"
+
 type Config struct {
 	DevMode bool `yaml:"dev_mode" env-default:"false"`
 	App     struct {
 		Timezone string `yaml:"timezone" env-default:"Asia/Singapore"`
 	} `yaml:"app"`
-	Database struct {
-		Host string `yaml:"host"`
-	} `yaml:"database"`
+	Database DatabaseConfig `yaml:"database"`
 	Server struct {
 		Addr         string   `yaml:"addr" env-default:""`
 		Port         int      `yaml:"port" env-required:"true"`
@@ -45,6 +45,30 @@ type Config struct {
 	Test        struct {
 		Flush bool `yaml:"flush" env-default:"false"`
 	} `yaml:"test"`
+}
+
+type DatabaseConfig struct {
+	Type     string `yaml:"type" env-default:"sqlite"`       // sqlite | postgres
+	Path     string `yaml:"path"`                            // SQLite only: database file path
+	Host     string `yaml:"host"`                            // Postgres only
+	Port     int    `yaml:"port" env-default:"5432"`         // Postgres only
+	User     string `yaml:"user"`                            // Postgres only
+	Password string `yaml:"password"`                        // Postgres only
+	DBName   string `yaml:"dbname"`                          // Postgres only
+	SSLMode  string `yaml:"sslmode" env-default:"disable"` // Postgres only
+}
+
+func (d DatabaseConfig) IsSQLite() bool {
+	return d.Type == "sqlite"
+}
+
+func (d DatabaseConfig) IsPostgres() bool {
+	return d.Type == "postgres"
+}
+
+func (d DatabaseConfig) PostgresDSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		d.Host, d.Port, d.User, d.Password, d.DBName, d.SSLMode)
 }
 
 type DatasourceConfig struct {

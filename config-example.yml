@@ -2,7 +2,14 @@ dev_mode: false
 app:
   timezone: 'Asia/Singapore' # Application timezone for date boundaries and display
 database:
-  host: ./dev.db
+  type: sqlite          # sqlite | postgres
+  path: ./dev.db        # SQLite only: database file path
+  # host: localhost     # Postgres only
+  # port: 5432          # Postgres only
+  # user: timelog       # Postgres only
+  # password: ''        # Postgres only
+  # dbname: timelog     # Postgres only
+  # sslmode: disable    # Postgres only
 server:
   addr: '127.0.0.1'
   port: 8080

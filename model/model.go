@@ -11,6 +11,7 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 	sqlite "github.com/ncruces/go-sqlite3/gormlite"
 	"github.com/patrickmn/go-cache"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gl "gorm.io/gorm/logger"
 )
@@ -57,9 +58,19 @@ func (tx *TxDao) Rollback() error {
 var _ DBProvider = (*Dao)(nil)
 var _ DBProvider = (*TxDao)(nil)
 
-// NewDao opens SQLite and returns a DAO without mutating package globals.
+// NewDao opens the configured database and returns a DAO without mutating package globals.
 func NewDao(cfg *config.Config, _ logger.Logger) (*Dao, error) {
-	db, err := gorm.Open(sqlite.Open(cfg.Database.Host), &gorm.Config{
+	var dialector gorm.Dialector
+	switch {
+	case cfg.Database.IsPostgres():
+		dialector = postgres.Open(cfg.Database.PostgresDSN())
+	case cfg.Database.IsSQLite():
+		dialector = sqlite.Open(cfg.Database.Path)
+	default:
+		panic(fmt.Sprintf("unsupported database type: %s", cfg.Database.Type))
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{
 		Logger: gl.Default.LogMode(gl.LogLevel(cfg.Log.ORMLogLevel)),
 	})
 	if err != nil {
