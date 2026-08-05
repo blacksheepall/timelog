@@ -53,57 +53,71 @@
               >
                 Statistics
               </router-link>
+            </nav>
+          </div>
+
+          <!-- 二级菜单：低频入口统一收纳 -->
+          <div class="relative hidden md:block" ref="moreMenuRef">
+            <button
+              @click="moreMenuOpen = !moreMenuOpen"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              :class="{ 'text-brand font-semibold': isSecondaryActive }"
+            >
+              更多
+              <ChevronDownIcon class="h-4 w-4 ml-1" />
+            </button>
+
+            <div
+              v-if="moreMenuOpen"
+              class="absolute right-0 mt-2 w-44 bg-bg-surface border border-default rounded-lg shadow-md-md py-1 z-50"
+            >
               <router-link
                 to="/constraints"
-                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-                :class="{
-                  'text-brand font-semibold': $route.name === 'Constraints',
-                }"
+                class="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                :class="{ 'text-brand font-semibold': $route.name === 'Constraints' }"
+                @click="moreMenuOpen = false"
               >
                 约束
               </router-link>
               <router-link
                 to="/metrics"
-                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-                :class="{
-                  'text-brand font-semibold': $route.name === 'Metrics',
-                }"
+                class="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                :class="{ 'text-brand font-semibold': $route.name === 'Metrics' }"
+                @click="moreMenuOpen = false"
               >
                 指标
               </router-link>
               <router-link
                 to="/study"
-                class="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-                :class="{
-                  'text-brand font-semibold': $route.name === 'Study',
-                }"
+                class="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                :class="{ 'text-brand font-semibold': $route.name === 'Study' }"
+                @click="moreMenuOpen = false"
               >
                 学习情况
               </router-link>
-            </nav>
-          </div>
-
-          <div class="hidden md:flex items-center gap-4">
-            <button
-              @click="themeCycle"
-              class="inline-flex items-center gap-2 rounded-full border border-default px-3 py-2 text-sm font-medium text-text-secondary transition hover:border-default hover:text-text-primary"
-              :title="themeLabel"
-            >
-              <component :is="themeIcon" class="h-4 w-4" />
-              <span class="text-xs">{{ themeLabel }}</span>
-            </button>
-            <router-link
-              to="/passkey/register"
-              class="inline-flex items-center gap-2 rounded-full border border-default px-4 py-2 text-sm font-medium text-text-secondary transition hover:border-default hover:text-text-primary"
-            >
-              绑定设备
-            </router-link>
-            <button
-              class="inline-flex items-center gap-2 rounded-full bg-text-primary px-4 py-2 text-sm font-semibold text-bg-surface transition hover:bg-text-muted"
-              @click="handleLogout"
-            >
-              退出
-            </button>
+              <div class="border-t border-default my-1"></div>
+              <router-link
+                to="/passkey/register"
+                class="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+                @click="moreMenuOpen = false"
+              >
+                绑定设备
+              </router-link>
+              <button
+                @click="handleDropdownTheme"
+                class="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              >
+                <component :is="themeIcon" class="h-4 w-4" />
+                主题: {{ themeLabel }}
+              </button>
+              <div class="border-t border-default my-1"></div>
+              <button
+                @click="handleDropdownLogout"
+                class="block w-full px-4 py-2 text-left text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+              >
+                退出
+              </button>
+            </div>
           </div>
 
           <!-- 移动端菜单按钮 -->
@@ -267,14 +281,39 @@
     MoonIcon,
     SunIcon,
     ComputerDesktopIcon,
+    ChevronDownIcon,
   } from '@heroicons/vue/24/outline'
   import { useSettings } from '@/composables/useSettings'
   import { setNotificationHandler } from '@/api'
   import { clearAuthToken } from '@/utils/auth'
-  import { useRouter } from 'vue-router'
+  import { useRouter, useRoute } from 'vue-router'
 
   // 移动端菜单状态
   const mobileMenuOpen = ref(false)
+
+  // 桌面端「更多」二级菜单状态
+  const moreMenuOpen = ref(false)
+  const moreMenuRef = ref<HTMLElement | null>(null)
+  const route = useRoute()
+  const isSecondaryActive = computed(() =>
+    ['Constraints', 'Metrics', 'Study'].includes(route.name as string)
+  )
+
+  const onDocumentClick = (e: MouseEvent) => {
+    if (moreMenuRef.value && !moreMenuRef.value.contains(e.target as Node)) {
+      moreMenuOpen.value = false
+    }
+  }
+
+  const handleDropdownTheme = () => {
+    themeCycle()
+    moreMenuOpen.value = false
+  }
+
+  const handleDropdownLogout = () => {
+    moreMenuOpen.value = false
+    handleLogout()
+  }
 
   // 全局通知系统
   const notification = reactive({
@@ -416,11 +455,15 @@
 
     // Register notification handler for API timeout errors
     setNotificationHandler(showNotification)
+
+    // 点击「更多」菜单外部时收起
+    document.addEventListener('click', onDocumentClick)
   })
 
   onUnmounted(() => {
     if (reminderTimer) {
       window.clearInterval(reminderTimer)
     }
+    document.removeEventListener('click', onDocumentClick)
   })
 </script>
