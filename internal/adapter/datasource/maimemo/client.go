@@ -10,10 +10,13 @@ import (
 	"time"
 )
 
-// getTodayItemsPath is the real MaiMemo Open API path (see
-// https://open.maimemo.com/api_bundle.yaml). The endpoint host is configurable;
-// the API itself lives under the /open prefix on that host.
-const getTodayItemsPath = "/open/api/v1/memo/study/get_today_items"
+// API paths from the official MaiMemo Open API bundle
+// (https://open.maimemo.com/api_bundle.yaml). The endpoint host is
+// configurable; the API itself lives under the /open prefix on that host.
+const (
+	getTodayItemsPath    = "/open/api/v1/memo/study/get_today_items"
+	getStudyProgressPath = "/open/api/v1/memo/study/get_study_progress"
+)
 
 // Client calls the MaiMemo Open API.
 type Client struct {
@@ -48,10 +51,22 @@ type TodayItem struct {
 	IsFinished  bool   `json:"is_finished"`
 }
 
+// GetStudyProgressResponse mirrors the data payload of MaiMemo's GetStudyProgress.
+type GetStudyProgressResponse struct {
+	Progress StudyProgress `json:"progress"`
+}
+
+// StudyProgress is today's study progress; StudyTime is in milliseconds.
+type StudyProgress struct {
+	Finished  int   `json:"finished"`
+	Total     int   `json:"total"`
+	StudyTime int64 `json:"study_time"`
+}
+
 // apiEnvelope is the common MaiMemo response wrapper.
 type apiEnvelope struct {
-	Success bool       `json:"success"`
-	Errors  []apiError `json:"errors"`
+	Success bool            `json:"success"`
+	Errors  []apiError      `json:"errors"`
 	Data    json.RawMessage `json:"data"`
 }
 
@@ -63,10 +78,27 @@ type apiError struct {
 // GetTodayItems fetches today's study items.
 func (c *Client) GetTodayItems(ctx context.Context) (*GetTodayItemsResponse, error) {
 	// The default limit is 50; raise it so heavy study days are not truncated.
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.endpoint+getTodayItemsPath, bytes.NewReader([]byte(`{"limit":1000}`)))
-	if err != nil {
+	var body GetTodayItemsResponse
+	if err := c.post(ctx, getTodayItemsPath, []byte(`{"limit":1000}`), &body); err != nil {
 		return nil, err
+	}
+	return &body, nil
+}
+
+// GetStudyProgress fetches today's study progress (finished/total/study time).
+func (c *Client) GetStudyProgress(ctx context.Context) (*GetStudyProgressResponse, error) {
+	var body GetStudyProgressResponse
+	if err := c.post(ctx, getStudyProgressPath, []byte(`{}`), &body); err != nil {
+		return nil, err
+	}
+	return &body, nil
+}
+
+// post issues a POST with a JSON body and decodes the MaiMemo envelope into out.
+func (c *Client) post(ctx context.Context, path string, payload []byte, out any) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint+path, bytes.NewReader(payload))
+	if err != nil {
+		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Content-Type", "application/json")
@@ -74,29 +106,28 @@ func (c *Client) GetTodayItems(ctx context.Context) (*GetTodayItemsResponse, err
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("maimemo api request failed: %w", err)
+		return fmt.Errorf("maimemo api request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("maimemo api returned status %d", resp.StatusCode)
+		return fmt.Errorf("maimemo api returned status %d", resp.StatusCode)
 	}
 
 	var env apiEnvelope
 	if err := json.NewDecoder(resp.Body).Decode(&env); err != nil {
-		return nil, fmt.Errorf("decode maimemo response: %w", err)
+		return fmt.Errorf("decode maimemo response: %w", err)
 	}
 	if !env.Success {
 		msgs := make([]string, 0, len(env.Errors))
 		for _, e := range env.Errors {
 			msgs = append(msgs, e.Code+": "+e.Msg)
 		}
-		return nil, fmt.Errorf("maimemo api error: %s", strings.Join(msgs, "; "))
+		return fmt.Errorf("maimemo api error: %s", strings.Join(msgs, "; "))
 	}
 
-	var body GetTodayItemsResponse
-	if err := json.Unmarshal(env.Data, &body); err != nil {
-		return nil, fmt.Errorf("decode maimemo data: %w", err)
+	if err := json.Unmarshal(env.Data, out); err != nil {
+		return fmt.Errorf("decode maimemo data: %w", err)
 	}
-	return &body, nil
+	return nil
 }

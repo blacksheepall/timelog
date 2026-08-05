@@ -1,0 +1,11 @@
+{
+  "errors": [],
+  "data": {
+    "progress": {
+      "finished": 10,
+      "total": 20,
+      "study_time": 114514
+    }
+  },
+  "success": true
+}

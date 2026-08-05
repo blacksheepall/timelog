@@ -46,6 +46,38 @@ func TestClient_GetTodayItems(t *testing.T) {
 	}
 }
 
+func TestClient_GetStudyProgress(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "get_study_progress.json"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", r.Method)
+		}
+		if r.URL.Path != getStudyProgressPath {
+			t.Fatalf("expected path %s, got %s", getStudyProgressPath, r.URL.Path)
+		}
+		if r.Header.Get("Authorization") != "Bearer test-token" {
+			t.Fatalf("unexpected Authorization header: %q", r.Header.Get("Authorization"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "test-token")
+	resp, err := client.GetStudyProgress(context.Background())
+	if err != nil {
+		t.Fatalf("GetStudyProgress: %v", err)
+	}
+	if resp.Progress.Finished != 10 || resp.Progress.Total != 20 || resp.Progress.StudyTime != 114514 {
+		t.Fatalf("unexpected progress: %+v", resp.Progress)
+	}
+}
+
 func TestClient_GetTodayItems_StatusError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)

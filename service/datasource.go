@@ -51,10 +51,14 @@ func (s *Service) SyncMetrics(ctx context.Context, sourceName string) (SyncMetri
 				result.Failed++
 				continue
 			}
+			unit := point.Unit
+			if unit == "" {
+				unit = "count"
+			}
 			newMetric := &domain.Metric{
 				Name:       point.MetricName,
 				MetricType: "numeric",
-				Unit:       "count",
+				Unit:       unit,
 			}
 			if err := s.metricRepo.CreateMetric(newMetric); err != nil {
 				s.log.Error("failed to create metric", "name", point.MetricName, "error", err)

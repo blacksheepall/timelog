@@ -113,6 +113,9 @@ type MetricRecord struct {
 type MetricDataPoint struct {
 	MetricName string
 	Value      float64
+	// Unit is used when the metric is created on demand; empty falls back to
+	// the service default.
+	Unit       string
 	RecordedAt time.Time
 	Source     string
 }

@@ -38,11 +38,22 @@ func (s *DataSource) Name() string {
 	return s.name
 }
 
-// Fetch retrieves today's items from MaiMemo and maps them to domain points.
+// Fetch retrieves today's items and study progress from MaiMemo, mapping
+// both to domain points.
 func (s *DataSource) Fetch(ctx context.Context) ([]domain.MetricDataPoint, error) {
-	resp, err := s.client.GetTodayItems(ctx)
+	now := time.Now().UTC()
+
+	itemsResp, err := s.client.GetTodayItems(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return MapTodayItems(resp, time.Now().UTC()), nil
+	points := MapTodayItems(itemsResp, now)
+
+	progressResp, err := s.client.GetStudyProgress(ctx)
+	if err != nil {
+		return nil, err
+	}
+	points = append(points, MapStudyProgress(progressResp, now)...)
+
+	return points, nil
 }
