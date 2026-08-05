@@ -41,8 +41,8 @@ func TestDataSource_Fetch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
-	if len(points) != 2 {
-		t.Fatalf("expected 2 points, got %d", len(points))
+	if len(points) != 3 {
+		t.Fatalf("expected 3 points, got %d", len(points))
 	}
 	if src.Name() != "maimemo" {
 		t.Fatalf("expected name maimemo, got %q", src.Name())

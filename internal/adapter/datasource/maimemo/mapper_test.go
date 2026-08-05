@@ -7,38 +7,45 @@ import (
 
 func TestMapTodayItems(t *testing.T) {
 	resp := &GetTodayItemsResponse{
-		Items: []TodayItem{
-			{Name: "今日已背单词", Value: 120, Unit: "个"},
-			{Name: "连续打卡天数", Value: 45, Unit: "天"},
+		TodayItems: []TodayItem{
+			{VocID: "1", VocSpelling: "apple", Order: 1, IsNew: true, IsFinished: true},
+			{VocID: "2", VocSpelling: "banana", Order: 2, IsNew: false, IsFinished: true},
+			{VocID: "3", VocSpelling: "cherry", Order: 3, IsNew: false, IsFinished: false},
 		},
 	}
 	now := time.Date(2026, 7, 25, 10, 0, 0, 0, time.UTC)
 
 	points := MapTodayItems(resp, now)
-	if len(points) != 2 {
-		t.Fatalf("expected 2 points, got %d", len(points))
+	if len(points) != 3 {
+		t.Fatalf("expected 3 points, got %d", len(points))
 	}
-	if points[0].MetricName != "今日已背单词" || points[0].Value != 120 {
-		t.Fatalf("unexpected first point: %+v", points[0])
+
+	want := map[string]float64{
+		MetricTodayWords:    3,
+		MetricTodayNew:      1,
+		MetricTodayFinished: 2,
 	}
-	if points[1].Source != "maimemo" {
-		t.Fatalf("expected source maimemo, got %q", points[1].Source)
-	}
-	if !points[0].RecordedAt.Equal(now) {
-		t.Fatalf("expected recorded_at %v, got %v", now, points[0].RecordedAt)
+	for _, p := range points {
+		v, ok := want[p.MetricName]
+		if !ok {
+			t.Fatalf("unexpected metric name %q", p.MetricName)
+		}
+		if p.Value != v {
+			t.Fatalf("metric %q: expected %v, got %v", p.MetricName, v, p.Value)
+		}
+		if p.Source != "maimemo" {
+			t.Fatalf("expected source maimemo, got %q", p.Source)
+		}
+		if !p.RecordedAt.Equal(now) {
+			t.Fatalf("expected recorded_at %v, got %v", now, p.RecordedAt)
+		}
 	}
 }
 
-func TestMapTodayItems_SkipsEmptyName(t *testing.T) {
-	resp := &GetTodayItemsResponse{
-		Items: []TodayItem{
-			{Name: "", Value: 1},
-			{Name: "有效指标", Value: 2},
-		},
-	}
-	points := MapTodayItems(resp, time.Now())
-	if len(points) != 1 || points[0].MetricName != "有效指标" {
-		t.Fatalf("expected only valid item, got %+v", points)
+func TestMapTodayItems_Empty(t *testing.T) {
+	resp := &GetTodayItemsResponse{TodayItems: []TodayItem{}}
+	if points := MapTodayItems(resp, time.Now()); points != nil {
+		t.Fatalf("expected nil for empty list, got %+v", points)
 	}
 }
 

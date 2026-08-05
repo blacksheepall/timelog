@@ -1,12 +1,19 @@
 package maimemo
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
+
+// getTodayItemsPath is the real MaiMemo Open API path (see
+// https://open.maimemo.com/api_bundle.yaml). The endpoint host is configurable;
+// the API itself lives under the /open prefix on that host.
+const getTodayItemsPath = "/open/api/v1/memo/study/get_today_items"
 
 // Client calls the MaiMemo Open API.
 type Client struct {
@@ -27,26 +34,42 @@ func NewClient(endpoint, token string) *Client {
 	}
 }
 
-// GetTodayItemsResponse mirrors the shape of MaiMemo's GetTodayItems response.
-// Adjust fields once the actual API schema is confirmed.
+// GetTodayItemsResponse mirrors the data payload of MaiMemo's GetTodayItems.
 type GetTodayItemsResponse struct {
-	Items []TodayItem `json:"items"`
+	TodayItems []TodayItem `json:"today_items"`
 }
 
-// TodayItem represents one countable item returned by GetTodayItems.
+// TodayItem represents one word in today's study list.
 type TodayItem struct {
-	Name  string  `json:"name"`
-	Value float64 `json:"value"`
-	Unit  string  `json:"unit"`
+	VocID       string `json:"voc_id"`
+	VocSpelling string `json:"voc_spelling"`
+	Order       int    `json:"order"`
+	IsNew       bool   `json:"is_new"`
+	IsFinished  bool   `json:"is_finished"`
+}
+
+// apiEnvelope is the common MaiMemo response wrapper.
+type apiEnvelope struct {
+	Success bool       `json:"success"`
+	Errors  []apiError `json:"errors"`
+	Data    json.RawMessage `json:"data"`
+}
+
+type apiError struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
 }
 
 // GetTodayItems fetches today's study items.
 func (c *Client) GetTodayItems(ctx context.Context) (*GetTodayItemsResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.endpoint+"/maimemo.openapi.study.v1.StudyService/GetTodayItems", nil)
+	// The default limit is 50; raise it so heavy study days are not truncated.
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		c.endpoint+getTodayItemsPath, bytes.NewReader([]byte(`{"limit":1000}`)))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
@@ -59,9 +82,21 @@ func (c *Client) GetTodayItems(ctx context.Context) (*GetTodayItemsResponse, err
 		return nil, fmt.Errorf("maimemo api returned status %d", resp.StatusCode)
 	}
 
-	var body GetTodayItemsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+	var env apiEnvelope
+	if err := json.NewDecoder(resp.Body).Decode(&env); err != nil {
 		return nil, fmt.Errorf("decode maimemo response: %w", err)
+	}
+	if !env.Success {
+		msgs := make([]string, 0, len(env.Errors))
+		for _, e := range env.Errors {
+			msgs = append(msgs, e.Code+": "+e.Msg)
+		}
+		return nil, fmt.Errorf("maimemo api error: %s", strings.Join(msgs, "; "))
+	}
+
+	var body GetTodayItemsResponse
+	if err := json.Unmarshal(env.Data, &body); err != nil {
+		return nil, fmt.Errorf("decode maimemo data: %w", err)
 	}
 	return &body, nil
 }
