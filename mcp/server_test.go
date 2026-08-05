@@ -8,6 +8,7 @@ import (
 
 func TestNewTimelogMCPServer(t *testing.T) {
 	cfg := &config.Config{}
+	cfg.Database.Type = "sqlite"
 	cfg.Database.Path = ":memory:"
 	cfg.Log.ORMLogLevel = 1
 	cfg.MCP.Enabled = false

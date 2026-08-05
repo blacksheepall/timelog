@@ -8,7 +8,7 @@ TimeLog 是一个本地优先的全栈时间记录应用：
 
 - 后端：Go，入口在 `main.go`。
 - 前端：Vue 3 + Vite，目录是 `web/`。
-- 数据库：默认 SQLite，迁移文件在 `model/migrations/sqlite/`。Postgres 基线迁移在 `model/migrations/postgres/`。
+- 数据库：开发和生产使用 Postgres，迁移文件在 `model/migrations/postgres/`。测试和 CI 使用内存 SQLite；历史 SQLite 迁移保留在 `model/migrations/sqlite/`。
 - API：HTTP 路由在 `router/`，业务逻辑在 `service/`，持久化在 `model/`。
 - API 合约：DTO 来源是 `api/proto/timelog/v1/`，REST 路径来源是 `api/openapi/rest.yaml`。
 - 文档：非 `prod` 构建会暴露 Redoc，路径是 `/docs/redoc.html`，旧入口 `/swagger` 会重定向过去。
@@ -168,19 +168,23 @@ make fmt
 创建迁移：
 
 ```bash
+# Postgres（默认）
+migrate -database "postgres://timelog:timelog@localhost:5432/timelog?sslmode=disable" create -seq -ext sql --dir model/migrations/postgres add_xxx
+
+# SQLite
 migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/sqlite add_xxx
 ```
 
 执行开发库迁移：
 
 ```bash
-make migrate env=dev
+make migrate
 ```
 
-执行生产库迁移：
+执行 SQLite 迁移（历史库 / 测试库）：
 
 ```bash
-make migrate env=prod
+make migrate DATABASE_TYPE=sqlite MIGRATE_DB_FILE=dev.db
 ```
 
 `make migrate` 不带参数会使用默认 `env=prod`。开发时请明确写 `env=dev`。

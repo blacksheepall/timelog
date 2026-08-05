@@ -8,7 +8,7 @@ TimeLog is a local-first full-stack time logging app:
 
 - Backend: Go, with `main.go` as the entry point.
 - Frontend: Vue 3 + Vite under `web/`.
-- Database: SQLite by default, with migrations under `model/migrations/sqlite/`. A Postgres baseline is available under `model/migrations/postgres/`.
+- Database: Postgres for development and production, with migrations under `model/migrations/postgres/`. Tests and CI use in-memory SQLite; legacy SQLite migrations are kept under `model/migrations/sqlite/`.
 - API: HTTP routes live in `router/`, business logic in `service/`, persistence in `model/`.
 - API contract: DTOs come from `api/proto/timelog/v1/`; REST paths come from `api/openapi/rest.yaml`.
 - Documentation: non-`prod` builds expose Redoc at `/docs/redoc.html`; the legacy `/swagger` path redirects there.
@@ -168,19 +168,23 @@ Read `web/CLAUDE.md` before frontend changes, but treat the actual code and this
 Create a migration:
 
 ```bash
+# Postgres (default)
+migrate -database "postgres://timelog:timelog@localhost:5432/timelog?sslmode=disable" create -seq -ext sql --dir model/migrations/postgres add_xxx
+
+# SQLite
 migrate -database "sqlite3://dev.db" create -seq -ext sql --dir model/migrations/sqlite add_xxx
 ```
 
 Run development migrations:
 
 ```bash
-make migrate env=dev
+make migrate
 ```
 
-Run production migrations:
+Run SQLite migrations (legacy / test databases):
 
 ```bash
-make migrate env=prod
+make migrate DATABASE_TYPE=sqlite MIGRATE_DB_FILE=dev.db
 ```
 
 `make migrate` without arguments uses the default `env=prod`. Be explicit with `env=dev` during development.

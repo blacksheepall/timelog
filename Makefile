@@ -73,14 +73,19 @@ passkey-temp:
 
 # Migrate target
 # Usage:
-#   make migrate                                 # SQLite (default)
-#   make migrate DATABASE_TYPE=postgres MIGRATE_DSN="postgres://user:pass@host/db?sslmode=disable"
-DATABASE_TYPE ?= sqlite
+#   make migrate                                 # Postgres (default), reads MIGRATE_DSN from .env
+#   make migrate DATABASE_TYPE=sqlite MIGRATE_DB_FILE=dev.db
+# MIGRATE_DSN is intentionally not hardcoded here to avoid leaking credentials.
+# Put it in .env (gitignored), e.g.:
+#   MIGRATE_DSN=postgres://timelog:timelog@localhost:5432/timelog?sslmode=disable
+DATABASE_TYPE ?= postgres
 
 migrate:
 ifeq ($(DATABASE_TYPE),sqlite)
 	migrate -database "sqlite3://$(MIGRATE_DB_FILE)" --path model/migrations/sqlite up
 else ifeq ($(DATABASE_TYPE),postgres)
+	@test -n "$(MIGRATE_DSN)" || (echo "MIGRATE_DSN is not set. Add it to .env, e.g.:"; \
+		echo "  MIGRATE_DSN=postgres://user:pass@localhost:5432/timelog?sslmode=disable"; exit 1)
 	migrate -database "$(MIGRATE_DSN)" --path model/migrations/postgres up
 else
 	$(error Unsupported DATABASE_TYPE: $(DATABASE_TYPE))
