@@ -43,8 +43,8 @@ func TestGoldenCategoryTreeEnvelope(t *testing.T) {
 			Category: &timelogv1.Category{
 				Id:          2,
 				Name:        "Coding",
-				Color:       "#3366ff",
-				Description: "Deep work",
+				Color:       stringPtr("#3366ff"),
+				Description: stringPtr("Deep work"),
 				Level:       1,
 				SortOrder:   10,
 				Path:        "/",

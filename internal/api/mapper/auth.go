@@ -11,7 +11,7 @@ func PasskeyCredentialToProto(credential *domain.PasskeyCredential) *timelogv1.P
 	}
 	return &timelogv1.PasskeyCredential{
 		Id:         uint32(credential.ID),
-		DeviceName: credential.DeviceName,
+		DeviceName: optionalString(credential.DeviceName),
 		CreatedAt:  FormatTimeUTC(credential.CreatedAt),
 	}
 }

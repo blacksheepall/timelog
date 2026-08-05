@@ -15,8 +15,8 @@ func CategoryToProto(c *domain.Category) *timelogv1.Category {
 	return &timelogv1.Category{
 		Id:          c.ID,
 		Name:        c.Name,
-		Color:       c.Color,
-		Description: c.Description,
+		Color:       optionalString(c.Color),
+		Description: optionalString(c.Description),
 		ParentId:    c.ParentID,
 		Level:       c.Level,
 		SortOrder:   c.SortOrder,
@@ -71,8 +71,8 @@ func CategoryFromCreateRequest(req *timelogv1.CreateCategoryRequest) (*domain.Ca
 	}
 	return &domain.Category{
 		Name:        req.Name,
-		Color:       req.Color,
-		Description: req.Description,
+		Color:       req.GetColor(),
+		Description: req.GetDescription(),
 		ParentID:    req.ParentId,
 	}, nil
 }

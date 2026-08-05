@@ -13,7 +13,7 @@ func MetricToProto(m *domain.Metric) *timelogv1.Metric {
 	return &timelogv1.Metric{
 		Id:             m.ID,
 		Name:           m.Name,
-		Description:    m.Description,
+		Description:    optionalString(m.Description),
 		MetricType:     m.MetricType,
 		Unit:           m.Unit,
 		CurrentValue:   m.CurrentValue,
@@ -60,7 +60,7 @@ func MetricFromCreateRequest(req *timelogv1.CreateMetricRequest) *domain.Metric 
 	}
 	return &domain.Metric{
 		Name:        req.Name,
-		Description: req.Description,
+		Description: req.GetDescription(),
 		MetricType:  req.MetricType,
 		Unit:        req.Unit,
 		Extra:       req.GetExtra(),

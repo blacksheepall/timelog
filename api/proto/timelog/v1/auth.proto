@@ -8,7 +8,7 @@ import "google/protobuf/struct.proto";
 
 message PasskeyCredential {
   uint32 id = 1;
-  string device_name = 2;
+  optional string device_name = 2;
   string created_at = 3;
 }
 

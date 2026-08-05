@@ -14,7 +14,7 @@ func TaskToProto(t *domain.Task) *timelogv1.Task {
 	return &timelogv1.Task{
 		Id:               t.ID,
 		Title:            t.Title,
-		Description:      t.Description,
+		Description:      optionalString(t.Description),
 		CategoryId:       t.CategoryID,
 		DueDate:          FormatDate(t.DueDate),
 		EstimatedMinutes: t.EstimatedMinutes,
@@ -44,7 +44,7 @@ func TaskFromCreateRequest(req *timelogv1.CreateTaskRequest) (*domain.Task, erro
 	}
 	return &domain.Task{
 		Title:            req.Title,
-		Description:      req.Description,
+		Description:      req.GetDescription(),
 		CategoryID:       req.CategoryId,
 		DueDate:          dueDate,
 		EstimatedMinutes: req.EstimatedMinutes,

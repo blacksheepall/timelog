@@ -9,7 +9,7 @@ import "timelog/v1/category.proto";
 message Task {
   int32 id = 1;
   string title = 2;
-  string description = 3;
+  optional string description = 3;
   int32 category_id = 4;
   optional Category category = 5;
   string due_date = 6;
@@ -23,7 +23,7 @@ message Task {
 
 message CreateTaskRequest {
   string title = 1;
-  string description = 2;
+  optional string description = 2;
   int32 category_id = 3;
   string due_date = 4;
   int32 estimated_minutes = 5;

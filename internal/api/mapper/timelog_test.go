@@ -50,12 +50,13 @@ func TestTimelogsToProto(t *testing.T) {
 func TestTimelogFromCreateRequest(t *testing.T) {
 	start := "2026-05-30T12:00:00Z"
 	end := "2026-05-30T13:00:00Z"
+	remark := "note"
 	req := &timelogv1.CreateTimelogRequest{
 		StartTime:  start,
 		EndTime:    &end,
 		CategoryId: 3,
 		TaskId:     &[]int32{5}[0],
-		Remark:     "note",
+		Remark:     &remark,
 	}
 	got, err := TimelogFromCreateRequest(req)
 	if err != nil {

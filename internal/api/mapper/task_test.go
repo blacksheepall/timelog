@@ -47,9 +47,10 @@ func TestTasksToProto(t *testing.T) {
 }
 
 func TestTaskFromCreateRequest(t *testing.T) {
+	description := "Desc"
 	req := &timelogv1.CreateTaskRequest{
 		Title:            "Test",
-		Description:      "Desc",
+		Description:      &description,
 		CategoryId:       3,
 		DueDate:          "2026-05-30",
 		EstimatedMinutes: 60,

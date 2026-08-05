@@ -14,7 +14,7 @@ import (
 func TestCreateCategoryHandler(t *testing.T) {
 	r, _ := setupTestRouter(t)
 
-	reqBody, _ := json.Marshal(timelogv1.CreateCategoryRequest{Name: "Work", Color: "#FF0000"})
+	reqBody, _ := json.Marshal(timelogv1.CreateCategoryRequest{Name: "Work", Color: strPtr("#FF0000")})
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/categories", bytes.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")

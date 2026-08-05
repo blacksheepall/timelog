@@ -46,7 +46,7 @@ func TimelogFromCreateRequest(req *timelogv1.CreateTimelogRequest) (*domain.Time
 		EndTime:    endTime,
 		CategoryID: req.CategoryId,
 		TaskID:     req.TaskId,
-		Remark:     req.Remark,
+		Remark:     req.GetRemark(),
 	}, nil
 }
 

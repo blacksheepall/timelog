@@ -81,9 +81,10 @@ func TestMetricRecordsToProto(t *testing.T) {
 
 func TestMetricFromCreateRequest(t *testing.T) {
 	extra := "extra"
+	description := "Pages read"
 	req := &timelogv1.CreateMetricRequest{
 		Name:        "Pages",
-		Description: "Pages read",
+		Description: &description,
 		MetricType:  "counter",
 		Unit:        "page",
 		Extra:       &extra,

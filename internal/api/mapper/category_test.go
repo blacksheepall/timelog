@@ -12,10 +12,12 @@ import (
 
 func TestCategoryFromCreateRequestRejectsInvalidParentID(t *testing.T) {
 	parentZero := int32(0)
+	color := "#3366ff"
+	description := "Root category"
 	req := &timelogv1.CreateCategoryRequest{
 		Name:        "Root",
-		Color:       "#3366ff",
-		Description: "Root category",
+		Color:       &color,
+		Description: &description,
 		ParentId:    &parentZero,
 	}
 	_, err := CategoryFromCreateRequest(req)
@@ -26,10 +28,12 @@ func TestCategoryFromCreateRequestRejectsInvalidParentID(t *testing.T) {
 
 func TestCategoryFromCreateRequestRejectsClientLevel(t *testing.T) {
 	level := int32(1)
+	color := "#3366ff"
+	description := "Root category"
 	req := &timelogv1.CreateCategoryRequest{
 		Name:        "Root",
-		Color:       "#3366ff",
-		Description: "Root category",
+		Color:       &color,
+		Description: &description,
 		Level:       &level,
 	}
 	_, err := CategoryFromCreateRequest(req)
@@ -52,10 +56,12 @@ func TestCategoryFromCreateRequestRejectsClientSortOrder(t *testing.T) {
 
 func TestCategoryFromCreateRequestHappyPath(t *testing.T) {
 	parentID := int32(3)
+	color := "#3366ff"
+	description := "Work category"
 	req := &timelogv1.CreateCategoryRequest{
 		Name:        "Work",
-		Color:       "#3366ff",
-		Description: "Work category",
+		Color:       &color,
+		Description: &description,
 		ParentId:    &parentID,
 	}
 	got, err := CategoryFromCreateRequest(req)
