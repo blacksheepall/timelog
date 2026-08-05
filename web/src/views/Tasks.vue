@@ -337,7 +337,8 @@
   const loadEditingData = () => {
     if (editingTask.value) {
       form.title = editingTask.value.title
-      form.description = editingTask.value.description
+      // description 在数据库中可为 NULL，API 会省略该字段
+      form.description = editingTask.value.description || ''
       form.category_id = editingTask.value.category_id.toString()
       form.due_date = editingTask.value.due_date.split('T')[0]
       form.estimated_minutes = editingTask.value.estimated_minutes

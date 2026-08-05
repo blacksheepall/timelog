@@ -260,8 +260,9 @@
   const loadEditingData = () => {
     if (editingCategory.value) {
       form.name = editingCategory.value.name
-      form.color = editingCategory.value.color
-      form.description = editingCategory.value.description
+      // color / description 在数据库中可为 NULL，API 会省略对应字段
+      form.color = editingCategory.value.color || '#3B82F6'
+      form.description = editingCategory.value.description || ''
     } else {
       resetForm()
     }
